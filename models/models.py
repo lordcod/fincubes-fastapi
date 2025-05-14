@@ -1,0 +1,111 @@
+import datetime
+from tortoise import fields
+from tortoise.models import Model
+from pydantic import BaseModel, field_validator
+
+
+class TimestampedModel(Model):
+    created_at = fields.DatetimeField(auto_now_add=True)
+    updated_at = fields.DatetimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+
+class Competition(TimestampedModel):
+    id = fields.IntField(pk=True)
+    name = fields.CharField(max_length=255)
+    date = fields.CharField(max_length=50)
+    location = fields.CharField(max_length=255)
+    organizer = fields.CharField(max_length=100)
+    status = fields.CharField(max_length=100, null=True)
+    links = fields.JSONField()
+    start_date = fields.DateField()
+    end_date = fields.DateField()
+
+    class Meta:
+        table = "competitions"
+
+
+class Distance(TimestampedModel):
+    id = fields.IntField(pk=True)
+    competition: Competition = fields.ForeignKeyField(
+        "models.Competition", related_name="distances")
+    order = fields.IntField()
+    stroke = fields.CharField(max_length=50)
+    distance = fields.IntField()
+    category = fields.CharField(max_length=255, null=True)
+    gender = fields.CharField(max_length=1)
+
+    class Meta:
+        table = "distances"
+
+
+class Athlete(TimestampedModel):
+    id = fields.IntField(pk=True)
+    last_name = fields.CharField(max_length=100)
+    first_name = fields.CharField(max_length=100)
+    birth_year = fields.CharField(max_length=4)
+    club = fields.CharField(max_length=255)
+    city = fields.CharField(max_length=255, null=True)
+    license = fields.CharField(max_length=50)
+    gender = fields.CharField(max_length=1)
+
+    class Meta:
+        table = "athletes"
+
+
+class Result(TimestampedModel):
+    id = fields.IntField(pk=True)
+    athlete: Athlete = fields.ForeignKeyField(
+        "models.Athlete", related_name="results")
+    competition: Competition = fields.ForeignKeyField(
+        "models.Competition", related_name="results")
+    stroke = fields.CharField(max_length=50)
+    distance = fields.IntField()
+    result = fields.TimeField(max_length=20, null=True)
+    final = fields.TimeField(max_length=1020, null=True)
+    place = fields.CharField(max_length=50, null=True)
+    final_rank = fields.CharField(max_length=50, null=True)
+    points = fields.CharField(max_length=50, null=True)
+    record = fields.CharField(max_length=255, null=True)
+    dsq_final = fields.BooleanField(default=False)
+    dsq = fields.BooleanField(default=False)
+
+    class Meta:
+        table = "results"
+
+
+class TopAthlete(TimestampedModel):
+    id = fields.IntField(pk=True)
+    athlete = fields.ForeignKeyField(
+        'models.Athlete', related_name='top_mentions')
+
+    class Meta:
+        table = "top_athletes"
+
+
+class RecentEvent(TimestampedModel):
+    id = fields.IntField(pk=True)
+    competition = fields.ForeignKeyField(
+        'models.Competition', related_name='recent_mentions')
+
+    class Meta:
+        table = "recent_events"
+
+
+class User(Model):
+    id = fields.IntField(pk=True)
+    email = fields.CharField(max_length=255, unique=True)
+    hashed_password = fields.CharField(max_length=255)
+    created_at = fields.DatetimeField(auto_now_add=True)
+    admin = fields.BooleanField(default=False)
+    premium = fields.BooleanField(default=False)
+
+    athlete = fields.ForeignKeyField(
+        "models.Athlete",
+        related_name="user",
+        null=True,
+        on_delete=fields.SET_NULL,
+        unique=True
+    )
