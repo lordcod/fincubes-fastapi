@@ -176,6 +176,6 @@ cython_debug/
 
 # Service Depends
 test_database.py
-test_main.py
-test_redis.pt
+test_mail.py
+test_redis.py
 migrations/
