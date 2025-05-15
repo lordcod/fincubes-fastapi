@@ -2,6 +2,7 @@ import logging
 import sys
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
+import uvicorn
 from config import DATABASE_URL
 from routers import competitions, distances, results, athletes, top_recent, auth
 from tortoise.contrib.fastapi import register_tortoise
@@ -43,3 +44,9 @@ register_tortoise(
     generate_schemas=True,
     add_exception_handlers=True,
 )
+
+if __name__ == '__main__':
+    uvicorn.run(
+        app,
+        port=5000
+    )
