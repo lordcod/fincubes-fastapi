@@ -14,6 +14,16 @@ class UserLogin(BaseModel):
         from_attributes = True
 
 
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+    cf_token: str
+    athlete_id: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
+
 class UserResponse(BaseModel):
     id: int
     email: str

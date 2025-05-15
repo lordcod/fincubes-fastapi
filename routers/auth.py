@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from tortoise import Tortoise
 from tortoise.exceptions import DoesNotExist
 from models.models import Athlete, User
-from schemas.auth import UserLogin, UserResponse, TokenResponse, UserResponseAthlete
+from schemas.auth import UserCreate, UserLogin, UserResponse, TokenResponse, UserResponseAthlete
 from passlib.context import CryptContext
 from datetime import datetime
 import jwt
@@ -100,21 +100,31 @@ async def search_users(q: str):
 
 
 @router.post("/register", response_model=TokenResponse)
-async def register_user(user_create: UserLogin):
+async def register_user(user_create: UserCreate):
     ts = await check_verification(user_create.cf_token)
     if not ts.success:
         codes = ', '.join(ts.error_codes)
         raise HTTPException(
             status_code=400, detail=f"Ошибка капчи {codes}")
 
-    if await User.filter(email=user_create.email).exists():
+    user = await User.filter(email=user_create.email).first()
+    if user:
         raise HTTPException(status_code=400, detail="Email уже занят")
+    if user_create.athlete_id:
+        try:
+            athlete = await Athlete.get(id=user_create.athlete_id)
+        except DoesNotExist:
+            raise HTTPException(status_code=404, detail="Атлет не найден")
+
+        if await User.filter(athlete_id=athlete.id).exists():
+            raise HTTPException(status_code=400, detail="Атлет уже занят")
 
     hashed_password = hash_password(user_create.password)
 
     user = await User.create(
         email=user_create.email,
-        hashed_password=hashed_password
+        hashed_password=hashed_password,
+        athlete_id=user_create.athlete_id
     )
 
     access_token = create_access_token(data={"sub": user.email})
