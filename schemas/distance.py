@@ -15,7 +15,7 @@ class Distance_Pydantic(DistanceCreateUpdateIn_Pydantic):
     competition_id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class DistanceOrderUpdate_Pydantic(BaseModel):
@@ -23,4 +23,4 @@ class DistanceOrderUpdate_Pydantic(BaseModel):
     order: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True

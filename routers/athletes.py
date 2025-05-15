@@ -120,56 +120,60 @@ async def get_athlete_results(athlete_id: int, redis=Depends(get_redis)):
     try:
         athlete = await Athlete.get(id=athlete_id)
         results_query = await Result.filter(athlete=athlete).prefetch_related("competition")
-
-        competitions = {}
-        best_results = {}
-        for result in results_query:
-            competition_id = result.competition.id
-            if competition_id not in competitions:
-                competitions[competition_id] = {
-                    "id": result.competition.id,
-                    "date": result.competition.date,
-                    "start_date": result.competition.start_date,
-                    "competition": result.competition.name,
-                    "performances": []
-                }
-            min_time = (result.final
-                        if result.final and result.final <= result.result
-                        else result.result)
-
-            performances = {
-                "stroke": result.stroke,
-                "distance": result.distance,
-                "result": result.result,
-                "final": result.final,
-                "place": result.place,
-                "final_rank": result.final_rank,
-                "points": result.points,
-                "record": result.record,
-                "dsq": result.dsq,
-                "dsq_final": result.dsq_final,
-                "max_time": min_time,
-                "top_rank": await get_rank(
-                    redis,
-                    athlete.gender,
-                    result.stroke,
-                    result.distance,
-                    min_time
-                )
-            }
-
-            key = (result.stroke, result.distance)
-            best_performance = best_results.get(key)
-            if best_performance is None or best_performance['min_time'] > min_time:
-                best_results[key] = performances
-
-            competitions[competition_id]["performances"].append(performances)
-        competitions = dict(sorted(competitions.items(),
-                            key=lambda item: item[1]['start_date'],
-                            reverse=True))
-        competition_results = [
-            UserCompetitionResult(**comp) for comp in competitions.values()
-        ]
-        return UserAthleteResults(athlete_id=athlete.id, results=competition_results)
     except DoesNotExist:
-        raise HTTPException(status_code=404, detail="Athlete not found")
+        raise HTTPException(
+            status_code=404, detail="Athlete or result not found")
+
+    competitions = {}
+    best_results = {}
+    for result in results_query:
+        competition_id = result.competition.id
+        if competition_id not in competitions:
+            competitions[competition_id] = {
+                "id": result.competition.id,
+                "date": result.competition.date,
+                "start_date": result.competition.start_date,
+                "competition": result.competition.name,
+                "performances": []
+            }
+        min_time = (result.final
+                    if result.final and result.final <= result.result
+                    else result.result)
+
+        performances = {
+            "stroke": result.stroke,
+            "distance": result.distance,
+            "result": result.result,
+            "final": result.final,
+            "place": result.place,
+            "final_rank": result.final_rank,
+            "points": result.points,
+            "record": result.record,
+            "dsq": result.dsq,
+            "dsq_final": result.dsq_final,
+            "min_time": min_time,
+            "top_rank": await get_rank(
+                redis,
+                athlete.gender,
+                result.stroke,
+                result.distance,
+                min_time
+            )
+        }
+
+        key = (result.stroke, result.distance)
+        best_performance = best_results.get(key)
+        if best_performance is None or best_performance['min_time'] > min_time:
+            if best_performance:
+                best_performance.pop('best')
+            performances['best'] = True
+            best_results[key] = performances
+
+        competitions[competition_id]["performances"].append(performances)
+    competitions = dict(sorted(competitions.items(),
+                        key=lambda item: item[1]['start_date'],
+                        reverse=True))
+    competition_results = [
+        UserCompetitionResult(**comp) for comp in competitions.values()
+    ]
+    return UserAthleteResults(athlete_id=athlete.id, results=competition_results)

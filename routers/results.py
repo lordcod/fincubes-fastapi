@@ -3,10 +3,11 @@ from fastapi.responses import RedirectResponse
 from fastapi import APIRouter, Depends, HTTPException
 from typing import Annotated, Any, List, Optional
 from tortoise.exceptions import DoesNotExist
+from models.deps import get_redis
 from models.models import Athlete, Competition, Result
 from schemas import RandomTop_Pydantic, Result_Pydantic, ResultIn_Pydantic, Top_Pydantic
 from misc.security import admin_required
-from misc.utils import get_top_results
+from misc.utils import get_rank, get_top_results
 
 router = APIRouter(prefix='/results')
 
@@ -68,7 +69,6 @@ async def get_top(
         season,
         current_season
     )
-    print(results, [res.__dict__ for res in results])
     return Top_Pydantic(
         distance=distance,
         stroke=stroke,
@@ -104,7 +104,7 @@ async def get_results(
 
 
 @router.post("/{competition_id}/{athlete_id}", dependencies=[Depends(admin_required)], response_model=Result_Pydantic)
-async def create_result(competition_id: int, athlete_id: int, result: ResultIn_Pydantic):
+async def create_result(competition_id: int, athlete_id: int, result: ResultIn_Pydantic, redis=Depends(get_redis)):
     try:
         competition = await Competition.get(id=competition_id)
         athlete = await Athlete.get(id=athlete_id)
@@ -126,6 +126,11 @@ async def create_result(competition_id: int, athlete_id: int, result: ResultIn_P
         dsq=result.dsq,
         dsq_final=result.dsq_final,
     )
+
+    await get_rank(redis, athlete.gender, result.stroke, result.distance, result.result)
+    if result.final:
+        await get_rank(redis, athlete.gender, result.stroke, result.distance, result.final)
+
     return db_result
 
 

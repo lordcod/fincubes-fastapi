@@ -11,7 +11,7 @@ class UserLogin(BaseModel):
     cf_token: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UserCreate(BaseModel):
@@ -21,7 +21,7 @@ class UserCreate(BaseModel):
     athlete_id: Optional[int] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UserResponse(BaseModel):
@@ -33,14 +33,14 @@ class UserResponse(BaseModel):
     athlete_id: Optional[int] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UserResponseAthlete(UserResponse):
     athlete: Optional[Athlete_Pydantic] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Модель для ответа на создание пользователя
 
@@ -53,4 +53,4 @@ class TokenResponse(BaseModel):
     token_type: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True

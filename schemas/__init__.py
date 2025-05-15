@@ -76,7 +76,7 @@ class CompetitionIn_Pydantic(BaseModel):
     end_date: datetime.date
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class Competition_Pydantic(CompetitionIn_Pydantic):
@@ -95,7 +95,7 @@ class AthleteIn_Pydantic(BaseModel):
     gender: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class Athlete_Pydantic(AthleteIn_Pydantic):
@@ -120,7 +120,7 @@ class ResultIn_Pydantic(BaseModel):
     best: Optional[FlexibleTime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
         json_encoders = {FlexibleTime: lambda v: str(v)}
 
 
@@ -153,6 +153,7 @@ class UserPerformance(BaseModel):
     points: Optional[str | int] = None
     top_rank: Optional[int] = None
     record: Optional[str] = None
+    best: bool = False
     dsq: bool = False
     dsq_final: bool = False
 
