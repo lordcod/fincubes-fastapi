@@ -139,6 +139,16 @@ async def get_athlete_results(athlete_id: int, redis=Depends(get_redis)):
         min_time = (result.final
                     if result.final and result.final <= result.result
                     else result.result)
+        if min_time:
+            top_rank = await get_rank(
+                redis,
+                athlete.gender,
+                result.stroke,
+                result.distance,
+                min_time
+            )
+        else:
+            top_rank = None
 
         performances = {
             "stroke": result.stroke,
@@ -152,18 +162,12 @@ async def get_athlete_results(athlete_id: int, redis=Depends(get_redis)):
             "dsq": result.dsq,
             "dsq_final": result.dsq_final,
             "min_time": min_time,
-            "top_rank": await get_rank(
-                redis,
-                athlete.gender,
-                result.stroke,
-                result.distance,
-                min_time
-            )
+            "top_rank": top_rank
         }
 
         key = (result.stroke, result.distance)
         best_performance = best_results.get(key)
-        if best_performance is None or best_performance['min_time'] > min_time:
+        if min_time and (best_performance is None or (best_performance['min_time'] > min_time)):
             if best_performance:
                 best_performance.pop('best')
             performances['best'] = True

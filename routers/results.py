@@ -127,7 +127,8 @@ async def create_result(competition_id: int, athlete_id: int, result: ResultIn_P
         dsq_final=result.dsq_final,
     )
 
-    await get_rank(redis, athlete.gender, result.stroke, result.distance, result.result)
+    if result.result:
+        await get_rank(redis, athlete.gender, result.stroke, result.distance, result.result)
     if result.final:
         await get_rank(redis, athlete.gender, result.stroke, result.distance, result.final)
 
