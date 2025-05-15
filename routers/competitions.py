@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from typing import List
 from models.models import Competition
 from schemas import Competition_Pydantic, CompetitionIn_Pydantic
-from utils.security import admin_required
+from misc.security import admin_required
 
 router = APIRouter(prefix="/competitions", tags=["competitions"])
 

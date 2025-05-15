@@ -5,8 +5,8 @@ from typing import Annotated, Any, List, Optional
 from tortoise.exceptions import DoesNotExist
 from models.models import Athlete, Competition, Result
 from schemas import RandomTop_Pydantic, Result_Pydantic, ResultIn_Pydantic, Top_Pydantic
-from utils.security import admin_required
-from utils.sql_raw import get_top_results
+from misc.security import admin_required
+from misc.utils import get_top_results
 
 router = APIRouter(prefix='/results')
 
@@ -68,6 +68,7 @@ async def get_top(
         season,
         current_season
     )
+    print(results, [res.__dict__ for res in results])
     return Top_Pydantic(
         distance=distance,
         stroke=stroke,

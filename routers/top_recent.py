@@ -3,7 +3,7 @@ from typing import List
 from fastapi import APIRouter, Depends
 from models.models import Athlete, Competition, TopAthlete, RecentEvent
 from schemas.home import TopAthleteIn, TopAthleteOut, RecentEventIn, RecentEventOut
-from utils.security import admin_required
+from misc.security import admin_required
 
 router = APIRouter()
 

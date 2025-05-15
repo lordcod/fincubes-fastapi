@@ -1,7 +1,39 @@
 from tortoise.expressions import Q, F, Case, When
 from models.models import Result
 from typing import Optional, List, Union
-from datetime import date
+from datetime import date, time
+import redis.asyncio as redis
+
+
+lua_script = """
+local zset_name = KEYS[1]
+local score = ARGV[1]
+local exists = redis.call('ZSCORE', zset_name, score)
+if exists == false then
+    redis.call('ZADD', zset_name, score, score)
+end
+return redis.call('ZRANK', zset_name, score)
+"""
+
+
+async def get_rank(
+    client: redis.Redis,
+    gender: str,
+    stroke: str,
+    distance: int,
+    r_time: time
+):
+    time = (
+        r_time.hour * 60 * 60
+        + r_time.minute * 60
+        + r_time.second
+        + ((r_time.microsecond // 1000)/1000)
+    )
+
+    rank = await client.eval(lua_script, 1,
+                             f"top:{gender}:{stroke}:{distance}",
+                             time)
+    return rank+1
 
 
 def get_current_season_year(current_date: date):

@@ -9,7 +9,7 @@ class TopAthleteOut(BaseModel):
     athlete: Athlete_Pydantic
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 
 class TopAthleteIn(BaseModel):
@@ -21,7 +21,7 @@ class RecentEventOut(BaseModel):
     competition: Competition_Pydantic
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 
 class RecentEventIn(BaseModel):

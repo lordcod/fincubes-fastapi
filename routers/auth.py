@@ -10,8 +10,8 @@ from passlib.context import CryptContext
 from datetime import datetime
 import jwt
 from jwt import PyJWTError
-from utils.security import admin_required, get_current_user, hash_password, verify_password, create_access_token
-from utils.cloudflare import check_verification
+from misc.security import admin_required, get_current_user, hash_password, verify_password, create_access_token
+from misc.cloudflare import check_verification
 
 
 router = APIRouter()

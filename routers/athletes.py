@@ -1,5 +1,5 @@
-from os import getenv
 from fastapi import APIRouter, Depends, HTTPException
+from misc.utils import get_rank
 from models.deps import get_redis
 from models.models import Athlete, Result
 from schemas import Athlete_Pydantic, AthleteIn_Pydantic, UserAthleteResults, UserCompetitionResult
@@ -7,33 +7,9 @@ from typing import List
 from tortoise.exceptions import DoesNotExist
 from tortoise.expressions import Q
 
-from utils.security import admin_required
+from misc.security import admin_required
 
 router = APIRouter(prefix='/athletes')
-
-lua_script = """
-local zset_name = KEYS[1]
-local score = ARGV[1]
-local exists = redis.call('ZSCORE', zset_name, score)
-if exists == false then
-    redis.call('ZADD', zset_name, score, score)
-end
-return redis.call('ZRANK', zset_name, score)
-"""
-
-
-async def get_rank(client, gender, stroke, distance, time):
-    time = (
-        time.hour * 60 * 60
-        + time.minute * 60
-        + time.second
-        + ((time.microsecond // 1000)/1000)
-    )
-
-    rank = await client.eval(lua_script, 1,
-                             f"top:{gender}:{stroke}:{distance}",
-                             time)
-    return rank+1
 
 
 @router.post("/", dependencies=[Depends(admin_required)], response_model=Athlete_Pydantic)
@@ -146,6 +122,7 @@ async def get_athlete_results(athlete_id: int, redis=Depends(get_redis)):
         results_query = await Result.filter(athlete=athlete).prefetch_related("competition")
 
         competitions = {}
+        best_results = {}
         for result in results_query:
             competition_id = result.competition.id
             if competition_id not in competitions:
@@ -156,6 +133,9 @@ async def get_athlete_results(athlete_id: int, redis=Depends(get_redis)):
                     "competition": result.competition.name,
                     "performances": []
                 }
+            min_time = (result.final
+                        if result.final and result.final <= result.result
+                        else result.result)
 
             performances = {
                 "stroke": result.stroke,
@@ -168,16 +148,20 @@ async def get_athlete_results(athlete_id: int, redis=Depends(get_redis)):
                 "record": result.record,
                 "dsq": result.dsq,
                 "dsq_final": result.dsq_final,
+                "max_time": min_time,
                 "top_rank": await get_rank(
                     redis,
                     athlete.gender,
                     result.stroke,
                     result.distance,
-                    result.final
-                    if result.final and result.final <= result.result
-                    else result.result
+                    min_time
                 )
             }
+
+            key = (result.stroke, result.distance)
+            best_performance = best_results.get(key)
+            if best_performance is None or best_performance['min_time'] > min_time:
+                best_results[key] = performances
 
             competitions[competition_id]["performances"].append(performances)
         competitions = dict(sorted(competitions.items(),

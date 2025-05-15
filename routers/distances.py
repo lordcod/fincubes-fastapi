@@ -1,11 +1,9 @@
-from math import dist
 from typing import List
-from email_validator import ALLOW_QUOTED_LOCAL
 from fastapi import APIRouter, HTTPException, Request, status, Depends
 from tortoise.exceptions import DoesNotExist
 from models.models import Competition, Distance
 from schemas.distance import Distance_Pydantic, DistanceCreateUpdateIn_Pydantic, DistanceOrderUpdate_Pydantic
-from utils.security import admin_required
+from misc.security import admin_required
 
 router = APIRouter(prefix='/competitions/{competition_id}/distances')
 

@@ -1,7 +1,5 @@
-import datetime
 from tortoise import fields
 from tortoise.models import Model
-from pydantic import BaseModel, field_validator
 
 
 class TimestampedModel(Model):
