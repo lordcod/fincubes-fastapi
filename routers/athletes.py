@@ -34,12 +34,12 @@ async def get_athletes(
     birth_year: int = None,
     club: str = None,
     gender: str = None,
-    limit: int = 1000
+    limit: int = None
 ):
     q_filter = Q()
 
     if query:
-        limit = limit if limit != 1000 else 15
+        limit = limit if limit is not None else 15
 
         parts = query.strip().split()
         if len(parts) == 1:
@@ -80,7 +80,10 @@ async def get_athletes(
     if gender:
         q_filter &= Q(gender=gender)
 
-    athletes = await Athlete.filter(q_filter).limit(limit)
+    if limit is None:
+        athletes = await Athlete.filter(q_filter)
+    else:
+        athletes = await Athlete.filter(q_filter).limit(limit)
     return athletes
 
 # Роут для получения всех атлетов с фильтрацией
