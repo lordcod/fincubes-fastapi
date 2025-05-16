@@ -84,17 +84,20 @@ async def get_results(
     athlete_id: Optional[int] = None,
     competition_id: Optional[int] = None,
     stroke: Optional[str] = None,
-    distance_id: Optional[int] = None,
+    distance: Optional[int] = None,
+    gender: Optional[str] = None
 ):
     filters = {}
     if athlete_id:
         filters["athlete_id"] = athlete_id
     if competition_id:
         filters["competition_id"] = competition_id
+    if gender:
+        filters['athlete__gender'] = gender
     if stroke:
         filters["stroke"] = stroke
-    if distance_id:
-        filters["distance_id"] = distance_id
+    if distance:
+        filters["distance"] = distance
 
     results = await Result.filter(**filters).prefetch_related(
         "competition",
