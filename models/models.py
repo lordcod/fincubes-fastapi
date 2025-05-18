@@ -34,6 +34,8 @@ class Distance(TimestampedModel):
     distance = fields.IntField()
     category = fields.CharField(max_length=255, null=True)
     gender = fields.CharField(max_length=1)
+    min_year = fields.IntField(null=True)
+    max_year = fields.IntField(null=True)
 
     class Meta:
         table = "distances"
@@ -107,3 +109,24 @@ class User(Model):
         on_delete=fields.SET_NULL,
         unique=True
     )
+
+
+class Record(Model):
+    id = fields.IntField(pk=True)
+    stroke = fields.CharField(max_length=50)
+    distance = fields.IntField()
+    time = fields.CharField(max_length=20)
+    firstname = fields.CharField(max_length=100)
+    lastname = fields.CharField(max_length=100)
+    birth_year = fields.IntField()
+    region = fields.CharField(max_length=100)
+    date = fields.DateField()
+    city = fields.CharField(max_length=100)
+    country = fields.CharField(max_length=100, null=True)
+    event_name = fields.CharField(max_length=100)
+    gender = fields.CharField(max_length=1, null=True)
+    category = fields.CharField(max_length=5, null=True)
+    is_active = fields.BooleanField(default=True)
+
+    class Meta:
+        table = "records"

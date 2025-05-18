@@ -48,7 +48,7 @@ async def create_distance(competition_id: int, distance: DistanceCreateUpdateIn_
 
 
 @router.put("/bulk-update", dependencies=[Depends(admin_required)], response_model=List[Distance_Pydantic])
-async def bulk_update_distances(request: Request, competition_id: int, distances: List[DistanceOrderUpdate_Pydantic]):
+async def bulk_update_distances(competition_id: int, distances: List[DistanceOrderUpdate_Pydantic]):
     try:
         existing_distances = await Distance.filter(id__in=[d.id for d in distances], competition_id=competition_id).all()
         if len(existing_distances) != len(distances):

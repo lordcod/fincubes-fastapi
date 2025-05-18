@@ -8,6 +8,8 @@ class DistanceCreateUpdateIn_Pydantic(BaseModel):
     category: Optional[str] = None
     order: int
     gender: str
+    min_year: Optional[int] = None
+    max_year: Optional[int] = None
 
 
 class Distance_Pydantic(DistanceCreateUpdateIn_Pydantic):

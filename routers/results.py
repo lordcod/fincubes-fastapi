@@ -1,11 +1,13 @@
+import contextlib
 import random
+from fastapi import responses
 from fastapi.responses import RedirectResponse
 from fastapi import APIRouter, Depends, HTTPException
-from typing import Annotated, Any, List, Optional
+from typing import Annotated, Any, List, Optional, Union
 from tortoise.exceptions import DoesNotExist
 from models.deps import get_redis
 from models.models import Athlete, Competition, Result
-from schemas import RandomTop_Pydantic, Result_Pydantic, ResultIn_Pydantic, Top_Pydantic
+from schemas import BulkCreateResult, BulkCreateResultResponse, RandomTop_Pydantic, Result_Pydantic, ResultIn_Pydantic, Top_Pydantic
 from misc.security import admin_required
 from misc.utils import get_rank, get_top_results
 
@@ -104,6 +106,78 @@ async def get_results(
         "athlete"
     )
     return results
+
+
+@router.post("/bulk-create", dependencies=[Depends(admin_required)], response_model=BulkCreateResultResponse)
+async def bulk_create_results(results: List[BulkCreateResult], ignore_exception: bool = True, redis=Depends(get_redis)):
+    response = []
+    errors = []
+    competitions = {}
+
+    print('Start parsing', len(results), 'athletes')
+    for bulk_request in results:
+        print('Athlete start process')
+        try:
+            if bulk_request.competition_id not in competitions:
+                try:
+                    competition = await Competition.get(id=bulk_request.competition_id)
+                except DoesNotExist:
+                    raise HTTPException(
+                        status_code=404, detail="Competition not found")
+                competitions[bulk_request.competition_id] = competition
+            else:
+                competition = competitions[bulk_request.competition_id]
+
+            try:
+                athlete = await Athlete.get(id=bulk_request.athlete_id)
+            except DoesNotExist:
+                raise HTTPException(
+                    status_code=404, detail="Athlete not found")
+
+            for result in bulk_request.results:
+                db_result = await Result.create(
+                    athlete=athlete,
+                    competition=competition,
+                    stroke=result.stroke,
+                    distance=result.distance,
+                    result=result.result,
+                    final=result.final,
+                    place=result.place,
+                    points=result.points,
+                    record=result.record,
+                    final_rank=result.final_rank,
+                    dsq=result.dsq,
+                    dsq_final=result.dsq_final,
+                )
+
+                if db_result.result:
+                    await get_rank(redis,
+                                   athlete.gender,
+                                   result.stroke,
+                                   result.distance,
+                                   db_result.result)
+                if db_result.final:
+                    await get_rank(redis,
+                                   athlete.gender,
+                                   result.stroke,
+                                   result.distance,
+                                   db_result.final)
+                response.append(db_result)
+        except Exception as exc:
+            if not ignore_exception:
+                raise
+            else:
+                errors.append({
+                    'exception': True,
+                    'name': type(exc).__name__,
+                    'description': str(exc),
+                    'input': bulk_request
+                })
+
+    return {
+        'results': response,
+        'errors': errors
+    }
 
 
 @router.post("/{competition_id}/{athlete_id}", dependencies=[Depends(admin_required)], response_model=Result_Pydantic)

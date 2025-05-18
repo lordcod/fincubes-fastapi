@@ -171,3 +171,21 @@ class UserCompetitionResult(BaseModel):
 class UserAthleteResults(BaseModel):
     athlete_id: int
     results: List[UserCompetitionResult]
+
+
+class BulkCreateResult(BaseModel):
+    competition_id: int
+    athlete_id: int
+    results: List[ResultIn_Pydantic]
+
+
+class BulkCreateResultExceptionResponse(BaseModel):
+    exception: bool
+    name: str
+    description: str
+    input: BulkCreateResult
+
+
+class BulkCreateResultResponse(BaseModel):
+    results: Optional[List[Result_Pydantic]] = None
+    errors: Optional[List[BulkCreateResultExceptionResponse]] = None
