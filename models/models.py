@@ -94,11 +94,10 @@ class RecentEvent(TimestampedModel):
         table = "recent_events"
 
 
-class User(Model):
+class User(TimestampedModel):
     id = fields.IntField(pk=True)
     email = fields.CharField(max_length=255, unique=True)
     hashed_password = fields.CharField(max_length=255)
-    created_at = fields.DatetimeField(auto_now_add=True)
     admin = fields.BooleanField(default=False)
     premium = fields.BooleanField(default=False)
 
@@ -111,7 +110,7 @@ class User(Model):
     )
 
 
-class Record(Model):
+class Record(TimestampedModel):
     id = fields.IntField(pk=True)
     stroke = fields.CharField(max_length=50)
     distance = fields.IntField()
@@ -130,3 +129,14 @@ class Record(Model):
 
     class Meta:
         table = "records"
+
+
+class StandardCategory(TimestampedModel):
+    id = fields.IntField(pk=True)
+    code = fields.CharField(max_length=10)
+    stroke = fields.CharField(max_length=10)
+    distance = fields.IntField()
+    gender = fields.CharField(max_length=1)
+    type = fields.CharField(max_length=10)
+    result = fields.TimeField(max_length=20, null=True)
+    is_active = fields.BooleanField(default=True)

@@ -1,11 +1,10 @@
 import logging
-from platform import release
 import sys
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
 import uvicorn
 from config import DATABASE_URL
-from routers import competitions, distances, record, results, athletes, top_recent, auth
+from routers import competitions, distances, record, results, athletes, standard, top_recent, auth
 from tortoise.contrib.fastapi import register_tortoise
 from models.redis_client import lifespan
 from starlette.middleware.trustedhost import TrustedHostMiddleware
@@ -47,6 +46,7 @@ app.include_router(distances.router)
 app.include_router(top_recent.router)
 app.include_router(auth.router)
 app.include_router(record.router)
+app.include_router(standard.router)
 
 
 register_tortoise(
