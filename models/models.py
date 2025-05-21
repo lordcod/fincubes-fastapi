@@ -1,6 +1,8 @@
 from tortoise import fields
 from tortoise.models import Model
 
+from models.flexible_time import FlexibleTimeField
+
 
 class TimestampedModel(Model):
     created_at = fields.DatetimeField(auto_now_add=True)
@@ -63,8 +65,8 @@ class Result(TimestampedModel):
         "models.Competition", related_name="results")
     stroke = fields.CharField(max_length=50)
     distance = fields.IntField()
-    result = fields.TimeField(max_length=20, null=True)
-    final = fields.TimeField(max_length=1020, null=True)
+    result = FlexibleTimeField(max_length=20, null=True)
+    final = FlexibleTimeField(max_length=1020, null=True)
     place = fields.CharField(max_length=50, null=True)
     final_rank = fields.CharField(max_length=50, null=True)
     points = fields.CharField(max_length=50, null=True)
@@ -92,22 +94,6 @@ class RecentEvent(TimestampedModel):
 
     class Meta:
         table = "recent_events"
-
-
-class User(TimestampedModel):
-    id = fields.IntField(pk=True)
-    email = fields.CharField(max_length=255, unique=True)
-    hashed_password = fields.CharField(max_length=255)
-    admin = fields.BooleanField(default=False)
-    premium = fields.BooleanField(default=False)
-
-    athlete = fields.ForeignKeyField(
-        "models.Athlete",
-        related_name="user",
-        null=True,
-        on_delete=fields.SET_NULL,
-        unique=True
-    )
 
 
 class Record(TimestampedModel):
@@ -138,5 +124,86 @@ class StandardCategory(TimestampedModel):
     distance = fields.IntField()
     gender = fields.CharField(max_length=1)
     type = fields.CharField(max_length=10)
-    result = fields.TimeField(max_length=20, null=True)
+    result = FlexibleTimeField(max_length=20, null=True)
     is_active = fields.BooleanField(default=True)
+
+# ROLES
+
+
+class Coach(TimestampedModel):
+    id = fields.IntField(pk=True)
+    last_name = fields.CharField(max_length=100)
+    first_name = fields.CharField(max_length=100)
+    middle_name = fields.CharField(max_length=100)
+    club = fields.CharField(max_length=255)
+    city = fields.CharField(max_length=255, null=True)
+
+
+class Parent(TimestampedModel):
+    id = fields.IntField(pk=True)
+    athletes = fields.ManyToManyField(
+        'models.Athlete',
+        related_name='parents'
+    )
+
+# LINKED
+
+
+class CoachAthlete(TimestampedModel):
+    id = fields.IntField(pk=True)
+    coach = fields.ForeignKeyField(
+        'models.Coach', related_name='coach_athletes')
+    athlete = fields.ForeignKeyField(
+        'models.Athlete', related_name='athlete_coaches')
+    # pending, accepted, rejected
+    status = fields.CharField(max_length=50, default='active')
+
+# AUTH
+
+
+class User(TimestampedModel):
+    id = fields.IntField(pk=True)
+    email = fields.CharField(max_length=255, unique=True)
+    hashed_password = fields.CharField(max_length=255)
+    role = fields.CharField(max_length=20, null=True)
+    admin = fields.BooleanField(default=False)
+    premium = fields.BooleanField(default=False)
+    verified = fields.BooleanField(default=False)
+
+    athlete = fields.ForeignKeyField(
+        "models.Athlete",
+        related_name="user",
+        null=True,
+        on_delete=fields.SET_NULL,
+        unique=True
+    )
+
+
+class UserVerification(TimestampedModel):
+    id = fields.IntField(pk=True)
+    user = fields.ForeignKeyField('models.User', related_name='verifications')
+    code = fields.CharField(max_length=6)
+    attempt = fields.IntField(default=0)
+    is_active = fields.BooleanField(default=True)
+
+
+class UserAthlete(TimestampedModel):
+    id = fields.IntField(pk=True)
+    user = fields.ForeignKeyField('models.User', related_name='user_athlete')
+    athlete = fields.ForeignKeyField(
+        "models.Athlete",
+        related_name="user_athlete"
+    )
+
+
+class UserParent(TimestampedModel):
+    id = fields.IntField(pk=True)
+    user = fields.ForeignKeyField('models.User', related_name='user_parent')
+    parent = fields.ForeignKeyField(
+        'models.Parent', related_name='user_parent')
+
+
+class UserCoach(TimestampedModel):
+    id = fields.IntField(pk=True)
+    user = fields.ForeignKeyField('models.User', related_name='user_coach')
+    coach = fields.ForeignKeyField('models.Coach', related_name='user_coach')

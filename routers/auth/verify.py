@@ -1,0 +1,55 @@
+import random
+from fastapi import APIRouter, Body, Depends
+from misc.errors import APIError, ErrorCode
+from misc.mail import send_confirm_code
+from models.models import User, UserVerification
+from misc.security import get_current_user
+
+
+router = APIRouter()
+
+
+@router.post("/send-verify-code", status_code=204)
+async def send_verify_code(current_user: User = Depends(get_current_user)):
+    if current_user.verified:
+        raise APIError(ErrorCode.ALREADY_VERIFIED)
+
+    code = str(random.randint(100000, 1_000_000-1))
+
+    await UserVerification.filter(user_id=current_user.id,
+                                  is_active=True).update(is_active=False)
+
+    await UserVerification.create(
+        user=current_user,
+        code=code
+    )
+    await send_confirm_code(current_user.email, code)
+
+
+@router.post("/verify", status_code=204)
+async def verify_email(code: str = Body(..., embed=True), current_user: User = Depends(get_current_user)):
+    if current_user.verified:
+        raise APIError(ErrorCode.ALREADY_VERIFIED)
+
+    verification = await UserVerification.filter(user_id=current_user.id, is_active=True).first()
+    if verification is None:
+        raise APIError(ErrorCode.VERIFICATION_NOT_FOUND)
+
+    if verification.code != code:
+        verification.attempt += 1
+        error = None
+
+        if verification.attempt >= 3:
+            verification.is_active = False
+            error = ErrorCode.VERIFICATION_ATTEMPTS_EXPIRED
+        else:
+            error = ErrorCode.INVALID_VERIFICATION_CODE
+
+        await verification.save()
+        raise APIError(error)
+
+    verification.is_active = False
+    await verification.save()
+
+    current_user.verified = True
+    await current_user.save()

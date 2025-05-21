@@ -2,12 +2,15 @@ import logging
 import sys
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 import uvicorn
 from config import DATABASE_URL
-from routers import competitions, distances, record, results, athletes, standard, top_recent, auth
+from misc.errors import APIError, api_error_handler
+from routers import distances, record, results, athletes, standard, top_recent, users, competitions
 from tortoise.contrib.fastapi import register_tortoise
 from models.redis_client import lifespan
 from starlette.middleware.trustedhost import TrustedHostMiddleware
+
 
 app = FastAPI(
     title="Swimming API",
@@ -39,12 +42,16 @@ app.add_middleware(
     allowed_hosts=allowed_hosts
 )
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+app.add_exception_handler(APIError, api_error_handler)
+
 app.include_router(competitions.router)
 app.include_router(results.router)
 app.include_router(athletes.router)
 app.include_router(distances.router)
 app.include_router(top_recent.router)
-app.include_router(auth.router)
+app.include_router(users.router)
 app.include_router(record.router)
 app.include_router(standard.router)
 

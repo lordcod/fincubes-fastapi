@@ -7,7 +7,8 @@ from typing import Annotated, Any, List, Optional, Union
 from tortoise.exceptions import DoesNotExist
 from models.deps import get_redis
 from models.models import Athlete, Competition, Result
-from schemas import BulkCreateResult, BulkCreateResultResponse, RandomTop_Pydantic, Result_Pydantic, ResultIn_Pydantic, Top_Pydantic
+from schemas.top import RandomTop_Pydantic, Top_Pydantic
+from schemas.result import BulkCreateResult, BulkCreateResultResponse, Result_Pydantic, ResultIn_Pydantic
 from misc.security import admin_required
 from misc.utils import get_rank, get_top_results
 
@@ -78,9 +79,6 @@ async def get_top(
     )
 
 
-# Роут для получения всех результатов с фильтрацией
-
-
 @router.get("/", response_model=List[Result_Pydantic])
 async def get_results(
     athlete_id: Optional[int] = None,
@@ -101,11 +99,8 @@ async def get_results(
     if distance:
         filters["distance"] = distance
 
-    results = await Result.filter(**filters).prefetch_related(
-        "competition",
-        "athlete"
-    )
-    return results
+    query = Result.filter(**filters)
+    return await Result_Pydantic.from_queryset(query)
 
 
 @router.post("/bulk-create", dependencies=[Depends(admin_required)], response_model=BulkCreateResultResponse)
@@ -209,7 +204,7 @@ async def create_result(competition_id: int, athlete_id: int, result: ResultIn_P
     if result.final:
         await get_rank(redis, athlete.gender, result.stroke, result.distance, result.final)
 
-    return db_result
+    return await Result_Pydantic.from_tortoise_orm(db_result)
 
 
 # Роут для обновления существующего результата
@@ -241,7 +236,7 @@ async def update_result(competition_id: int, athlete_id: int, result_id: int, re
     db_result.dsq_final = result.dsq_final
     await db_result.save()
 
-    return db_result
+    return await Result_Pydantic.from_tortoise_orm(db_result)
 
 
 @router.delete("/{competition_id}/{athlete_id}/{result_id}", dependencies=[Depends(admin_required)], status_code=204)

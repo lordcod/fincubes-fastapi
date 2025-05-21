@@ -19,7 +19,7 @@ async def create_standard(data: StandardIn):
     ).update(is_active=False)
 
     standard = await StandardCategory.create(**data.model_dump())
-    return standard
+    return await StandardOut.from_tortoise_orm(standard)
 
 
 @router.get("/", response_model=List[StandardOut])
@@ -42,7 +42,8 @@ async def list_standards(
     if code:
         filters["code"] = code
 
-    return await StandardCategory.filter(**filters).all()
+    query = StandardCategory.filter(**filters)
+    return await StandardOut.from_queryset(query)
 
 
 @router.get("/{standard_id}", response_model=StandardOut)
@@ -50,4 +51,4 @@ async def get_standard(standard_id: int):
     standard = await StandardCategory.filter(id=standard_id).first()
     if not standard:
         raise HTTPException(status_code=404, detail="Standard not found")
-    return standard
+    return await StandardOut.from_tortoise_orm(standard)

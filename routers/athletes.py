@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from misc.utils import get_rank
 from models.deps import get_redis
 from models.models import Athlete, Result
-from schemas import Athlete_Pydantic, AthleteIn_Pydantic, UserAthleteResults, UserCompetitionResult
+from schemas.performance import UserAthleteResults, UserCompetitionResult
+from schemas.athlete import Athlete_Pydantic, AthleteIn_Pydantic
 from typing import List
 from tortoise.exceptions import DoesNotExist
 from tortoise.expressions import Q
@@ -25,7 +26,6 @@ async def create_athlete(athlete: AthleteIn_Pydantic):
     return db_athlete
 
 
-# Роут для получения всех атлетов с фильтрацией
 @router.get("/", response_model=List[Athlete_Pydantic])
 async def get_athletes(
     query: str = None,
@@ -86,8 +86,6 @@ async def get_athletes(
         athletes = await Athlete.filter(q_filter).limit(limit)
     return athletes
 
-# Роут для получения всех атлетов с фильтрацией
-
 
 @router.get("/{id}", response_model=AthleteIn_Pydantic)
 async def get_athlete(id: int):
@@ -96,8 +94,6 @@ async def get_athlete(id: int):
         return athlete
     except DoesNotExist:
         raise HTTPException(status_code=404, detail="Athlete not found")
-
-# Роут для обновления атлета
 
 
 @router.put("/{athlete_id}", dependencies=[Depends(admin_required)], response_model=Athlete_Pydantic)
@@ -181,6 +177,8 @@ async def get_athlete_results(athlete_id: int, redis=Depends(get_redis)):
                         key=lambda item: item[1]['start_date'],
                         reverse=True))
     competition_results = [
-        UserCompetitionResult(**comp) for comp in competitions.values()
+        UserCompetitionResult(**comp)
+        for comp in competitions.values()
     ]
-    return UserAthleteResults(athlete_id=athlete.id, results=competition_results)
+    return UserAthleteResults(athlete_id=athlete.id,
+                              results=competition_results)

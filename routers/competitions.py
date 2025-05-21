@@ -3,7 +3,7 @@ from tortoise import timezone
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List
 from models.models import Competition
-from schemas import Competition_Pydantic, CompetitionIn_Pydantic
+from schemas.competition import Competition_Pydantic, CompetitionIn_Pydantic
 from misc.security import admin_required
 
 router = APIRouter(prefix="/competitions", tags=["competitions"])
@@ -20,7 +20,6 @@ async def get_competitions_nearests():
 
 @router.get("/", response_model=List[Competition_Pydantic])
 async def get_competitions():
-    # Получаем все соревнования из базы данных и возвращаем в виде схемы Pydantic
     return await Competition.all().order_by("-start_date")
 
 

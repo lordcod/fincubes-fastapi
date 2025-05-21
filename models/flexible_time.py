@@ -1,8 +1,9 @@
 import re
 import datetime
-from typing import Any
+from typing import Any, Optional
 from pydantic_core import core_schema
 from pydantic import GetCoreSchemaHandler
+from tortoise import fields
 
 
 class FlexibleTime(datetime.time):
@@ -58,3 +59,17 @@ class FlexibleTime(datetime.time):
             serialization=core_schema.plain_serializer_function_ser_schema(
                 lambda v: str(v)),
         )
+
+
+class FlexibleTimeField(fields.TimeField):
+    def to_python_value(self, value: Optional[datetime.time]) -> Optional[FlexibleTime]:
+        if value is None:
+            return None
+        return FlexibleTime.validate(value)
+
+    def to_db_value(self, value: Optional[FlexibleTime]) -> Optional[datetime.time]:
+        if value is None:
+            return None
+        if isinstance(value, datetime.time):
+            return FlexibleTime.validate(value)
+        raise ValueError(f"Unsupported value for FlexibleTimeField: {value}")

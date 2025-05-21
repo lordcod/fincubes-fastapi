@@ -2,7 +2,7 @@ from typing import List
 from fastapi import APIRouter, HTTPException, Request, status, Depends
 from tortoise.exceptions import DoesNotExist
 from models.models import Competition, Distance
-from schemas.distance import Distance_Pydantic, DistanceCreateUpdateIn_Pydantic, DistanceOrderUpdate_Pydantic
+from schemas.distance import Distance_Pydantic, DistanceIn_Pydantic, DistanceOrderUpdate_Pydantic
 from misc.security import admin_required
 
 router = APIRouter(prefix='/competitions/{competition_id}/distances')
@@ -37,7 +37,7 @@ async def get_distance(competition_id: int, distance_id: int):
 
 
 @router.post("/", dependencies=[Depends(admin_required)], response_model=Distance_Pydantic)
-async def create_distance(competition_id: int, distance: DistanceCreateUpdateIn_Pydantic):
+async def create_distance(competition_id: int, distance: DistanceIn_Pydantic):
     try:
         kwargs = distance.dict()
         competition = await Competition.get(id=competition_id)
@@ -72,7 +72,7 @@ async def bulk_update_distances(competition_id: int, distances: List[DistanceOrd
 
 
 @router.put("/{distance_id}", dependencies=[Depends(admin_required)], response_model=Distance_Pydantic)
-async def update_distance(competition_id: int, distance_id: int, distance: DistanceCreateUpdateIn_Pydantic):
+async def update_distance(competition_id: int, distance_id: int, distance: DistanceIn_Pydantic):
     try:
         existing_distance = await Distance.filter(id=distance_id, competition_id=competition_id).first()
 

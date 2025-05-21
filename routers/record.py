@@ -20,7 +20,7 @@ async def create_record(data: RecordIn):
     ).update(is_active=False)
 
     record = await Record.create(**data.dict(), is_active=True)
-    return record
+    return await RecordOut.from_tortoise_orm(record)
 
 
 @router.get("/", response_model=List[RecordOut])
@@ -38,8 +38,8 @@ async def list_records(
     if gender:
         filters["gender"] = gender
 
-    records = await Record.filter(**filters).all()
-    return records
+    records = Record.filter(**filters)
+    return await RecordOut.from_queryset(records)
 
 
 @router.get("/{record_id}", response_model=RecordOut)
@@ -47,4 +47,4 @@ async def get_record(record_id: int):
     record = await Record.filter(id=record_id).first()
     if not record:
         raise HTTPException(status_code=404, detail="Record not found")
-    return record
+    return await RecordOut.from_tortoise_orm(record)
