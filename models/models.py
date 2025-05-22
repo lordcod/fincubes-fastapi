@@ -2,6 +2,7 @@ from tortoise import fields
 from tortoise.models import Model
 
 from models.flexible_time import FlexibleTimeField
+from models.enums import UserRoleEnum
 
 
 class TimestampedModel(Model):
@@ -52,6 +53,7 @@ class Athlete(TimestampedModel):
     city = fields.CharField(max_length=255, null=True)
     license = fields.CharField(max_length=50)
     gender = fields.CharField(max_length=1)
+    avatar_url = fields.CharField(max_length=250, null=True)
 
     class Meta:
         table = "athletes"
@@ -155,7 +157,7 @@ class CoachAthlete(TimestampedModel):
         'models.Coach', related_name='coach_athletes')
     athlete = fields.ForeignKeyField(
         'models.Athlete', related_name='athlete_coaches')
-    # pending, accepted, rejected
+    # pending, accepted, rejected_athlete, rejected_coach
     status = fields.CharField(max_length=50, default='active')
 
 # AUTH
@@ -165,7 +167,6 @@ class User(TimestampedModel):
     id = fields.IntField(pk=True)
     email = fields.CharField(max_length=255, unique=True)
     hashed_password = fields.CharField(max_length=255)
-    role = fields.CharField(max_length=20, null=True)
     admin = fields.BooleanField(default=False)
     premium = fields.BooleanField(default=False)
     verified = fields.BooleanField(default=False)
@@ -187,23 +188,8 @@ class UserVerification(TimestampedModel):
     is_active = fields.BooleanField(default=True)
 
 
-class UserAthlete(TimestampedModel):
+class UserRole(TimestampedModel):
     id = fields.IntField(pk=True)
-    user = fields.ForeignKeyField('models.User', related_name='user_athlete')
-    athlete = fields.ForeignKeyField(
-        "models.Athlete",
-        related_name="user_athlete"
-    )
-
-
-class UserParent(TimestampedModel):
-    id = fields.IntField(pk=True)
-    user = fields.ForeignKeyField('models.User', related_name='user_parent')
-    parent = fields.ForeignKeyField(
-        'models.Parent', related_name='user_parent')
-
-
-class UserCoach(TimestampedModel):
-    id = fields.IntField(pk=True)
-    user = fields.ForeignKeyField('models.User', related_name='user_coach')
-    coach = fields.ForeignKeyField('models.Coach', related_name='user_coach')
+    user = fields.ForeignKeyField('models.User', related_name='roles')
+    role_type = fields.CharEnumField(enum_type=UserRoleEnum)
+    profile_id = fields.IntField()

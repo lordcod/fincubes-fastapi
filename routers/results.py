@@ -12,7 +12,7 @@ from schemas.result import BulkCreateResult, BulkCreateResultResponse, Result_Py
 from misc.security import admin_required
 from misc.utils import get_rank, get_top_results
 
-router = APIRouter(prefix='/results')
+router = APIRouter(prefix='/results', tags=['results', 'top'])
 
 swim_styles = [
     {'stroke': 'APNEA', 'distance': 50},

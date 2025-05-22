@@ -179,6 +179,7 @@ test_database.py
 test_mail.py
 test_redis.py
 test_record.py
+test_upload_image.py
 migrations/
 
 

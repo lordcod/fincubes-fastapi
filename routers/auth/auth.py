@@ -32,7 +32,7 @@ async def login_user(user_login: UserLogin):
 
     access_token = create_access_token(data={"sub": user.email})
 
-    return {"access_token": access_token, "token_type": "  Bearer"}
+    return {"access_token": access_token, "token_type": "Bearer"}
 
 
 @router.put("/change-password", status_code=204)

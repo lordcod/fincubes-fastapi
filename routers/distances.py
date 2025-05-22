@@ -5,7 +5,8 @@ from models.models import Competition, Distance
 from schemas.distance import Distance_Pydantic, DistanceIn_Pydantic, DistanceOrderUpdate_Pydantic
 from misc.security import admin_required
 
-router = APIRouter(prefix='/competitions/{competition_id}/distances')
+router = APIRouter(
+    prefix='/competitions/{competition_id}/distances', tags=['distances'])
 
 # Получить все дистанции для конкретного соревнования
 

@@ -4,7 +4,8 @@ from typing import Optional
 from fastapi import HTTPException
 
 from misc.security import hash_password
-from models.models import Athlete, Coach, Parent, User, UserAthlete, UserCoach, UserParent
+from models.models import Athlete, Coach, Parent, User, UserRole
+from models.enums import UserRoleEnum
 from schemas.auth import UserCreate
 
 
@@ -28,25 +29,31 @@ class UserRegistration:
         hashed_password = hash_password(self.data.password)
         self.user = await User.create(
             email=self.data.email,
-            hashed_password=hashed_password,
-            role=self.data.role
+            hashed_password=hashed_password
         )
 
+    @abstractmethod
     async def _assign_role(self):
-        pass
+        raise NotImplementedError
 
 
 class AthleteRegistration(UserRegistration):
     async def _assign_role(self):
         athlete_id = self.data.metadata.get("id")
         athlete = await Athlete.get_or_none(id=athlete_id)
+
         if not athlete:
             raise HTTPException(status_code=404, detail="Атлет не найден")
 
-        if await UserAthlete.filter(athlete=athlete).exists():
-            raise HTTPException(status_code=400, detail="Атлет уже занят")
+        if await UserRole.filter(role_type=UserRoleEnum.ATHLETE, profile_id=athlete.id).exists():
+            raise HTTPException(
+                status_code=400, detail="Атлет уже привязан к другому пользователю")
 
-        await UserAthlete.create(user=self.user, athlete=athlete)
+        await UserRole.create(
+            user=self.user,
+            role_type=UserRoleEnum.ATHLETE,
+            profile_id=athlete.id
+        )
 
 
 class CoachRegistration(UserRegistration):
@@ -58,13 +65,22 @@ class CoachRegistration(UserRegistration):
             club=self.data.metadata.get("club"),
             city=self.data.metadata.get("city")
         )
-        await UserCoach.create(user=self.user, coach=coach)
+
+        await UserRole.create(
+            user=self.user,
+            role_type=UserRoleEnum.COACH,
+            profile_id=coach.id
+        )
 
 
 class ParentRegistration(UserRegistration):
     async def _assign_role(self):
         parent = await Parent.create()
-        await UserParent.create(user=self.user, parent=parent)
+        await UserRole.create(
+            user=self.user,
+            role_type=UserRoleEnum.PARENT,
+            profile_id=parent.id
+        )
 
 
 def get_registration_handler(data: UserCreate) -> UserRegistration:

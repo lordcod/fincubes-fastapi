@@ -1,33 +1,24 @@
-from tkinter.tix import Tree
-from typing import List, Optional
-from fastapi import APIRouter, Body, HTTPException, Depends
-from tortoise.exceptions import DoesNotExist
+from typing import List
+from fastapi import APIRouter, Body, Depends
 from misc.errors import APIError, ErrorCode
-from models.models import Athlete, Parent, User, UserParent
-from misc.security import get_current_user
+from models.models import Athlete, Parent
+from models.enums import UserRoleEnum
+from routers.users.utils import get_role
 from schemas.athlete import Athlete_Pydantic
-
-
-async def get_parent(
-    user: User = Depends(get_current_user)
-) -> Parent:
-    if user.role != 'parent':
-        raise APIError(ErrorCode.INVALID_ROLE)
-    parent = await UserParent.filter(user=user).first().select_related('parent')
-    return parent.parent
 
 router = APIRouter(
     prefix='/parent')
 
 
 @router.get('/children', response_model=List[Athlete_Pydantic])
-async def get_children(parent: Parent = Depends(get_parent)):
+async def get_children(parent: Parent = Depends(get_role(UserRoleEnum.PARENT))):
     query = parent.athletes.all()
     return await Athlete_Pydantic.from_queryset(query)
 
 
 @router.post('/children/', response_model=Athlete_Pydantic)
-async def add_child(athlete_id: int = Body(embed=True), parent: Parent = Depends(get_parent)):
+async def add_child(athlete_id: int = Body(embed=True),
+                    parent: Parent = Depends(get_role(UserRoleEnum.PARENT))):
     athlete = await Athlete.get(id=athlete_id)
 
     is_exists = await parent.athletes.filter(id=athlete_id).exists()

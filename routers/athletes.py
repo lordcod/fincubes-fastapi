@@ -10,7 +10,7 @@ from tortoise.expressions import Q
 
 from misc.security import admin_required
 
-router = APIRouter(prefix='/athletes')
+router = APIRouter(prefix='/athletes', tags=['athletes'])
 
 
 @router.post("/", dependencies=[Depends(admin_required)], response_model=Athlete_Pydantic)

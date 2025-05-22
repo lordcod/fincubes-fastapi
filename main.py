@@ -6,9 +6,9 @@ from fastapi.staticfiles import StaticFiles
 import uvicorn
 from config import DATABASE_URL
 from misc.errors import APIError, api_error_handler
-from routers import distances, record, results, athletes, standard, top_recent, users, competitions
+from routers import distances, record, results, athletes, standard, top_recent, users, competitions, auth
 from tortoise.contrib.fastapi import register_tortoise
-from models.redis_client import lifespan
+from services import lifespan
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 
@@ -24,6 +24,10 @@ if dev_mode:
     logger.info("Start app in dev mode")
     origins = ['*']
     allowed_hosts = ["*"]
+    app.servers = [
+        {"url": "https://localhost:8000",
+         "description": "Local server"}
+    ]
 else:
     origins = ['https://fincubes.ru']
     allowed_hosts = ["localhost", "127.0.0.1", "fincubes.ru", "*.fincubes.ru"]
@@ -54,6 +58,7 @@ app.include_router(top_recent.router)
 app.include_router(users.router)
 app.include_router(record.router)
 app.include_router(standard.router)
+app.include_router(auth.router)
 
 
 register_tortoise(

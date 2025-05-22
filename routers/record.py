@@ -7,7 +7,7 @@ from typing import List
 from fastapi import APIRouter, HTTPException, Depends
 from misc.security import admin_required
 
-router = APIRouter(prefix='/record')
+router = APIRouter(prefix='/record', tags=['record'])
 
 
 @router.post("/", dependencies=[Depends(admin_required)], response_model=RecordOut)

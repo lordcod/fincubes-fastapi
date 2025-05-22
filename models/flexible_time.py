@@ -47,7 +47,16 @@ class FlexibleTime(datetime.time):
         return f"{self.minute:02}:{self.second:02}.{int(self.microsecond / 10000):02}"
 
     def __repr__(self) -> str:
-        return f'"{self}"'  # For JSON encoding
+        return f'"{self}"'
+
+    @classmethod
+    def __get_pydantic_json_schema__(cls, schema: core_schema.CoreSchema, handler: GetCoreSchemaHandler) -> dict:
+        return {
+            "type": "string",
+            "title": "FlexibleTime",
+            "description": "Формат времени: mm:ss.SS или hh:mm:ss.SS",
+            "examples": ["01:23.45", "12:34:56.78"],
+        }
 
     @classmethod
     def __get_pydantic_core_schema__(cls, _source_type: Any, _handler: GetCoreSchemaHandler) -> core_schema.CoreSchema:
