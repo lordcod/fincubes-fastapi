@@ -15,8 +15,9 @@ router = APIRouter(
 async def get_distances(competition_id: int):
     try:
         competition = await Competition.get(id=competition_id)
-        distances = await competition.distances.all().order_by('order')
-        return distances
+
+        distances = competition.distances.all().order_by('order')
+        return await Distance_Pydantic.from_queryset(distances)
     except DoesNotExist:
         raise HTTPException(status_code=404, detail="Competition not found")
 

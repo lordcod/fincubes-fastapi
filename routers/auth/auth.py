@@ -2,7 +2,7 @@ import random
 from fastapi import APIRouter, HTTPException, Depends
 from tortoise.exceptions import DoesNotExist
 from auth.user.registration import get_registration_handler
-from models.models import Athlete, User
+from models.models import User
 from schemas.auth import UserCreate, UserLogin, TokenResponse
 from passlib.context import CryptContext
 from misc.security import get_current_user, hash_password, verify_password, create_access_token
@@ -12,6 +12,16 @@ from misc.cloudflare import check_verification
 router = APIRouter()
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+@router.post("/register", response_model=TokenResponse)
+async def register_user(user_create: UserCreate):
+    handler = get_registration_handler(user_create)
+    user = await handler.register_user()
+
+    access_token = create_access_token(data={"sub": user.email})
+
+    return {"access_token": access_token, "token_type": "Bearer"}
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -44,10 +54,3 @@ async def change_password(current_password: str, new_password: str, current_user
     hashed_new_password = hash_password(new_password)
     current_user.hashed_password = hashed_new_password
     await current_user.save()
-
-
-@router.post("/register")
-async def register_user(user_create: UserCreate):
-    handler = get_registration_handler(user_create)
-    user = await handler.register_user()
-    return user

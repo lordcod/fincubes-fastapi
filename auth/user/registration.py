@@ -32,9 +32,8 @@ class UserRegistration:
             hashed_password=hashed_password
         )
 
-    @abstractmethod
     async def _assign_role(self):
-        raise NotImplementedError
+        pass
 
 
 class AthleteRegistration(UserRegistration):

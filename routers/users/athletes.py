@@ -3,6 +3,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Body,  Depends, File, HTTPException, UploadFile
 from fastapi.background import P
 from misc.errors import APIError, ErrorCode
+from misc.ratelimit import create_ratelimit
 from models.deps import get_redis
 from models.enums import UserRoleEnum
 from models.models import Athlete, Coach, CoachAthlete
@@ -14,7 +15,7 @@ from redis.asyncio import Redis as RedisClient
 from schemas.users.coach import CoachOut
 
 MAX_SIZE = 16 * 1024 * 1024
-UPLOAD_INTERVAL_SECONDS = 60 * 60
+UPLOAD_INTERVAL_SECONDS = 0  # 60 * 60 # TODO REQUIRED CHANGE
 
 
 async def get_content(file: UploadFile):
@@ -29,7 +30,8 @@ router = APIRouter(
 
 
 @router.get('/', response_model=Athlete_Pydantic)
-async def get_athlete_me(athlete: Athlete = Depends(get_role(UserRoleEnum.ATHLETE))):
+async def get_athlete_me(
+        athlete: Athlete = Depends(get_role(UserRoleEnum.ATHLETE, False))):
     return await Athlete_Pydantic.from_tortoise_orm(athlete)
 
 
@@ -58,17 +60,10 @@ async def edit_athlete_me(
 async def upload_avatar(
     file: UploadFile = File(...),
     athlete: Athlete = Depends(get_role(UserRoleEnum.ATHLETE)),
-    redis: RedisClient = Depends(get_redis)
+    send_limit=Depends(create_ratelimit(
+        'upload_avatar', UPLOAD_INTERVAL_SECONDS))
 ):
-    key = f"last_avatar_upload:{athlete.id}"
-    now = datetime.now().timestamp()
-    last_upload_timestamp = await redis.get(key)
-    if last_upload_timestamp:
-        last = float(last_upload_timestamp)
-        if now - last < UPLOAD_INTERVAL_SECONDS:
-            raise HTTPException(
-                status_code=429, detail="Аватарку можно изменять раз в час.")
-    await redis.set(key, now)
+    await send_limit(athlete.id)
 
     content = await get_content(file)
     ext = file.filename.split('.')[-1]

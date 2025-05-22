@@ -30,6 +30,8 @@ class ErrorCode(Enum):
         1009, "The athlete has already been added to your profile")
     ATHLETE_COACH_NOT_FOUND = ErrorInfo(
         1010, "The athlete's relationship with the coach was not found")
+    VERIFICATION_FAILED = ErrorInfo(
+        1010, "Verification failed, go through it to continue")
 
     @property
     def code(self):
