@@ -1,7 +1,6 @@
-import random
-from fastapi import APIRouter, HTTPException, Depends
-from tortoise.exceptions import DoesNotExist
+from fastapi import APIRouter, Depends
 from auth.user.registration import get_registration_handler
+from misc.errors import APIError, ErrorCode
 from models.models import User
 from schemas.auth import UserCreate, UserLogin, TokenResponse
 from passlib.context import CryptContext
@@ -28,17 +27,14 @@ async def register_user(user_create: UserCreate):
 async def login_user(user_login: UserLogin):
     ts = await check_verification(user_login.cf_token)
     if not ts.success:
-        raise HTTPException(
-            status_code=400, detail="Ошибка капчи")
+        raise APIError(ErrorCode.CAPTCHA_FAILED)
 
     user = await User.filter(email=user_login.email).first()
     if not user:
-        raise HTTPException(
-            status_code=400, detail="Неверный email или пароль")
+        raise APIError(ErrorCode.USER_NOT_FOUND)
 
     if not pwd_context.verify(user_login.password, user.hashed_password):
-        raise HTTPException(
-            status_code=400, detail="Неверный email или пароль")
+        raise APIError(ErrorCode.INCORRECT_CURRENT_PASSWORD)
 
     access_token = create_access_token(data={"sub": user.email})
 
@@ -48,8 +44,7 @@ async def login_user(user_login: UserLogin):
 @router.put("/change-password", status_code=204)
 async def change_password(current_password: str, new_password: str, current_user: User = Depends(get_current_user)):
     if not verify_password(current_user.hashed_password, current_password):
-        raise HTTPException(
-            status_code=400, detail="Incorrect current password")
+        raise APIError(ErrorCode.INCORRECT_CURRENT_PASSWORD)
 
     hashed_new_password = hash_password(new_password)
     current_user.hashed_password = hashed_new_password

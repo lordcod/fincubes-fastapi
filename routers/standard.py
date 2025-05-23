@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends
 from typing import List, Optional
+from misc.errors import APIError, ErrorCode
 from models.models import StandardCategory
 from schemas.standards import StandardIn, StandardOut
 from misc.security import admin_required
@@ -50,5 +51,5 @@ async def list_standards(
 async def get_standard(standard_id: int):
     standard = await StandardCategory.filter(id=standard_id).first()
     if not standard:
-        raise HTTPException(status_code=404, detail="Standard not found")
+        raise APIError(ErrorCode.STANDARD_NOT_FOUND, status_code=404)
     return await StandardOut.from_tortoise_orm(standard)

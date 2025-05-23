@@ -1,10 +1,8 @@
-import contextlib
 import random
-from fastapi import responses
-from fastapi.responses import RedirectResponse
-from fastapi import APIRouter, Depends, HTTPException
-from typing import Annotated, Any, List, Optional, Union
+from fastapi import APIRouter, Depends
+from typing import List, Optional
 from tortoise.exceptions import DoesNotExist
+from misc.errors import APIError, ErrorCode
 from models.deps import get_redis
 from models.models import Athlete, Competition, Result
 from schemas.top import RandomTop_Pydantic, Top_Pydantic
@@ -117,8 +115,7 @@ async def bulk_create_results(results: List[BulkCreateResult], ignore_exception:
                 try:
                     competition = await Competition.get(id=bulk_request.competition_id)
                 except DoesNotExist:
-                    raise HTTPException(
-                        status_code=404, detail="Competition not found")
+                    raise APIError(ErrorCode.COMPETITION_NOT_FOUND)
                 competitions[bulk_request.competition_id] = competition
             else:
                 competition = competitions[bulk_request.competition_id]
@@ -126,8 +123,7 @@ async def bulk_create_results(results: List[BulkCreateResult], ignore_exception:
             try:
                 athlete = await Athlete.get(id=bulk_request.athlete_id)
             except DoesNotExist:
-                raise HTTPException(
-                    status_code=404, detail="Athlete not found")
+                raise APIError(ErrorCode.ATHLETE_NOT_FOUND)
 
             for result in bulk_request.results:
                 db_result = await Result.create(
@@ -180,9 +176,12 @@ async def create_result(competition_id: int, athlete_id: int, result: ResultIn_P
     try:
         competition = await Competition.get(id=competition_id)
         athlete = await Athlete.get(id=athlete_id)
-    except DoesNotExist:
-        raise HTTPException(
-            status_code=404, detail="Competition or athlete not found")
+    except DoesNotExist as exc:
+        raise APIError(
+            ErrorCode.ATHLETE_NOT_FOUND
+            if exc.model is Athlete
+            else ErrorCode.COMPETITION_NOT_FOUND
+        )
 
     db_result = await Result.create(
         athlete=athlete,
@@ -213,17 +212,19 @@ async def update_result(competition_id: int, athlete_id: int, result_id: int, re
     try:
         competition = await Competition.get(id=competition_id)
         athlete = await Athlete.get(id=athlete_id)
-    except DoesNotExist:
-        raise HTTPException(
-            status_code=404, detail="Competition or athlete not found")
+    except DoesNotExist as exc:
+        raise APIError(
+            ErrorCode.ATHLETE_NOT_FOUND
+            if exc.model is Athlete
+            else ErrorCode.COMPETITION_NOT_FOUND
+        )
 
     db_result = await Result.filter(id=result_id, competition=competition, athlete=athlete).first().prefetch_related(
         "competition",
         "athlete"
     )
     if not db_result:
-        raise HTTPException(status_code=404, detail="Result not found")
-
+        raise APIError(ErrorCode.RESULT_NOT_FOUND)
     db_result.stroke = result.stroke
     db_result.distance = result.distance
     db_result.result = result.result
@@ -244,14 +245,16 @@ async def delete_result(competition_id: int, athlete_id: int, result_id: int):
     try:
         competition = await Competition.get(id=competition_id)
         athlete = await Athlete.get(id=athlete_id)
-    except DoesNotExist:
-        raise HTTPException(
-            status_code=404, detail="Competition or athlete not found")
-
+    except DoesNotExist as exc:
+        raise APIError(
+            ErrorCode.ATHLETE_NOT_FOUND
+            if exc.model is Athlete
+            else ErrorCode.COMPETITION_NOT_FOUND
+        )
     db_result = await Result.filter(id=result_id, competition=competition, athlete=athlete).first().prefetch_related(
         "competition",
         "athlete"
     )
     if not db_result:
-        raise HTTPException(status_code=404, detail="Result not found")
+        raise APIError(ErrorCode.RESULT_NOT_FOUND)
     await db_result.delete()

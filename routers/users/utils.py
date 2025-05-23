@@ -1,12 +1,7 @@
-from tkinter.tix import Tree
-from typing import List, Optional
-from fastapi import APIRouter, Body, HTTPException, Depends
-from tortoise.exceptions import DoesNotExist
 from misc.errors import APIError, ErrorCode
 from models.models import Athlete, Parent, User, UserRole, Coach
 from models.enums import UserRoleEnum
 from misc.security import get_current_user
-from schemas.athlete import Athlete_Pydantic
 
 
 model_map = {

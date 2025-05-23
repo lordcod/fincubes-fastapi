@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
+from misc.errors import APIError, ErrorCode
 from misc.utils import get_rank
 from models.deps import get_redis
 from models.models import Athlete, Result
@@ -93,14 +94,14 @@ async def get_athlete(id: int):
         athlete = await Athlete.get(id=id)
         return athlete
     except DoesNotExist:
-        raise HTTPException(status_code=404, detail="Athlete not found")
+        raise APIError(ErrorCode.ATHLETE_NOT_FOUND)
 
 
 @router.put("/{athlete_id}", dependencies=[Depends(admin_required)], response_model=Athlete_Pydantic)
 async def update_athlete(athlete_id: int, athlete: AthleteIn_Pydantic):
     db_athlete = await Athlete.get_or_none(id=athlete_id)
     if not db_athlete:
-        raise HTTPException(status_code=404, detail="Athlete not found")
+        raise APIError(ErrorCode.ATHLETE_NOT_FOUND)
 
     db_athlete.last_name = athlete.last_name
     db_athlete.first_name = athlete.first_name
@@ -120,8 +121,7 @@ async def get_athlete_results(athlete_id: int, redis=Depends(get_redis)):
         athlete = await Athlete.get(id=athlete_id)
         results_query = await Result.filter(athlete=athlete).prefetch_related("competition")
     except DoesNotExist:
-        raise HTTPException(
-            status_code=404, detail="Athlete or result not found")
+        raise APIError(ErrorCode.ATHLETE_NOT_FOUND)
 
     competitions = {}
     best_results = {}

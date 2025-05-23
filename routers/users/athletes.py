@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from typing import List, Optional
-from fastapi import APIRouter, Body,  Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Body,  Depends, File, UploadFile
 from fastapi.background import P
 from misc.errors import APIError, ErrorCode
 from misc.ratelimit import create_ratelimit
@@ -12,7 +12,7 @@ from schemas.athlete import Athlete_Pydantic
 from misc.yandexcloud import delete_file, upload_file
 from redis.asyncio import Redis as RedisClient
 
-from schemas.users.coach import CoachOut
+from schemas.users.coach import CoachOut, CoachOutWithStatus
 
 MAX_SIZE = 16 * 1024 * 1024
 UPLOAD_INTERVAL_SECONDS = 0  # 60 * 60 # TODO REQUIRED CHANGE
@@ -21,7 +21,7 @@ UPLOAD_INTERVAL_SECONDS = 0  # 60 * 60 # TODO REQUIRED CHANGE
 async def get_content(file: UploadFile):
     content = await file.read()
     if len(content) > MAX_SIZE:
-        raise HTTPException(status_code=413, detail="Файл слишком большой")
+        raise APIError(ErrorCode.FILE_TOO_LARGE)
     return content
 
 
@@ -42,10 +42,9 @@ async def edit_athlete_me(
     athlete: Athlete = Depends(get_role(UserRoleEnum.ATHLETE))
 ):
     if city is None and club is None:
-        raise HTTPException(detail="Пустые данные", status_code=422)
+        raise APIError(ErrorCode.EMPTY_DATA)
     if club is not None and not club:
-        raise HTTPException(
-            detail="Клуб не может быть пустым", status_code=422)
+        raise APIError(ErrorCode.CLUB_CANNOT_BE_EMPTY)
     if club is not None:
         athlete.club = club
     if city is not None:
@@ -86,14 +85,21 @@ async def delete_avatar(
     return await Athlete_Pydantic.from_tortoise_orm(athlete)
 
 
-@router.get('/coach/', response_model=List[CoachOut])
+@router.get('/coach/', response_model=List[CoachOutWithStatus])
 async def get_coach(
     athlete: Athlete = Depends(get_role(UserRoleEnum.ATHLETE))
 ):
     linked = await CoachAthlete.filter(
-        athlete=athlete).select_related('coach')
-    return [await CoachOut.from_tortoise_orm(link.athlete)
-            for link in linked]
+        athlete=athlete
+    ).select_related('coach')
+
+    return [
+        {
+            **(await CoachOut.from_tortoise_orm(link.coach)).dict(),
+            'status': link.status
+        }
+        for link in linked
+    ]
 
 
 @router.post('/coach/')
@@ -111,8 +117,11 @@ async def add_coach(
             'success': False,
             'status': link.status
         }
-
-    await CoachAthlete.create(coach=coach, athlete=athlete, status=status)
+    if link:
+        link.status = status
+        await link.save()
+    else:
+        await CoachAthlete.create(coach=coach, athlete=athlete, status=status)
     return {
         'success': True,
         'status': status
@@ -121,10 +130,10 @@ async def add_coach(
 
 @router.delete('/coach/', status_code=204)
 async def reject_coach(
-    athlete_id: int = Body(embed=True),
-    coach: Coach = Depends(get_role(UserRoleEnum.COACH))
+    coach_id: int = Body(embed=True),
+    athlete: Athlete = Depends(get_role(UserRoleEnum.ATHLETE))
 ):
-    athlete = await Athlete.get(id=athlete_id)
+    coach = await Coach.get(id=coach_id)
     link = await CoachAthlete.filter(coach=coach, athlete=athlete).first()
     if not link:
         raise APIError(ErrorCode.ATHLETE_COACH_NOT_FOUND)

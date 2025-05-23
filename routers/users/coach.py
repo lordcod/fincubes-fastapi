@@ -6,6 +6,7 @@ from models.enums import UserRoleEnum
 from routers.users.utils import get_role
 from schemas.athlete import Athlete_Pydantic
 from schemas.users.coach import CoachIn, CoachOut
+from tortoise.expressions import Q
 
 router = APIRouter(
     prefix='/coach')
@@ -21,6 +22,28 @@ async def update_coach(updated: CoachIn, coach: Coach = Depends(get_role(UserRol
 @router.get('/', response_model=CoachOut)
 async def get_coach_me(coach: Coach = Depends(get_role(UserRoleEnum.COACH))):
     return await CoachOut.from_tortoise_orm(coach)
+
+
+@router.get('/search/', response_model=List[CoachOut])
+async def search_coach(q: str):
+    if not q.strip():
+        return []
+
+    words = q.strip().split()
+
+    query = Q()
+    for word in words:
+        part = (
+            Q(last_name__icontains=word) |
+            Q(first_name__icontains=word) |
+            Q(middle_name__icontains=word) |
+            Q(city__icontains=word) |
+            Q(club__icontains=word)
+        )
+        query &= part
+
+    coaches = Coach.filter(query)
+    return await CoachOut.from_queryset(coaches)
 
 
 @router.get('/{id}', response_model=CoachOut)

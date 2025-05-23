@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from fastapi import HTTPException
-
+from misc.errors import APIError, ErrorCode
 from misc.security import hash_password
 from models.models import Athlete, Coach, Parent, User, UserRole
 from models.enums import UserRoleEnum
@@ -23,7 +22,7 @@ class UserRegistration:
     async def _validate(self):
         existing_user = await User.filter(email=self.data.email).first()
         if existing_user:
-            raise HTTPException(status_code=400, detail="Email уже занят")
+            raise APIError(ErrorCode.EMAIL_ALREADY_TAKEN)
 
     async def _create_user(self):
         hashed_password = hash_password(self.data.password)
@@ -42,11 +41,10 @@ class AthleteRegistration(UserRegistration):
         athlete = await Athlete.get_or_none(id=athlete_id)
 
         if not athlete:
-            raise HTTPException(status_code=404, detail="Атлет не найден")
+            raise APIError(ErrorCode.ATHLETE_NOT_FOUND)
 
         if await UserRole.filter(role_type=UserRoleEnum.ATHLETE, profile_id=athlete.id).exists():
-            raise HTTPException(
-                status_code=400, detail="Атлет уже привязан к другому пользователю")
+            raise APIError(ErrorCode.ATHLETE_ALREADY_BOUND_TO_OTHER_USER)
 
         await UserRole.create(
             user=self.user,
@@ -93,5 +91,4 @@ def get_registration_handler(data: UserCreate) -> UserRegistration:
         case "parent":
             return ParentRegistration(data)
         case _:
-            raise HTTPException(
-                status_code=400, detail="Неверный тип пользователя")
+            raise APIError(ErrorCode.INVALID_USER_ROLE)

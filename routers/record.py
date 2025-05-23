@@ -1,10 +1,8 @@
+from misc.errors import APIError, ErrorCode
 from schemas.records import RecordIn, RecordOut
 from models.models import Record
-from tortoise.exceptions import IntegrityError
 from typing import List, Optional
-from fastapi import APIRouter, HTTPException
-from typing import List
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends
 from misc.security import admin_required
 
 router = APIRouter(prefix='/record', tags=['record'])
@@ -46,5 +44,5 @@ async def list_records(
 async def get_record(record_id: int):
     record = await Record.filter(id=record_id).first()
     if not record:
-        raise HTTPException(status_code=404, detail="Record not found")
+        raise APIError(ErrorCode.RECORD_NOT_FOUND)
     return await RecordOut.from_tortoise_orm(record)

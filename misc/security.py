@@ -1,6 +1,6 @@
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
-from fastapi import HTTPException, Security, Depends
+from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2AuthorizationCodeBearer, OAuth2
 from tortoise.exceptions import DoesNotExist
 import jwt

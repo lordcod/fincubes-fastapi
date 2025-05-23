@@ -1,5 +1,6 @@
 from tortoise.contrib.pydantic import pydantic_model_creator
-from models.models import Coach
+from models.models import Athlete, Coach
+from schemas import with_nested
 
 
 BaseCoachIn = pydantic_model_creator(Coach, exclude_readonly=True)
@@ -13,3 +14,7 @@ class CoachIn(BaseCoachIn):
 
 
 CoachOut = pydantic_model_creator(Coach)
+
+
+class CoachOutWithStatus(CoachOut):
+    status: str

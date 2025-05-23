@@ -1,8 +1,9 @@
 
 from datetime import datetime
-from fastapi import Depends, HTTPException
+from fastapi import Depends
 from redis.asyncio import Redis as RedisClient
 
+from misc.errors import APIError, ErrorCode
 from models.deps import get_redis
 
 
@@ -17,9 +18,7 @@ def create_ratelimit(name: str, interval: int):
             if last_upload_timestamp:
                 last = float(last_upload_timestamp)
                 if now - last < interval:
-                    raise HTTPException(
-                        status_code=429,
-                        detail="Действуют ограничения, повторите попытку позже.")
+                    raise APIError(ErrorCode.RATE_LIMIT_EXCEEDED)
             await redis.set(key, now)
         return active
 

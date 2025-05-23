@@ -1,7 +1,8 @@
 
 from tortoise import timezone
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from typing import List
+from misc.errors import APIError, ErrorCode
 from models.models import Competition
 from schemas.competition import Competition_Pydantic, CompetitionIn_Pydantic
 from misc.security import admin_required
@@ -27,7 +28,7 @@ async def get_competitions():
 async def get_competition(competition_id: int):
     comp = await Competition.get_or_none(id=competition_id)
     if not comp:
-        raise HTTPException(status_code=404, detail="Competition not found")
+        raise APIError(ErrorCode.COMPETITION_NOT_FOUND)
     return comp
 
 
@@ -43,7 +44,7 @@ async def create_competition(data: CompetitionIn_Pydantic):
 async def update_competition(competition_id: int, competition: CompetitionIn_Pydantic):
     comp = await Competition.get_or_none(id=competition_id)
     if not comp:
-        raise HTTPException(status_code=404, detail="Competition not found")
+        raise APIError(ErrorCode.COMPETITION_NOT_FOUND)
     await comp.update_from_dict(competition.dict()).save()
     return comp
 
@@ -52,6 +53,6 @@ async def update_competition(competition_id: int, competition: CompetitionIn_Pyd
 async def delete_competition(competition_id: int):
     competition = await Competition.get_or_none(id=competition_id)
     if not competition:
-        raise HTTPException(status_code=404, detail="Competition not found")
+        raise APIError(ErrorCode.COMPETITION_NOT_FOUND)
     await competition.delete()
     return
