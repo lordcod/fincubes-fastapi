@@ -17,7 +17,6 @@ async def protected_endpoint(current_user: User = Depends(get_current_user)):
 @router.get("/me/role", response_model=Optional[UserRoleOut])
 async def protected_role_endpoint(current_user: User = Depends(get_current_user)):
     role = await UserRole.filter(user=current_user).first()
-    print(role)
     if not role:
         return None
 
