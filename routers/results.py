@@ -1,17 +1,16 @@
-import contextlib
 import random
-from fastapi import responses
-from fastapi.responses import RedirectResponse
-from fastapi import APIRouter, Depends, HTTPException
-from typing import Annotated, Any, List, Optional, Union
+from fastapi import APIRouter, Depends
+from typing import List, Optional
 from tortoise.exceptions import DoesNotExist
+from misc.errors import APIError, ErrorCode
 from models.deps import get_redis
 from models.models import Athlete, Competition, Result
-from schemas import BulkCreateResult, BulkCreateResultResponse, RandomTop_Pydantic, Result_Pydantic, ResultIn_Pydantic, Top_Pydantic
+from schemas.top import RandomTop_Pydantic, Top_Pydantic
+from schemas.result import BulkCreateResult, BulkCreateResultResponse, Result_Pydantic, ResultIn_Pydantic
 from misc.security import admin_required
 from misc.utils import get_rank, get_top_results
 
-router = APIRouter(prefix='/results')
+router = APIRouter(prefix='/results', tags=['results', 'top'])
 
 swim_styles = [
     {'stroke': 'APNEA', 'distance': 50},
@@ -78,9 +77,6 @@ async def get_top(
     )
 
 
-# Роут для получения всех результатов с фильтрацией
-
-
 @router.get("/", response_model=List[Result_Pydantic])
 async def get_results(
     athlete_id: Optional[int] = None,
@@ -101,11 +97,8 @@ async def get_results(
     if distance:
         filters["distance"] = distance
 
-    results = await Result.filter(**filters).prefetch_related(
-        "competition",
-        "athlete"
-    )
-    return results
+    query = Result.filter(**filters)
+    return await Result_Pydantic.from_queryset(query)
 
 
 @router.post("/bulk-create", dependencies=[Depends(admin_required)], response_model=BulkCreateResultResponse)
@@ -115,15 +108,15 @@ async def bulk_create_results(results: List[BulkCreateResult], ignore_exception:
     competitions = {}
 
     print('Start parsing', len(results), 'athletes')
-    for bulk_request in results:
-        print('Athlete start process')
+    count = len(results)
+    for index, bulk_request in enumerate(results):
+        print(f'[{index}/{count}] Athlete start process')
         try:
             if bulk_request.competition_id not in competitions:
                 try:
                     competition = await Competition.get(id=bulk_request.competition_id)
                 except DoesNotExist:
-                    raise HTTPException(
-                        status_code=404, detail="Competition not found")
+                    raise APIError(ErrorCode.COMPETITION_NOT_FOUND)
                 competitions[bulk_request.competition_id] = competition
             else:
                 competition = competitions[bulk_request.competition_id]
@@ -131,8 +124,7 @@ async def bulk_create_results(results: List[BulkCreateResult], ignore_exception:
             try:
                 athlete = await Athlete.get(id=bulk_request.athlete_id)
             except DoesNotExist:
-                raise HTTPException(
-                    status_code=404, detail="Athlete not found")
+                raise APIError(ErrorCode.ATHLETE_NOT_FOUND)
 
             for result in bulk_request.results:
                 db_result = await Result.create(
@@ -185,9 +177,12 @@ async def create_result(competition_id: int, athlete_id: int, result: ResultIn_P
     try:
         competition = await Competition.get(id=competition_id)
         athlete = await Athlete.get(id=athlete_id)
-    except DoesNotExist:
-        raise HTTPException(
-            status_code=404, detail="Competition or athlete not found")
+    except DoesNotExist as exc:
+        raise APIError(
+            ErrorCode.ATHLETE_NOT_FOUND
+            if exc.model is Athlete
+            else ErrorCode.COMPETITION_NOT_FOUND
+        )
 
     db_result = await Result.create(
         athlete=athlete,
@@ -209,7 +204,7 @@ async def create_result(competition_id: int, athlete_id: int, result: ResultIn_P
     if result.final:
         await get_rank(redis, athlete.gender, result.stroke, result.distance, result.final)
 
-    return db_result
+    return await Result_Pydantic.from_tortoise_orm(db_result)
 
 
 # Роут для обновления существующего результата
@@ -218,17 +213,19 @@ async def update_result(competition_id: int, athlete_id: int, result_id: int, re
     try:
         competition = await Competition.get(id=competition_id)
         athlete = await Athlete.get(id=athlete_id)
-    except DoesNotExist:
-        raise HTTPException(
-            status_code=404, detail="Competition or athlete not found")
+    except DoesNotExist as exc:
+        raise APIError(
+            ErrorCode.ATHLETE_NOT_FOUND
+            if exc.model is Athlete
+            else ErrorCode.COMPETITION_NOT_FOUND
+        )
 
     db_result = await Result.filter(id=result_id, competition=competition, athlete=athlete).first().prefetch_related(
         "competition",
         "athlete"
     )
     if not db_result:
-        raise HTTPException(status_code=404, detail="Result not found")
-
+        raise APIError(ErrorCode.RESULT_NOT_FOUND)
     db_result.stroke = result.stroke
     db_result.distance = result.distance
     db_result.result = result.result
@@ -241,7 +238,7 @@ async def update_result(competition_id: int, athlete_id: int, result_id: int, re
     db_result.dsq_final = result.dsq_final
     await db_result.save()
 
-    return db_result
+    return await Result_Pydantic.from_tortoise_orm(db_result)
 
 
 @router.delete("/{competition_id}/{athlete_id}/{result_id}", dependencies=[Depends(admin_required)], status_code=204)
@@ -249,14 +246,16 @@ async def delete_result(competition_id: int, athlete_id: int, result_id: int):
     try:
         competition = await Competition.get(id=competition_id)
         athlete = await Athlete.get(id=athlete_id)
-    except DoesNotExist:
-        raise HTTPException(
-            status_code=404, detail="Competition or athlete not found")
-
+    except DoesNotExist as exc:
+        raise APIError(
+            ErrorCode.ATHLETE_NOT_FOUND
+            if exc.model is Athlete
+            else ErrorCode.COMPETITION_NOT_FOUND
+        )
     db_result = await Result.filter(id=result_id, competition=competition, athlete=athlete).first().prefetch_related(
         "competition",
         "athlete"
     )
     if not db_result:
-        raise HTTPException(status_code=404, detail="Result not found")
+        raise APIError(ErrorCode.RESULT_NOT_FOUND)
     await db_result.delete()

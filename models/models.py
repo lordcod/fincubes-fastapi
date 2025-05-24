@@ -1,6 +1,9 @@
 from tortoise import fields
 from tortoise.models import Model
 
+from models.flexible_time import FlexibleTimeField
+from models.enums import UserRoleEnum
+
 
 class TimestampedModel(Model):
     created_at = fields.DatetimeField(auto_now_add=True)
@@ -50,6 +53,7 @@ class Athlete(TimestampedModel):
     city = fields.CharField(max_length=255, null=True)
     license = fields.CharField(max_length=50)
     gender = fields.CharField(max_length=1)
+    avatar_url = fields.CharField(max_length=250, null=True)
 
     class Meta:
         table = "athletes"
@@ -63,8 +67,8 @@ class Result(TimestampedModel):
         "models.Competition", related_name="results")
     stroke = fields.CharField(max_length=50)
     distance = fields.IntField()
-    result = fields.TimeField(max_length=20, null=True)
-    final = fields.TimeField(max_length=1020, null=True)
+    result = FlexibleTimeField(max_length=20, null=True)
+    final = FlexibleTimeField(max_length=1020, null=True)
     place = fields.CharField(max_length=50, null=True)
     final_rank = fields.CharField(max_length=50, null=True)
     points = fields.CharField(max_length=50, null=True)
@@ -92,22 +96,6 @@ class RecentEvent(TimestampedModel):
 
     class Meta:
         table = "recent_events"
-
-
-class User(TimestampedModel):
-    id = fields.IntField(pk=True)
-    email = fields.CharField(max_length=255, unique=True)
-    hashed_password = fields.CharField(max_length=255)
-    admin = fields.BooleanField(default=False)
-    premium = fields.BooleanField(default=False)
-
-    athlete = fields.ForeignKeyField(
-        "models.Athlete",
-        related_name="user",
-        null=True,
-        on_delete=fields.SET_NULL,
-        unique=True
-    )
 
 
 class Record(TimestampedModel):
@@ -138,5 +126,70 @@ class StandardCategory(TimestampedModel):
     distance = fields.IntField()
     gender = fields.CharField(max_length=1)
     type = fields.CharField(max_length=10)
-    result = fields.TimeField(max_length=20, null=True)
+    result = FlexibleTimeField(max_length=20, null=True)
     is_active = fields.BooleanField(default=True)
+
+# ROLES
+
+
+class Coach(TimestampedModel):
+    id = fields.IntField(pk=True)
+    last_name = fields.CharField(max_length=100)
+    first_name = fields.CharField(max_length=100)
+    middle_name = fields.CharField(max_length=100)
+    club = fields.CharField(max_length=255)
+    city = fields.CharField(max_length=255, null=True)
+
+
+class Parent(TimestampedModel):
+    id = fields.IntField(pk=True)
+    athletes = fields.ManyToManyField(
+        'models.Athlete',
+        related_name='parents'
+    )
+
+# LINKED
+
+
+class CoachAthlete(TimestampedModel):
+    id = fields.IntField(pk=True)
+    coach = fields.ForeignKeyField(
+        'models.Coach', related_name='coach_athletes')
+    athlete = fields.ForeignKeyField(
+        'models.Athlete', related_name='athlete_coaches')
+    # pending, accepted, rejected_athlete, rejected_coach
+    status = fields.CharField(max_length=50, default='active')
+
+# AUTH
+
+
+class User(TimestampedModel):
+    id = fields.IntField(pk=True)
+    email = fields.CharField(max_length=255, unique=True)
+    hashed_password = fields.CharField(max_length=255)
+    admin = fields.BooleanField(default=False)
+    premium = fields.BooleanField(default=False)
+    verified = fields.BooleanField(default=False)
+
+    athlete = fields.ForeignKeyField(
+        "models.Athlete",
+        related_name="user",
+        null=True,
+        on_delete=fields.SET_NULL,
+        unique=True
+    )
+
+
+class UserVerification(TimestampedModel):
+    id = fields.IntField(pk=True)
+    user = fields.ForeignKeyField('models.User', related_name='verifications')
+    code = fields.CharField(max_length=6)
+    attempt = fields.IntField(default=0)
+    is_active = fields.BooleanField(default=True)
+
+
+class UserRole(TimestampedModel):
+    id = fields.IntField(pk=True)
+    user = fields.ForeignKeyField('models.User', related_name='roles')
+    role_type = fields.CharEnumField(enum_type=UserRoleEnum)
+    profile_id = fields.IntField()

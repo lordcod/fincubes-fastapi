@@ -1,13 +1,11 @@
+from misc.errors import APIError, ErrorCode
 from schemas.records import RecordIn, RecordOut
 from models.models import Record
-from tortoise.exceptions import IntegrityError
 from typing import List, Optional
-from fastapi import APIRouter, HTTPException
-from typing import List
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends
 from misc.security import admin_required
 
-router = APIRouter(prefix='/record')
+router = APIRouter(prefix='/record', tags=['record'])
 
 
 @router.post("/", dependencies=[Depends(admin_required)], response_model=RecordOut)
@@ -20,7 +18,7 @@ async def create_record(data: RecordIn):
     ).update(is_active=False)
 
     record = await Record.create(**data.dict(), is_active=True)
-    return record
+    return await RecordOut.from_tortoise_orm(record)
 
 
 @router.get("/", response_model=List[RecordOut])
@@ -38,13 +36,13 @@ async def list_records(
     if gender:
         filters["gender"] = gender
 
-    records = await Record.filter(**filters).all()
-    return records
+    records = Record.filter(**filters)
+    return await RecordOut.from_queryset(records)
 
 
 @router.get("/{record_id}", response_model=RecordOut)
 async def get_record(record_id: int):
     record = await Record.filter(id=record_id).first()
     if not record:
-        raise HTTPException(status_code=404, detail="Record not found")
-    return record
+        raise APIError(ErrorCode.RECORD_NOT_FOUND)
+    return await RecordOut.from_tortoise_orm(record)

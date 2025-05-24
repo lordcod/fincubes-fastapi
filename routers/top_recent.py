@@ -5,18 +5,20 @@ from models.models import Athlete, Competition, TopAthlete, RecentEvent
 from schemas.home import TopAthleteIn, TopAthleteOut, RecentEventIn, RecentEventOut
 from misc.security import admin_required
 
-router = APIRouter()
+router = APIRouter(tags=['top', 'recent'])
 
 
 @router.get("/top-athletes", response_model=List[TopAthleteOut])
 async def get_top_athletes():
-    return await TopAthlete.all().prefetch_related("athlete")
+    query = TopAthlete.all()
+    return await TopAthleteOut.from_queryset(query)
 
 
 @router.post("/top-athletes", dependencies=[Depends(admin_required)], response_model=TopAthleteOut)
 async def add_top_athlete(data: TopAthleteIn):
     athlete = await Athlete.get(id=data.athlete_id)
-    return await TopAthlete.create(athlete=athlete)
+    top = await TopAthlete.create(athlete=athlete)
+    return await TopAthleteOut.from_tortoise_orm(top)
 
 
 @router.delete("/top-athletes/{athlete_id}", dependencies=[Depends(admin_required)], status_code=204)
@@ -27,13 +29,15 @@ async def delete_top_athlete(athlete_id: int):
 
 @router.get("/recent-events", response_model=List[RecentEventOut])
 async def get_recent_events():
-    return await RecentEvent.all().order_by("-created_at").prefetch_related("competition")
+    query = RecentEvent.all().order_by("-created_at").select_related("competition")
+    return await RecentEventOut.from_queryset(query)
 
 
 @router.post("/recent-events", dependencies=[Depends(admin_required)], response_model=RecentEventOut)
 async def add_recent_event(data: RecentEventIn):
     competition = await Competition.get(id=data.competition_id)
-    return await RecentEvent.create(competition=competition)
+    event = await RecentEvent.create(competition=competition)
+    return await RecentEventOut.from_tortoise_orm(event)
 
 
 @router.delete("/recent-events/{competition_id}", dependencies=[Depends(admin_required)], status_code=204)

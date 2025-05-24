@@ -1,23 +1,6 @@
-from datetime import date
-from pydantic import BaseModel
-from typing import Optional
+from models.models import Record
+from tortoise.contrib.pydantic import pydantic_model_creator
 
 
-class RecordIn(BaseModel):
-    stroke: str
-    distance: int
-    time: str
-    firstname: str
-    lastname: str
-    birth_year: int
-    region: str
-    date: date
-    city: str
-    country: Optional[str] = None
-    event_name: str
-    category: Optional[str] = None
-    gender: Optional[str] = None
-
-
-class RecordOut(RecordIn):
-    id: int
+RecordIn = pydantic_model_creator(Record, exclude_readonly=True)
+RecordOut = pydantic_model_creator(Record)

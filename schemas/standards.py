@@ -1,20 +1,6 @@
-from pydantic import BaseModel
-from typing import Optional
-from .flexible_time import FlexibleTime
+from models.models import StandardCategory
+from tortoise.contrib.pydantic import pydantic_model_creator
+from schemas import create_pydantic_model
 
-
-class StandardIn(BaseModel):
-    code: str
-    stroke: str
-    distance: int
-    gender: str
-    type: str
-    result: Optional[FlexibleTime]
-    is_active: Optional[bool] = True
-
-
-class StandardOut(StandardIn):
-    id: int
-
-    class Config:
-        from_attributes = True
+StandardIn = pydantic_model_creator(StandardCategory, exclude_readonly=True)
+StandardOut = create_pydantic_model(StandardCategory)

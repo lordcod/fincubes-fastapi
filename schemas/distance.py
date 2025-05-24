@@ -1,23 +1,14 @@
 from pydantic import BaseModel
-from typing import Optional
+from models.models import Distance
+from tortoise.contrib.pydantic import pydantic_model_creator
+
+from schemas import with_nested
+from schemas.competition import Competition_Pydantic
 
 
-class DistanceCreateUpdateIn_Pydantic(BaseModel):
-    stroke: str
-    distance: int
-    category: Optional[str] = None
-    order: int
-    gender: str
-    min_year: Optional[int] = None
-    max_year: Optional[int] = None
-
-
-class Distance_Pydantic(DistanceCreateUpdateIn_Pydantic):
-    id: int
-    competition_id: int
-
-    class Config:
-        from_attributes = True
+DistanceIn_Pydantic = pydantic_model_creator(Distance, exclude_readonly=True)
+Distance_Pydantic = with_nested(pydantic_model_creator(Distance),
+                                competition=Competition_Pydantic)
 
 
 class DistanceOrderUpdate_Pydantic(BaseModel):

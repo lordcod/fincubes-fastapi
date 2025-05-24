@@ -1,28 +1,17 @@
+from models.models import RecentEvent, TopAthlete
+from tortoise.contrib.pydantic import pydantic_model_creator
 
-from pydantic import BaseModel
-from schemas import Athlete_Pydantic
-from schemas import Competition_Pydantic
-
-
-class TopAthleteOut(BaseModel):
-    id: int
-    athlete: Athlete_Pydantic
-
-    class Config:
-        from_attributes = True
+from schemas import with_nested
+from schemas.athlete import Athlete_Pydantic
+from schemas.competition import Competition_Pydantic
 
 
-class TopAthleteIn(BaseModel):
-    athlete_id: int
+TopAthleteIn = pydantic_model_creator(TopAthlete, exclude_readonly=True)
+TopAthleteOut = with_nested(pydantic_model_creator(TopAthlete),
+                            athlete=Athlete_Pydantic)
 
-
-class RecentEventOut(BaseModel):
-    id: int
-    competition: Competition_Pydantic
-
-    class Config:
-        from_attributes = True
-
-
-class RecentEventIn(BaseModel):
-    competition_id: int
+RecentEventIn = pydantic_model_creator(RecentEvent, exclude_readonly=True)
+RecentEventOut = RecentEventOut = with_nested(
+    pydantic_model_creator(RecentEvent),
+    competition=Competition_Pydantic
+)
