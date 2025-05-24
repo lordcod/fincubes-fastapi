@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 import uvicorn
 from config import DATABASE_URL
 from misc.errors import APIError, api_error_handler
-from routers import distances, record, results, athletes, standard, top_recent, users, competitions, auth
+from routers import coaches, distances, record, results, athletes, standard, top_recent, users, competitions, auth
 from tortoise.contrib.fastapi import register_tortoise
 from services import lifespan
 from starlette.middleware.trustedhost import TrustedHostMiddleware
@@ -59,6 +59,7 @@ app.include_router(users.router)
 app.include_router(record.router)
 app.include_router(standard.router)
 app.include_router(auth.router)
+app.include_router(coaches.router)
 
 
 register_tortoise(

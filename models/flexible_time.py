@@ -1,3 +1,4 @@
+import time
 import re
 import datetime
 from typing import Any, Optional
@@ -6,8 +7,15 @@ from pydantic import GetCoreSchemaHandler
 from tortoise import fields
 
 
+def get_local_timezone():
+    offset_sec = -time.timezone if time.localtime().tm_isdst == 0 else -time.altzone
+    return datetime.timezone(datetime.timedelta(seconds=offset_sec))
+
+
 class FlexibleTime(datetime.time):
-    time_regex = re.compile(r'((\d+):)?((\d+):)?(\d{1,2})[.,](\d{1,2})')
+    time_regex = re.compile(
+        r'^(?:(?P<minutes>\d{1,2}):)?(?P<seconds>\d{1,2})[.,](?P<hundredths>\d{1,2})$'
+    )
 
     @classmethod
     def validate(cls, value: Any) -> 'FlexibleTime':
@@ -34,10 +42,10 @@ class FlexibleTime(datetime.time):
         if not match:
             raise ValueError(f"Invalid time format: {value}")
 
-        minutes, seconds, hundredths = match.groups()
-        minutes = int(minutes) if minutes else 0
-        seconds = int(seconds) if seconds else 0
-        hundredths = int(hundredths) if hundredths else 0
+        groups = match.groupdict()
+        minutes = int(groups.get('minutes') or 0)
+        seconds = int(groups.get('seconds') or 0)
+        hundredths = int(groups.get('hundredths') or 0)
 
         return cls(hour=0, minute=minutes, second=seconds, microsecond=hundredths*10_000)
 
@@ -50,12 +58,16 @@ class FlexibleTime(datetime.time):
         return f'"{self}"'
 
     @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
     def __get_pydantic_json_schema__(cls, schema: core_schema.CoreSchema, handler: GetCoreSchemaHandler) -> dict:
         return {
             "type": "string",
             "title": "FlexibleTime",
-            "description": "Формат времени: mm:ss.SS или hh:mm:ss.SS",
-            "examples": ["01:23.45", "12:34:56.78"],
+            "description": "Формат времени: mm:ss.SS или ss.SS",
+            "examples": ["01:23.45", "56.78"],
         }
 
     @classmethod
@@ -70,15 +82,47 @@ class FlexibleTime(datetime.time):
         )
 
 
-class FlexibleTimeField(fields.TimeField):
+class FlexibleTimeField(fields.Field[FlexibleTime], FlexibleTime):
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+
     def to_python_value(self, value: Optional[datetime.time]) -> Optional[FlexibleTime]:
         if value is None:
             return None
         return FlexibleTime.validate(value)
 
-    def to_db_value(self, value: Optional[FlexibleTime]) -> Optional[datetime.time]:
+    def to_db_value(self, value, instance):
         if value is None:
             return None
+
+        if isinstance(value, FlexibleTime):
+            return datetime.time(
+                hour=value.hour,
+                minute=value.minute,
+                second=value.second,
+                microsecond=value.microsecond,
+                tzinfo=get_local_timezone()
+            )
+
         if isinstance(value, datetime.time):
-            return FlexibleTime.validate(value)
+            if value.tzinfo is None:
+                return value.replace(tzinfo=get_local_timezone())
+            return value
+
         raise ValueError(f"Unsupported value for FlexibleTimeField: {value}")
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source_type, handler: GetCoreSchemaHandler) -> core_schema.CoreSchema:
+        return FlexibleTime.__get_pydantic_core_schema__(source_type, handler)
+
+    skip_to_python_if_native = True
+    SQL_TYPE = "TIME"
+
+    class _db_oracle:
+        SQL_TYPE = "NVARCHAR2(8)"
+
+    class _db_mysql:
+        SQL_TYPE = "TIME(6)"
+
+    class _db_postgres:
+        SQL_TYPE = "TIMETZ"

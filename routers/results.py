@@ -108,8 +108,9 @@ async def bulk_create_results(results: List[BulkCreateResult], ignore_exception:
     competitions = {}
 
     print('Start parsing', len(results), 'athletes')
-    for bulk_request in results:
-        print('Athlete start process')
+    count = len(results)
+    for index, bulk_request in enumerate(results):
+        print(f'[{index}/{count}] Athlete start process')
         try:
             if bulk_request.competition_id not in competitions:
                 try:

@@ -31,7 +31,7 @@ router = APIRouter(
 
 @router.get('/', response_model=Athlete_Pydantic)
 async def get_athlete_me(
-        athlete: Athlete = Depends(get_role(UserRoleEnum.ATHLETE, False))):
+        athlete: Athlete = Depends(get_role(UserRoleEnum.ATHLETE))):
     return await Athlete_Pydantic.from_tortoise_orm(athlete)
 
 

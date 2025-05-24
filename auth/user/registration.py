@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 from typing import Optional
 
 from misc.errors import APIError, ErrorCode

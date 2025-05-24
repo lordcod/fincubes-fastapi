@@ -1,3 +1,4 @@
+from fastapi import Depends
 from misc.errors import APIError, ErrorCode
 from models.models import Athlete, Parent, User, UserRole, Coach
 from models.enums import UserRoleEnum
