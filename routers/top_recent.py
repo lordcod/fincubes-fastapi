@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Body, Depends
 from models.models import Athlete, Competition, TopAthlete, RecentEvent
 from schemas.home import TopAthleteIn, TopAthleteOut, RecentEventIn, RecentEventOut
 from misc.security import admin_required
@@ -15,8 +15,8 @@ async def get_top_athletes():
 
 
 @router.post("/top-athletes", dependencies=[Depends(admin_required)], response_model=TopAthleteOut)
-async def add_top_athlete(data: TopAthleteIn):
-    athlete = await Athlete.get(id=data.athlete_id)
+async def add_top_athlete(athlete_id: int = Body(embed=True)):
+    athlete = await Athlete.get(id=athlete_id)
     top = await TopAthlete.create(athlete=athlete)
     return await TopAthleteOut.from_tortoise_orm(top)
 
@@ -34,8 +34,8 @@ async def get_recent_events():
 
 
 @router.post("/recent-events", dependencies=[Depends(admin_required)], response_model=RecentEventOut)
-async def add_recent_event(data: RecentEventIn):
-    competition = await Competition.get(id=data.competition_id)
+async def add_recent_event(competition_id=Body(embed=True)):
+    competition = await Competition.get(id=competition_id)
     event = await RecentEvent.create(competition=competition)
     return await RecentEventOut.from_tortoise_orm(event)
 

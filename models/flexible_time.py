@@ -1,15 +1,9 @@
-import time
 import re
 import datetime
 from typing import Any, Optional
 from pydantic_core import core_schema
 from pydantic import GetCoreSchemaHandler
 from tortoise import fields
-
-
-def get_local_timezone():
-    offset_sec = -time.timezone if time.localtime().tm_isdst == 0 else -time.altzone
-    return datetime.timezone(datetime.timedelta(seconds=offset_sec))
 
 
 class FlexibleTime(datetime.time):
@@ -101,12 +95,12 @@ class FlexibleTimeField(fields.Field[FlexibleTime], FlexibleTime):
                 minute=value.minute,
                 second=value.second,
                 microsecond=value.microsecond,
-                tzinfo=get_local_timezone()
+                tzinfo=datetime.timezone.utc
             )
 
         if isinstance(value, datetime.time):
             if value.tzinfo is None:
-                return value.replace(tzinfo=get_local_timezone())
+                return value.replace(tzinfo=datetime.timezone.utc)
             return value
 
         raise ValueError(f"Unsupported value for FlexibleTimeField: {value}")

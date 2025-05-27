@@ -51,7 +51,7 @@ class Athlete(TimestampedModel):
     birth_year = fields.CharField(max_length=4)
     club = fields.CharField(max_length=255)
     city = fields.CharField(max_length=255, null=True)
-    license = fields.CharField(max_length=50)
+    license = fields.CharField(max_length=50, null=True)
     gender = fields.CharField(max_length=1)
     avatar_url = fields.CharField(max_length=250, null=True)
 
