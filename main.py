@@ -13,7 +13,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 
 app = FastAPI(
-    title="Swimming API",
+    title="FinCubes API",
     lifespan=lifespan
 )
 
@@ -29,8 +29,9 @@ if dev_mode:
          "description": "Local server"}
     ]
 else:
-    origins = ['https://fincubes.ru']
-    allowed_hosts = ["localhost", "127.0.0.1", "fincubes.ru", "*.fincubes.ru"]
+    origins = ['https://fincubes.ru', 'https://fincubes.online']
+    allowed_hosts = ["localhost", "127.0.0.1",
+                     "fincubes.ru", "*.fincubes.ru", "fincubes.online"]
 
 
 app.add_middleware(
