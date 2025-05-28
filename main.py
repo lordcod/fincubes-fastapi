@@ -29,9 +29,9 @@ if dev_mode:
          "description": "Local server"}
     ]
 else:
-    origins = ['https://fincubes.ru', 'https://fincubes.online']
+    origins = ['https://fincubes.ru', 'https://dev.fincubes.ru']
     allowed_hosts = ["localhost", "127.0.0.1",
-                     "fincubes.ru", "*.fincubes.ru", "fincubes.online"]
+                     "fincubes.ru", "*.fincubes.ru"]
 
 
 app.add_middleware(
