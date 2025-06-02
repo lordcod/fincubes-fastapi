@@ -40,14 +40,14 @@ jobs:
           echo DATABASE_URL="postgres://postgres:postgres@postgres:5432" >> .env
           echo REDIS_URL="redis://@redis:6379" >> .env
           echo SECRET_KEY="your-256-bit-secret" >> .env
-          echo TURNSTILE_SECRET_KEY="0x4AAAAAABc705Dyt3j4XjzmE1DfMZu9LU4" >> .env
-          echo SMTP_HOST="{{ secrets.SMTP_HOST }}" >> .env
-          echo SMTP_PORT="{{ secrets.SMTP_PORT }}" >> .env
-          echo SMTP_USER="{{ secrets.SMTP_USER }}" >> .env
-          echo SMTP_PASSWORD="{{ secrets.SMTP_PASSWORD }}" >> .env
-          echo AWS_KEY_ID="{{ secrets.AWS_KEY_ID }}" >> .env
-          echo AWS_SECRET_KEY="{{ secrets.AWS_SECRET_KEY }}" >> .env
-          echo BUCKET_NAME="{{ secrets.BUCKET_NAME }}" >> .env
+          echo TURNSTILE_SECRET_KEY="${{ secrets.TURNSTILE_SECRET_KEY }}" >> .env
+          echo SMTP_HOST="${{ secrets.SMTP_HOST }}" >> .env
+          echo SMTP_PORT="${{ secrets.SMTP_PORT }}" >> .env
+          echo SMTP_USER="${{ secrets.SMTP_USER }}" >> .env
+          echo SMTP_PASSWORD="${{ secrets.SMTP_PASSWORD }}" >> .env
+          echo AWS_KEY_ID="${{ secrets.AWS_KEY_ID }}" >> .env
+          echo AWS_SECRET_KEY="${{ secrets.AWS_SECRET_KEY }}" >> .env
+          echo BUCKET_NAME="${{ secrets.BUCKET_NAME }}" >> .env
           cat .env
       - name: Install dependencies
         run: |
