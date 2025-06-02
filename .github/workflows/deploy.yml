@@ -37,8 +37,8 @@ jobs:
       - name: Create env file
         run: |
           touch .env
-          echo DATABASE_URL=postgres://postgres:postgres@postgres:5432 >> .env
-          echo REDIS_URL=redis://@redis:6379 >> .env
+          echo DATABASE_URL=postgres://postgres:postgres@localhost:5432 >> .env
+          echo REDIS_URL=redis://@localhost:6379 >> .env
           echo SECRET_KEY=your-256-bit-secret >> .env
           cat .env
       - name: Install dependencies
