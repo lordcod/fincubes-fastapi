@@ -6,12 +6,12 @@ def test():
     with TestClient(app) as client:
         response = client.get("/")
         print(
-            f'Getting {response.status_code} status, data: {response.json()}')
+            f'Getting {response.status_code} status, data: {response.read().decode()}')
         assert response.status_code == 404
 
         response = client.get("/competitions/nearests")
         print(
-            f'Getting {response.status_code} status, data: {response.json()}')
+            f'Getting {response.status_code} status, data: {response.read().decode()}')
         assert response.status_code == 200
         assert isinstance(response.json(), list)
 
