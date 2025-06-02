@@ -21,8 +21,9 @@ dev_mode = sys.platform == 'win32'
 logger = logging.getLogger(__name__)
 
 if dev_mode:
-    logger.info("Start app in dev mode")
+    print("Start app in dev mode")
     origins = ['*']
+    origins = ['http://localhost:5173', 'http://localhost:4173']
     allowed_hosts = ["*"]
     app.servers = [
         {"url": "https://localhost:8000",
