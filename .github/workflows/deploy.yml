@@ -31,11 +31,14 @@ jobs:
           --health-retries 5
       redis:
         image: redis
+        ports:
+          - 6379/tcp
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+          --entrypoint redis-server
 
     steps:
       - uses: actions/checkout@v2
