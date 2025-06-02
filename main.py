@@ -48,7 +48,7 @@ app.add_middleware(
     allowed_hosts=allowed_hosts
 )
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.add_exception_handler(APIError, api_error_handler)
 
