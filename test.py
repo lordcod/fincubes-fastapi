@@ -5,6 +5,7 @@ from main import app
 def test():
     with TestClient(app) as client:
         response = client.get("/")
+        print(response.headers, response.request.headers)
         print(
             f'Getting {response.status_code} status, data: {response.read().decode()}')
         assert response.status_code == 404

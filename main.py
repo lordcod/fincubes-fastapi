@@ -31,7 +31,7 @@ if dev_mode:
     ]
 else:
     origins = ['https://fincubes.ru', 'https://dev.fincubes.ru']
-    allowed_hosts = ["localhost", "127.0.0.1",
+    allowed_hosts = ["testserver", "localhost", "127.0.0.1",
                      "fincubes.ru", "*.fincubes.ru"]
 
 
