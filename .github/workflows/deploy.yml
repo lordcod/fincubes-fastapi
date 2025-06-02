@@ -85,7 +85,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 22
           script: |
-            cd /fincubes 
+            cd ~/fincubes 
             source ~/fincubes_venv/bin/activate
             git pull origin main --rebase --autostash
             git status 
