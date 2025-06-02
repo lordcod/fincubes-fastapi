@@ -64,7 +64,7 @@ jobs:
       - name: Run appsp
         run: |
           source venv/bin/activate
-          uvicorn main:app --host 0.0.0.0 --port 8000
+          python test.py
         env:
           TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}

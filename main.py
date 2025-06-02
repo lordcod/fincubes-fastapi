@@ -19,7 +19,6 @@ app = FastAPI(
 
 dev_mode = sys.platform == 'win32'
 logger = logging.getLogger(__name__)
-print('DB URL', DATABASE_URL)
 
 if dev_mode:
     print("Start app in dev mode")
