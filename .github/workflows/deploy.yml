@@ -14,7 +14,11 @@ jobs:
       postgres:
         image: postgres
         env:
+          POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432/tcp
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -37,7 +41,6 @@ jobs:
       - name: Create env file
         run: |
           touch .env
-          echo DATABASE_URL=postgres://postgres:postgres@localhost:5432 >> .env
           echo REDIS_URL=redis://@localhost:6379 >> .env
           echo SECRET_KEY=your-256-bit-secret >> .env
           cat .env
@@ -64,3 +67,4 @@ jobs:
           AWS_KEY_ID: ${{ secrets.AWS_KEY_ID }}
           AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
           BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
+          DATABASE_URL: postgres://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@${{ secrets.POSTGRES_HOST }}:5432
