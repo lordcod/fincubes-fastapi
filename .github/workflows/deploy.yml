@@ -46,7 +46,6 @@ jobs:
       - name: Create env file
         run: |
           touch .env
-          echo REDIS_URL=redis://@localhost:6379 >> .env
           echo SECRET_KEY=your-256-bit-secret >> .env
           cat .env
       - name: Install dependencies
@@ -73,3 +72,4 @@ jobs:
           AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
           BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
           DATABASE_URL: postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}
+          REDIS_URL: redis://@localhost:${{ job.services.redis.ports[6379] }}
