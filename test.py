@@ -5,14 +5,15 @@ from main import app
 def test():
     with TestClient(app) as client:
         response = client.get("/")
-        assert response.status_code == 404, ('Receive %s status' %
-                                             response.status_code)
+        print(
+            f'Getting {response.status_code} status, data: {response.json()}')
+        assert response.status_code == 404
 
         response = client.get("/competitions/nearests")
-        assert response.status_code == 200, ('Receive %s status' %
-                                             response.status_code)
-        assert isinstance(response.json(), list), 'Receive %s type' % type(
-            response.json())
+        print(
+            f'Getting {response.status_code} status, data: {response.json()}')
+        assert response.status_code == 200
+        assert isinstance(response.json(), list)
 
 
 if __name__ == '__main__':
