@@ -13,7 +13,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 
 app = FastAPI(
-    title="Swimming API",
+    title="FinCubes API",
     lifespan=lifespan
 )
 
@@ -21,16 +21,18 @@ dev_mode = sys.platform == 'win32'
 logger = logging.getLogger(__name__)
 
 if dev_mode:
-    logger.info("Start app in dev mode")
+    print("Start app in dev mode")
     origins = ['*']
+    origins = ['http://localhost:5173', 'http://localhost:4173']
     allowed_hosts = ["*"]
     app.servers = [
         {"url": "https://localhost:8000",
          "description": "Local server"}
     ]
 else:
-    origins = ['https://fincubes.ru']
-    allowed_hosts = ["localhost", "127.0.0.1", "fincubes.ru", "*.fincubes.ru"]
+    origins = ['https://fincubes.ru', 'https://dev.fincubes.ru']
+    allowed_hosts = ["testserver", "localhost", "127.0.0.1",
+                     "fincubes.ru", "*.fincubes.ru"]
 
 
 app.add_middleware(
@@ -46,7 +48,7 @@ app.add_middleware(
     allowed_hosts=allowed_hosts
 )
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.add_exception_handler(APIError, api_error_handler)
 

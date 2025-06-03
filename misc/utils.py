@@ -87,7 +87,11 @@ async def get_top_results(
 
     results_with_best = await Result.filter(filters).annotate(
         best=Case(
-            When(final__isnull=False, then=F("final")),
+            When(
+                Q(final__isnull=False) & (
+                    Q(result__isnull=True) | Q(final__lt=F("result"))),
+                then=F("final")
+            ),
             default=F("result")
         )
     ).order_by("best").prefetch_related("athlete", "competition").all()

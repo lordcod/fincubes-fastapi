@@ -1,0 +1,93 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+env:
+  registry: my_registry_name
+  DB_HOST: localhost
+  DB_USERNAME: postgres
+  DB_PASSWORD: postgres
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:10.8
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432/tcp
+        options: >-
+          --health-cmd pg_isready 
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis
+        ports:
+          - 6379/tcp
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --entrypoint redis-server
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.12"
+      - name: Create env file
+        run: |
+          touch .env
+          echo SECRET_KEY=your-256-bit-secret >> .env
+          cat .env
+      - name: Install dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+
+      - name: Run test
+        run: |
+          source venv/bin/activate
+
+      - name: Run app
+        run: |
+          source venv/bin/activate
+          python test.py
+        env:
+          TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          AWS_KEY_ID: ${{ secrets.AWS_KEY_ID }}
+          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+          BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
+          DATABASE_URL: postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}
+          REDIS_URL: redis://@localhost:${{ job.services.redis.ports[6379] }}
+
+      - name: Deploy using ssh
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST  }}
+          username: ${{ secrets.SERVER_USER  }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          script: |
+            cd ~/fincubes 
+            source ~/fincubes_venv/bin/activate
+            git pull origin main --rebase --autostash
+            git status 
+            pip install -r requirements.txt
+            sudo systemctl restart fincubes.service

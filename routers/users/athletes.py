@@ -66,8 +66,6 @@ async def upload_avatar(
 
     content = await get_content(file)
     ext = file.filename.split('.')[-1]
-    if athlete.avatar_url:
-        await delete_file(url=athlete.avatar_url)
 
     avatar_url = await upload_file(content, f'{athlete.id}.{ext}')
     athlete.avatar_url = avatar_url
@@ -80,8 +78,10 @@ async def upload_avatar(
 async def delete_avatar(
     athlete: Athlete = Depends(get_role(UserRoleEnum.ATHLETE))
 ):
-    athlete.avatar_url = None
-    await athlete.save()
+    if athlete.avatar_url:
+        await delete_file(url=athlete.avatar_url)
+        athlete.avatar_url = None
+        await athlete.save()
     return await Athlete_Pydantic.from_tortoise_orm(athlete)
 
 
