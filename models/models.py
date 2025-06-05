@@ -171,14 +171,6 @@ class User(TimestampedModel):
     premium = fields.BooleanField(default=False)
     verified = fields.BooleanField(default=False)
 
-    athlete = fields.ForeignKeyField(
-        "models.Athlete",
-        related_name="user",
-        null=True,
-        on_delete=fields.SET_NULL,
-        unique=True
-    )
-
 
 class UserVerification(TimestampedModel):
     id = fields.IntField(pk=True)
