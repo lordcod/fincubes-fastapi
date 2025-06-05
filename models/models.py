@@ -18,6 +18,7 @@ class Competition(TimestampedModel):
     name = fields.CharField(max_length=255)
     date = fields.CharField(max_length=50)
     location = fields.CharField(max_length=255)
+    city = fields.CharField(max_length=255, null=True)
     organizer = fields.CharField(max_length=100)
     status = fields.CharField(max_length=100, null=True)
     links = fields.JSONField()
@@ -170,14 +171,6 @@ class User(TimestampedModel):
     admin = fields.BooleanField(default=False)
     premium = fields.BooleanField(default=False)
     verified = fields.BooleanField(default=False)
-
-    athlete = fields.ForeignKeyField(
-        "models.Athlete",
-        related_name="user",
-        null=True,
-        on_delete=fields.SET_NULL,
-        unique=True
-    )
 
 
 class UserVerification(TimestampedModel):
