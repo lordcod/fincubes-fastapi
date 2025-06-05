@@ -64,7 +64,7 @@ jobs:
       - name: Run app
         run: |
           source venv/bin/activate
-          python test.py
+          python tests/test.py
         env:
           TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
