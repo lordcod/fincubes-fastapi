@@ -32,7 +32,7 @@ if dev_mode:
 else:
     origins = ['https://fincubes.ru', 'https://dev.fincubes.ru']
     allowed_hosts = ["testserver", "localhost", "127.0.0.1",
-                     "fincubes.ru", "*.fincubes.ru"]
+                     "fincubes.ru", "*.fincubes.ru", 'http://localhost:5173', 'http://localhost:4173']
 
 
 app.add_middleware(
