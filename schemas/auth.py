@@ -8,8 +8,7 @@ from models.models import User
 from schemas import with_nested
 
 
-UserResponse = with_nested(pydantic_model_creator(User, exclude=('hashed_password',)),
-                           athlete_id=Optional[int])
+UserResponse = pydantic_model_creator(User, exclude=('hashed_password',))
 
 
 class UserLogin(BaseModel):
