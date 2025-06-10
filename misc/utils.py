@@ -22,6 +22,7 @@ return redis.call('ZRANK', zset_name, score)
 ranking_sql_raw = """
 SELECT
     r.athlete_id,
+    r.id,
     r.stroke,
     r.distance,
     a.gender,
@@ -35,7 +36,9 @@ FROM
 JOIN
     athletes a ON a.id = r.athlete_id
 WHERE
-    (r.result IS NOT NULL OR r.final IS NOT NULL) WHERE 
+    (r.result IS NOT NULL OR r.final IS NOT NULL) AND r.stroke = 'BIFINS'
+      AND r.distance = '100'
+      AND a.gender = 'F' 
 GROUP BY
     r.athlete_id, r.stroke, r.distance, a.gender;"""
 
