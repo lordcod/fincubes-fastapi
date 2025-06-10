@@ -52,6 +52,8 @@ best_full_results AS (
 
         c.name AS competition_name,
         c.date AS competition_date,
+        c.start_date AS competition_start_date,
+        c.end_date AS competition_end_date,
 
         r.effective_result AS best,
 

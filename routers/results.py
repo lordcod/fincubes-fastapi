@@ -5,10 +5,11 @@ from tortoise.exceptions import DoesNotExist
 from misc.errors import APIError, ErrorCode
 from models.deps import get_redis
 from models.models import Athlete, Competition, Result
-from schemas.top import RandomTop_Pydantic, Top_Pydantic
+from schemas.top import RandomTop, BestFullResult, parse_best_full_result, TopResponse
 from schemas.result import BulkCreateResult, BulkCreateResultResponse, Result_Pydantic, ResultIn_Pydantic
 from misc.security import admin_required
-from misc.utils import get_rank, get_top_results
+from misc.utils import get_rank
+from misc.get_top_results import get_top_results
 
 router = APIRouter(prefix='/results', tags=['results', 'top'])
 
@@ -39,13 +40,13 @@ async def get_records_nearests():
     return results
 
 
-@router.get('/top/random', response_model=RandomTop_Pydantic)
+@router.get('/top/random', response_model=RandomTop)
 async def get_random_top():
     item = random.choice(swim_styles)
     return item
 
 
-@router.get('/top/', response_model=Top_Pydantic)
+@router.get('/top/', response_model=TopResponse)
 async def get_top(
     distance: int,
     stroke: str,
@@ -54,7 +55,6 @@ async def get_top(
     offset: int = 0,
     min_age: int = None,
     max_age: int = None,
-    competition_ids: list[int] = None,
     season: Optional[int] = None,
     current_season: Optional[bool] = False
 ):
@@ -66,15 +66,10 @@ async def get_top(
         offset,
         min_age,
         max_age,
-        competition_ids,
         season,
         current_season
     )
-    return Top_Pydantic(
-        distance=distance,
-        stroke=stroke,
-        results=results
-    )
+    return {'results': [parse_best_full_result(res) for res in results]}
 
 
 @router.get("/", response_model=List[Result_Pydantic])
