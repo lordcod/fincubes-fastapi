@@ -4,7 +4,12 @@ from misc.errors import APIError, ErrorCode
 from models.models import User
 from schemas.auth import UserCreate, UserLogin, TokenResponse
 from passlib.context import CryptContext
-from misc.security import get_current_user, hash_password, verify_password, create_access_token
+from misc.security import (
+    get_current_user,
+    hash_password,
+    verify_password,
+    create_access_token,
+)
 from misc.cloudflare import check_verification
 
 
@@ -42,7 +47,11 @@ async def login_user(user_login: UserLogin):
 
 
 @router.put("/change-password", status_code=204)
-async def change_password(current_password: str, new_password: str, current_user: User = Depends(get_current_user)):
+async def change_password(
+    current_password: str,
+    new_password: str,
+    current_user: User = Depends(get_current_user),
+):
     if not verify_password(current_user.hashed_password, current_password):
         raise APIError(ErrorCode.INCORRECT_CURRENT_PASSWORD)
 

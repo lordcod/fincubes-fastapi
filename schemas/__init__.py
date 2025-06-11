@@ -2,7 +2,8 @@ import datetime
 from typing import TYPE_CHECKING
 from tortoise.contrib.pydantic import pydantic_model_creator, PydanticModel
 from typing import TypeVar
-T = TypeVar('T')
+
+T = TypeVar("T")
 
 
 def with_nested(base_model, **nested_fields) -> PydanticModel:
@@ -19,16 +20,13 @@ def with_nested(base_model, **nested_fields) -> PydanticModel:
             # не задаём значение по умолчанию
     namespace["__annotations__"] = annotations
 
-    return type(
-        f"{base_model.__name__}WithNested",
-        (base_model,),
-        namespace
-    )
+    return type(f"{base_model.__name__}WithNested", (base_model,), namespace)
 
 
 if TYPE_CHECKING:
     create_pydantic_model = pydantic_model_creator
 else:
+
     def create_pydantic_model(model, **kwargs):
         custom_encoders = {
             datetime.time: lambda v: str(v),

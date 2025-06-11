@@ -5,49 +5,54 @@ from tortoise.exceptions import DoesNotExist
 from misc.errors import APIError, ErrorCode
 from models.deps import get_redis
 from models.models import Athlete, Competition, Result
-from schemas.top import RandomTop, BestFullResult, parse_best_full_result, TopResponse
-from misc.redis_cache_compressed import RedisCachePickleCompressed
-from schemas.result import BulkCreateResult, BulkCreateResultResponse, Result_Pydantic, ResultIn_Pydantic
+from schemas.top import RandomTop, parse_best_full_result, TopResponse
+from schemas.result import (
+    BulkCreateResult,
+    BulkCreateResultResponse,
+    Result_Pydantic,
+    ResultIn_Pydantic,
+)
 from misc.security import admin_required
 from misc.ratings import get_rank
 from misc.get_top_results import get_top_results
 
-router = APIRouter(prefix='/results', tags=['results', 'top'])
+router = APIRouter(prefix="/results", tags=["results", "top"])
 
 swim_styles = [
-    {'stroke': 'APNEA', 'distance': 50},
-
-    {'stroke': 'BIFINS', 'distance': 50},
-    {'stroke': 'BIFINS', 'distance': 100},
-    {'stroke': 'BIFINS', 'distance': 200},
-    {'stroke': 'BIFINS', 'distance': 400},
-
-    {'stroke': 'IMMERSION', 'distance': 100},
-    {'stroke': 'IMMERSION', 'distance': 400},
-
-    {'stroke': 'SURFACE', 'distance': 50},
-    {'stroke': 'SURFACE', 'distance': 100},
-    {'stroke': 'SURFACE', 'distance': 200},
-    {'stroke': 'SURFACE', 'distance': 400},
-    {'stroke': 'SURFACE', 'distance': 800},
-    {'stroke': 'SURFACE', 'distance': 1500},
+    {"stroke": "APNEA", "distance": 50},
+    {"stroke": "BIFINS", "distance": 50},
+    {"stroke": "BIFINS", "distance": 100},
+    {"stroke": "BIFINS", "distance": 200},
+    {"stroke": "BIFINS", "distance": 400},
+    {"stroke": "IMMERSION", "distance": 100},
+    {"stroke": "IMMERSION", "distance": 400},
+    {"stroke": "SURFACE", "distance": 50},
+    {"stroke": "SURFACE", "distance": 100},
+    {"stroke": "SURFACE", "distance": 200},
+    {"stroke": "SURFACE", "distance": 400},
+    {"stroke": "SURFACE", "distance": 800},
+    {"stroke": "SURFACE", "distance": 1500},
 ]
 
 
 @router.get("/records/nearests", response_model=List[Result_Pydantic])
 async def get_records_nearests():
-    results = await Result.filter(
-        record__isnull=False, record__not="").order_by('-competition__end_date').prefetch_related("competition", "athlete").limit(3)
+    results = (
+        await Result.filter(record__isnull=False, record__not="")
+        .order_by("-competition__end_date")
+        .prefetch_related("competition", "athlete")
+        .limit(3)
+    )
     return results
 
 
-@router.get('/top/random', response_model=RandomTop)
+@router.get("/top/random", response_model=RandomTop)
 async def get_random_top():
     item = random.choice(swim_styles)
     return item
 
 
-@router.get('/top/', response_model=TopResponse)
+@router.get("/top/", response_model=TopResponse)
 async def get_top(
     distance: int,
     stroke: str,
@@ -57,7 +62,7 @@ async def get_top(
     min_age: int = None,
     max_age: int = None,
     season: Optional[int] = None,
-    current_season: Optional[bool] = False
+    current_season: Optional[bool] = False,
 ):
     results = await get_top_results(
         distance,
@@ -68,9 +73,9 @@ async def get_top(
         min_age,
         max_age,
         season,
-        current_season
+        current_season,
     )
-    return {'results': [parse_best_full_result(res) for res in results]}
+    return {"results": [parse_best_full_result(res) for res in results]}
 
 
 @router.get("/", response_model=List[Result_Pydantic])
@@ -79,7 +84,7 @@ async def get_results(
     competition_id: Optional[int] = None,
     stroke: Optional[str] = None,
     distance: Optional[int] = None,
-    gender: Optional[str] = None
+    gender: Optional[str] = None,
 ):
     filters = {}
     if athlete_id:
@@ -87,7 +92,7 @@ async def get_results(
     if competition_id:
         filters["competition_id"] = competition_id
     if gender:
-        filters['athlete__gender'] = gender
+        filters["athlete__gender"] = gender
     if stroke:
         filters["stroke"] = stroke
     if distance:
@@ -97,16 +102,24 @@ async def get_results(
     return await Result_Pydantic.from_queryset(query)
 
 
-@router.post("/bulk-create", dependencies=[Depends(admin_required)], response_model=BulkCreateResultResponse)
-async def bulk_create_results(results: List[BulkCreateResult], ignore_exception: bool = True, redis=Depends(get_redis)):
+@router.post(
+    "/bulk-create",
+    dependencies=[Depends(admin_required)],
+    response_model=BulkCreateResultResponse,
+)
+async def bulk_create_results(
+    results: List[BulkCreateResult],
+    ignore_exception: bool = True,
+    redis=Depends(get_redis),
+):
     response = []
     errors = []
     competitions = {}
 
-    print('Start parsing', len(results), 'athletes')
+    print("Start parsing", len(results), "athletes")
     count = len(results)
     for index, bulk_request in enumerate(results):
-        print(f'[{index}/{count}] Athlete start process')
+        print(f"[{index}/{count}] Athlete start process")
         try:
             if bulk_request.competition_id not in competitions:
                 try:
@@ -139,37 +152,49 @@ async def bulk_create_results(results: List[BulkCreateResult], ignore_exception:
                 )
 
                 if db_result.result:
-                    await get_rank(redis,
-                                   athlete.gender,
-                                   result.stroke,
-                                   result.distance,
-                                   db_result.result)
+                    await get_rank(
+                        redis,
+                        athlete.gender,
+                        result.stroke,
+                        result.distance,
+                        db_result.result,
+                    )
                 if db_result.final:
-                    await get_rank(redis,
-                                   athlete.gender,
-                                   result.stroke,
-                                   result.distance,
-                                   db_result.final)
+                    await get_rank(
+                        redis,
+                        athlete.gender,
+                        result.stroke,
+                        result.distance,
+                        db_result.final,
+                    )
                 response.append(db_result)
         except Exception as exc:
             if not ignore_exception:
                 raise
             else:
-                errors.append({
-                    'exception': True,
-                    'name': type(exc).__name__,
-                    'description': str(exc),
-                    'input': bulk_request
-                })
+                errors.append(
+                    {
+                        "exception": True,
+                        "name": type(exc).__name__,
+                        "description": str(exc),
+                        "input": bulk_request,
+                    }
+                )
 
-    return {
-        'results': response,
-        'errors': errors
-    }
+    return {"results": response, "errors": errors}
 
 
-@router.post("/{competition_id}/{athlete_id}", dependencies=[Depends(admin_required)], response_model=Result_Pydantic)
-async def create_result(competition_id: int, athlete_id: int, result: ResultIn_Pydantic, redis=Depends(get_redis)):
+@router.post(
+    "/{competition_id}/{athlete_id}",
+    dependencies=[Depends(admin_required)],
+    response_model=Result_Pydantic,
+)
+async def create_result(
+    competition_id: int,
+    athlete_id: int,
+    result: ResultIn_Pydantic,
+    redis=Depends(get_redis),
+):
     try:
         competition = await Competition.get(id=competition_id)
         athlete = await Athlete.get(id=athlete_id)
@@ -196,16 +221,26 @@ async def create_result(competition_id: int, athlete_id: int, result: ResultIn_P
     )
 
     if result.result:
-        await get_rank(redis, athlete.gender, result.stroke, result.distance, result.result)
+        await get_rank(
+            redis, athlete.gender, result.stroke, result.distance, result.result
+        )
     if result.final:
-        await get_rank(redis, athlete.gender, result.stroke, result.distance, result.final)
+        await get_rank(
+            redis, athlete.gender, result.stroke, result.distance, result.final
+        )
 
     return await Result_Pydantic.from_tortoise_orm(db_result)
 
 
 # Роут для обновления существующего результата
-@router.put("/{competition_id}/{athlete_id}/{result_id}", dependencies=[Depends(admin_required)], response_model=Result_Pydantic)
-async def update_result(competition_id: int, athlete_id: int, result_id: int, result: ResultIn_Pydantic):
+@router.put(
+    "/{competition_id}/{athlete_id}/{result_id}",
+    dependencies=[Depends(admin_required)],
+    response_model=Result_Pydantic,
+)
+async def update_result(
+    competition_id: int, athlete_id: int, result_id: int, result: ResultIn_Pydantic
+):
     try:
         competition = await Competition.get(id=competition_id)
         athlete = await Athlete.get(id=athlete_id)
@@ -216,9 +251,10 @@ async def update_result(competition_id: int, athlete_id: int, result_id: int, re
             else ErrorCode.COMPETITION_NOT_FOUND
         )
 
-    db_result = await Result.filter(id=result_id, competition=competition, athlete=athlete).first().prefetch_related(
-        "competition",
-        "athlete"
+    db_result = (
+        await Result.filter(id=result_id, competition=competition, athlete=athlete)
+        .first()
+        .prefetch_related("competition", "athlete")
     )
     if not db_result:
         raise APIError(ErrorCode.RESULT_NOT_FOUND)
@@ -237,7 +273,11 @@ async def update_result(competition_id: int, athlete_id: int, result_id: int, re
     return await Result_Pydantic.from_tortoise_orm(db_result)
 
 
-@router.delete("/{competition_id}/{athlete_id}/{result_id}", dependencies=[Depends(admin_required)], status_code=204)
+@router.delete(
+    "/{competition_id}/{athlete_id}/{result_id}",
+    dependencies=[Depends(admin_required)],
+    status_code=204,
+)
 async def delete_result(competition_id: int, athlete_id: int, result_id: int):
     try:
         competition = await Competition.get(id=competition_id)
@@ -248,9 +288,10 @@ async def delete_result(competition_id: int, athlete_id: int, result_id: int):
             if exc.model is Athlete
             else ErrorCode.COMPETITION_NOT_FOUND
         )
-    db_result = await Result.filter(id=result_id, competition=competition, athlete=athlete).first().prefetch_related(
-        "competition",
-        "athlete"
+    db_result = (
+        await Result.filter(id=result_id, competition=competition, athlete=athlete)
+        .first()
+        .prefetch_related("competition", "athlete")
     )
     if not db_result:
         raise APIError(ErrorCode.RESULT_NOT_FOUND)

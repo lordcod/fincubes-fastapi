@@ -8,11 +8,11 @@ from tortoise import fields
 
 class FlexibleTime(datetime.time):
     time_regex = re.compile(
-        r'^(?:(?P<minutes>\d{1,2}):)?(?P<seconds>\d{1,2})[.,](?P<hundredths>\d{1,2})$'
+        r"^(?:(?P<minutes>\d{1,2}):)?(?P<seconds>\d{1,2})[.,](?P<hundredths>\d{1,2})$"
     )
 
     @classmethod
-    def validate(cls, value: Any) -> 'FlexibleTime':
+    def validate(cls, value: Any) -> "FlexibleTime":
         if not value and isinstance(value, (bool, int, str)):
             return cls()
 
@@ -23,25 +23,33 @@ class FlexibleTime(datetime.time):
             total_seconds = int(value.total_seconds())
             minutes, seconds = divmod(total_seconds, 60)
             hundredths = round(value.microseconds / 10000)
-            return cls(hour=0, minute=minutes, second=seconds, microsecond=hundredths * 10000)
+            return cls(
+                hour=0, minute=minutes, second=seconds, microsecond=hundredths * 10000
+            )
 
         if isinstance(value, datetime.time):
-            return cls(hour=value.hour, minute=value.minute, second=value.second, microsecond=value.microsecond)
+            return cls(
+                hour=value.hour,
+                minute=value.minute,
+                second=value.second,
+                microsecond=value.microsecond,
+            )
 
         if not isinstance(value, str):
-            raise TypeError(
-                f"Unsupported type for FlexibleTime: {type(value)}")
+            raise TypeError(f"Unsupported type for FlexibleTime: {type(value)}")
 
-        match = cls.time_regex.match(value.strip().replace(',', '.'))
+        match = cls.time_regex.match(value.strip().replace(",", "."))
         if not match:
             raise ValueError(f"Invalid time format: {value}")
 
         groups = match.groupdict()
-        minutes = int(groups.get('minutes') or 0)
-        seconds = int(groups.get('seconds') or 0)
-        hundredths = int(groups.get('hundredths') or 0)
+        minutes = int(groups.get("minutes") or 0)
+        seconds = int(groups.get("seconds") or 0)
+        hundredths = int(groups.get("hundredths") or 0)
 
-        return cls(hour=0, minute=minutes, second=seconds, microsecond=hundredths*10_000)
+        return cls(
+            hour=0, minute=minutes, second=seconds, microsecond=hundredths * 10_000
+        )
 
     def __str__(self) -> str:
         if self.hour:
@@ -56,7 +64,9 @@ class FlexibleTime(datetime.time):
         yield cls.validate
 
     @classmethod
-    def __get_pydantic_json_schema__(cls, schema: core_schema.CoreSchema, handler: GetCoreSchemaHandler) -> dict:
+    def __get_pydantic_json_schema__(
+        cls, schema: core_schema.CoreSchema, handler: GetCoreSchemaHandler
+    ) -> dict:
         return {
             "type": "string",
             "title": "FlexibleTime",
@@ -65,14 +75,15 @@ class FlexibleTime(datetime.time):
         }
 
     @classmethod
-    def __get_pydantic_core_schema__(cls, _source_type: Any, _handler: GetCoreSchemaHandler) -> core_schema.CoreSchema:
+    def __get_pydantic_core_schema__(
+        cls, _source_type: Any, _handler: GetCoreSchemaHandler
+    ) -> core_schema.CoreSchema:
         return core_schema.json_or_python_schema(
-            python_schema=core_schema.no_info_plain_validator_function(
-                cls.validate),
-            json_schema=core_schema.no_info_plain_validator_function(
-                cls.validate),
+            python_schema=core_schema.no_info_plain_validator_function(cls.validate),
+            json_schema=core_schema.no_info_plain_validator_function(cls.validate),
             serialization=core_schema.plain_serializer_function_ser_schema(
-                lambda v: str(v)),
+                lambda v: str(v)
+            ),
         )
 
 
@@ -95,7 +106,7 @@ class FlexibleTimeField(fields.Field[FlexibleTime], FlexibleTime):
                 minute=value.minute,
                 second=value.second,
                 microsecond=value.microsecond,
-                tzinfo=datetime.timezone.utc
+                tzinfo=datetime.timezone.utc,
             )
 
         if isinstance(value, datetime.time):
@@ -106,7 +117,9 @@ class FlexibleTimeField(fields.Field[FlexibleTime], FlexibleTime):
         raise ValueError(f"Unsupported value for FlexibleTimeField: {value}")
 
     @classmethod
-    def __get_pydantic_core_schema__(cls, source_type, handler: GetCoreSchemaHandler) -> core_schema.CoreSchema:
+    def __get_pydantic_core_schema__(
+        cls, source_type, handler: GetCoreSchemaHandler
+    ) -> core_schema.CoreSchema:
         return FlexibleTime.__get_pydantic_core_schema__(source_type, handler)
 
     skip_to_python_if_native = True

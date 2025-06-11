@@ -26,8 +26,7 @@ class UserRegistration:
     async def _create_user(self):
         hashed_password = hash_password(self.data.password)
         self.user = await User.create(
-            email=self.data.email,
-            hashed_password=hashed_password
+            email=self.data.email, hashed_password=hashed_password
         )
 
     async def _assign_role(self):
@@ -42,13 +41,13 @@ class AthleteRegistration(UserRegistration):
         if not athlete:
             raise APIError(ErrorCode.ATHLETE_NOT_FOUND)
 
-        if await UserRole.filter(role_type=UserRoleEnum.ATHLETE, profile_id=athlete.id).exists():
+        if await UserRole.filter(
+            role_type=UserRoleEnum.ATHLETE, profile_id=athlete.id
+        ).exists():
             raise APIError(ErrorCode.ATHLETE_ALREADY_BOUND_TO_OTHER_USER)
 
         await UserRole.create(
-            user=self.user,
-            role_type=UserRoleEnum.ATHLETE,
-            profile_id=athlete.id
+            user=self.user, role_type=UserRoleEnum.ATHLETE, profile_id=athlete.id
         )
 
 
@@ -59,13 +58,11 @@ class CoachRegistration(UserRegistration):
             last_name=self.data.metadata.get("last_name"),
             middle_name=self.data.metadata.get("middle_name"),
             club=self.data.metadata.get("club"),
-            city=self.data.metadata.get("city")
+            city=self.data.metadata.get("city"),
         )
 
         await UserRole.create(
-            user=self.user,
-            role_type=UserRoleEnum.COACH,
-            profile_id=coach.id
+            user=self.user, role_type=UserRoleEnum.COACH, profile_id=coach.id
         )
 
 
@@ -73,9 +70,7 @@ class ParentRegistration(UserRegistration):
     async def _assign_role(self):
         parent = await Parent.create()
         await UserRole.create(
-            user=self.user,
-            role_type=UserRoleEnum.PARENT,
-            profile_id=parent.id
+            user=self.user, role_type=UserRoleEnum.PARENT, profile_id=parent.id
         )
 
 

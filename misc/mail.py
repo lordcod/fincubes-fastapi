@@ -6,7 +6,9 @@ from misc.errors import APIError, ErrorCode
 from misc.templates import get_template
 
 
-async def send_email(to_email: str, subject: str, body_text: str, body_html: Optional[str] = None):
+async def send_email(
+    to_email: str, subject: str, body_text: str, body_html: Optional[str] = None
+):
     message = EmailMessage()
     message["From"] = SMTP_USER
     message["To"] = to_email
@@ -28,10 +30,10 @@ async def send_email(to_email: str, subject: str, body_text: str, body_html: Opt
 
 
 async def send_confirm_code(email: str, code: int):
-    html = get_template('mail_confirm_code.html', code=code)
+    html = get_template("mail_confirm_code.html", code=code)
     await send_email(
         to_email=email,
-        subject='Подтверждение аккаунта',
-        body_text=f'Ваш код: {code}',
-        body_html=html
+        subject="Подтверждение аккаунта",
+        body_text=f"Ваш код: {code}",
+        body_html=html,
     )

@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from services import s3_session
 
 
-TURNSTILE_SECRET_KEY = getenv('TURNSTILE_SECRET_KEY')
+TURNSTILE_SECRET_KEY = getenv("TURNSTILE_SECRET_KEY")
 
 
 class TurnstileResponse(BaseModel):
@@ -13,10 +13,7 @@ class TurnstileResponse(BaseModel):
 
 async def check_verification(turnstile_token: str) -> TurnstileResponse:
     url = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
-    data = {
-        "secret": TURNSTILE_SECRET_KEY,
-        "response": turnstile_token
-    }
+    data = {"secret": TURNSTILE_SECRET_KEY, "response": turnstile_token}
     async with s3_session.session.post(url, data=data) as response:
         result = await response.json()
         turnstile_result = TurnstileResponse(**result)

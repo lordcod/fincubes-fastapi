@@ -11,7 +11,9 @@ router = APIRouter()
 @router.post("/athlete/{athlete_id}", dependencies=[Depends(admin_required)])
 async def get_user_from_athlete_id(athlete_id: int):
     try:
-        user = await User.filter(athlete_id=athlete_id).prefetch_related("athlete").first()
+        user = (
+            await User.filter(athlete_id=athlete_id).prefetch_related("athlete").first()
+        )
     except DoesNotExist:
         raise APIError(ErrorCode.USER_NOT_FOUND)
     return user
@@ -27,7 +29,9 @@ async def unassign_athlete(user_id: int):
     return {"detail": "Athlete unassigned"}
 
 
-@router.post("/{user_id}/assign-athlete/{athlete_id}", dependencies=[Depends(admin_required)])
+@router.post(
+    "/{user_id}/assign-athlete/{athlete_id}", dependencies=[Depends(admin_required)]
+)
 async def assign_athlete(user_id: int, athlete_id: int):
     try:
         user = await User.get(id=user_id)

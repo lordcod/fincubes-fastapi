@@ -7,8 +7,9 @@ from schemas.competition import Competition_Pydantic
 
 
 DistanceIn_Pydantic = pydantic_model_creator(Distance, exclude_readonly=True)
-Distance_Pydantic = with_nested(pydantic_model_creator(Distance),
-                                competition=Competition_Pydantic)
+Distance_Pydantic = with_nested(
+    pydantic_model_creator(Distance), competition=Competition_Pydantic
+)
 
 
 class DistanceOrderUpdate_Pydantic(BaseModel):

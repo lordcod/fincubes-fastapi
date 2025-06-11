@@ -1,4 +1,3 @@
-
 from tortoise import timezone
 from fastapi import APIRouter, Depends
 from typing import List
@@ -13,9 +12,9 @@ router = APIRouter(prefix="/competitions", tags=["competitions"])
 @router.get("/nearests", response_model=List[Competition_Pydantic])
 async def get_competitions_nearests():
     now = timezone.now().date()
-    competitions = await Competition.filter(
-        start_date__gte=now
-    ).order_by('start_date').limit(3)
+    competitions = (
+        await Competition.filter(start_date__gte=now).order_by("start_date").limit(3)
+    )
     return competitions
 
 
@@ -32,7 +31,9 @@ async def get_competition(competition_id: int):
     return comp
 
 
-@router.post("/", dependencies=[Depends(admin_required)], response_model=Competition_Pydantic)
+@router.post(
+    "/", dependencies=[Depends(admin_required)], response_model=Competition_Pydantic
+)
 async def create_competition(data: CompetitionIn_Pydantic):
     # Создаём новое соревнование на основе переданных данных и возвращаем его с ID
     competition = await Competition.create(**data.dict())
@@ -40,7 +41,11 @@ async def create_competition(data: CompetitionIn_Pydantic):
 
 
 # PUT update existing competition
-@router.put("/{competition_id}", dependencies=[Depends(admin_required)], response_model=Competition_Pydantic)
+@router.put(
+    "/{competition_id}",
+    dependencies=[Depends(admin_required)],
+    response_model=Competition_Pydantic,
+)
 async def update_competition(competition_id: int, competition: CompetitionIn_Pydantic):
     comp = await Competition.get_or_none(id=competition_id)
     if not comp:
@@ -49,7 +54,9 @@ async def update_competition(competition_id: int, competition: CompetitionIn_Pyd
     return comp
 
 
-@router.delete("/{competition_id}", dependencies=[Depends(admin_required)], status_code=204)
+@router.delete(
+    "/{competition_id}", dependencies=[Depends(admin_required)], status_code=204
+)
 async def delete_competition(competition_id: int):
     competition = await Competition.get_or_none(id=competition_id)
     if not competition:

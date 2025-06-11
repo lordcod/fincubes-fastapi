@@ -1,14 +1,12 @@
-import datetime
 from typing import Literal, Dict, Any, Optional
 from pydantic import BaseModel, EmailStr
 
 from tortoise.contrib.pydantic import pydantic_model_creator
 
 from models.models import User
-from schemas import with_nested
 
 
-UserResponse = pydantic_model_creator(User, exclude=('hashed_password',))
+UserResponse = pydantic_model_creator(User, exclude=("hashed_password",))
 
 
 class UserLogin(BaseModel):

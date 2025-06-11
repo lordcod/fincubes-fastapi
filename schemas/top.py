@@ -54,15 +54,15 @@ def parse_best_full_result(row: dict) -> BestFullResult:
         result=Result(
             id=row["result_id"],
             result=FlexibleTime.validate(row.get("result_result")),
-            final=row.get("result_final") and FlexibleTime.validate(
-                row.get("result_final")),
+            final=row.get("result_final")
+            and FlexibleTime.validate(row.get("result_final")),
             competition_id=row["competition_id"],
             athlete_id=row["athlete_id"],
             stroke=row["stroke"],
-            distance=row["distance"]
+            distance=row["distance"],
         ),
         athlete=Athlete(
-            id=row['athlete_id'],
+            id=row["athlete_id"],
             first_name=row["athlete_first_name"],
             last_name=row["athlete_last_name"],
             gender=row["athlete_gender"],
@@ -78,5 +78,5 @@ def parse_best_full_result(row: dict) -> BestFullResult:
             end_date=row["competition_end_date"],
         ),
         best=FlexibleTime.validate(row["best"]),
-        row_num=row["row_num"]
+        row_num=row["row_num"],
     )

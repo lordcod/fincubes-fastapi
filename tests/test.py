@@ -12,7 +12,7 @@ test_data_competition = {
     "location": "FINCUBES SITE",
     "organizer": "FINCUBES",
     "links": [],
-    "status": "ALL"
+    "status": "ALL",
 }
 
 
@@ -23,24 +23,27 @@ async def test():
         response = client.get("/")
         print(response.headers, response.request.headers)
         print(
-            f'Getting {response.status_code} status, data: {response.read().decode()}')
+            f"Getting {response.status_code} status, data: {response.read().decode()}"
+        )
         assert response.status_code == 404
 
         response = client.get("/competitions/nearests")
         print(
-            f'Getting {response.status_code} status, data: {response.read().decode()}')
+            f"Getting {response.status_code} status, data: {response.read().decode()}"
+        )
         assert response.status_code == 200
         assert isinstance(response.json(), list)
 
-        response = client.post("/competitions/",
-                               json=test_data_competition,
-                               headers={
-                                   'Authorization': 'Bearer ' + ' '
-                               })
+        response = client.post(
+            "/competitions/",
+            json=test_data_competition,
+            headers={"Authorization": "Bearer " + " "},
+        )
         print(
-            f'Getting {response.status_code} status, data: {response.read().decode()}')
+            f"Getting {response.status_code} status, data: {response.read().decode()}"
+        )
         assert response.status_code == 403
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(test())

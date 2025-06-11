@@ -14,24 +14,26 @@ async def send_verify_code(current_user: User = Depends(get_current_user)):
     if current_user.verified:
         raise APIError(ErrorCode.ALREADY_VERIFIED)
 
-    code = str(random.randint(100000, 1_000_000-1))
+    code = str(random.randint(100000, 1_000_000 - 1))
 
-    await UserVerification.filter(user_id=current_user.id,
-                                  is_active=True).update(is_active=False)
-
-    await UserVerification.create(
-        user=current_user,
-        code=code
+    await UserVerification.filter(user_id=current_user.id, is_active=True).update(
+        is_active=False
     )
+
+    await UserVerification.create(user=current_user, code=code)
     await send_confirm_code(current_user.email, code)
 
 
 @router.post("/verify", status_code=204)
-async def verify_email(code: str = Body(..., embed=True), current_user: User = Depends(get_current_user)):
+async def verify_email(
+    code: str = Body(..., embed=True), current_user: User = Depends(get_current_user)
+):
     if current_user.verified:
         raise APIError(ErrorCode.ALREADY_VERIFIED)
 
-    verification = await UserVerification.filter(user_id=current_user.id, is_active=True).first()
+    verification = await UserVerification.filter(
+        user_id=current_user.id, is_active=True
+    ).first()
     if verification is None:
         raise APIError(ErrorCode.VERIFICATION_NOT_FOUND)
 

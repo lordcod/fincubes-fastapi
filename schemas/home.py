@@ -7,11 +7,11 @@ from schemas.competition import Competition_Pydantic
 
 
 TopAthleteIn = pydantic_model_creator(TopAthlete, exclude_readonly=True)
-TopAthleteOut = with_nested(pydantic_model_creator(TopAthlete),
-                            athlete=Athlete_Pydantic)
+TopAthleteOut = with_nested(
+    pydantic_model_creator(TopAthlete), athlete=Athlete_Pydantic
+)
 
 RecentEventIn = pydantic_model_creator(RecentEvent, exclude_readonly=True)
 RecentEventOut = RecentEventOut = with_nested(
-    pydantic_model_creator(RecentEvent),
-    competition=Competition_Pydantic
+    pydantic_model_creator(RecentEvent), competition=Competition_Pydantic
 )

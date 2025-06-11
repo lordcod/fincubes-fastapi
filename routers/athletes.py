@@ -15,10 +15,12 @@ from tortoise.expressions import Q
 from misc.security import admin_required
 from schemas.top import BestFullResult
 
-router = APIRouter(prefix='/athletes', tags=['athletes'])
+router = APIRouter(prefix="/athletes", tags=["athletes"])
 
 
-@router.post("/", dependencies=[Depends(admin_required)], response_model=Athlete_Pydantic)
+@router.post(
+    "/", dependencies=[Depends(admin_required)], response_model=Athlete_Pydantic
+)
 async def create_athlete(athlete: AthleteIn_Pydantic):
     db_athlete = await Athlete.create(
         last_name=athlete.last_name,
@@ -26,7 +28,7 @@ async def create_athlete(athlete: AthleteIn_Pydantic):
         birth_year=athlete.birth_year,
         club=athlete.club,
         license=athlete.license,
-        gender=athlete.gender
+        gender=athlete.gender,
     )
     return db_athlete
 
@@ -39,7 +41,7 @@ async def get_athletes(
     birth_year: int = None,
     club: str = None,
     gender: str = None,
-    limit: int = None
+    limit: int = None,
 ):
     q_filter = Q()
 
@@ -56,23 +58,29 @@ async def get_athletes(
 
         elif len(parts) == 2:
             a, b = parts
-            q_filter |= (Q(last_name__icontains=a) &
-                         Q(first_name__icontains=b))
-            q_filter |= (Q(last_name__icontains=b) &
-                         Q(first_name__icontains=a))
+            q_filter |= Q(last_name__icontains=a) & Q(first_name__icontains=b)
+            q_filter |= Q(last_name__icontains=b) & Q(first_name__icontains=a)
 
         elif len(parts) == 3:
             a, b, c = parts
             if c.isdigit():
-                q_filter |= (Q(last_name__icontains=a) & Q(
-                    first_name__icontains=b) & Q(birth_year=int(c)))
-                q_filter |= (Q(last_name__icontains=b) & Q(
-                    first_name__icontains=a) & Q(birth_year=int(c)))
+                q_filter |= (
+                    Q(last_name__icontains=a)
+                    & Q(first_name__icontains=b)
+                    & Q(birth_year=int(c))
+                )
+                q_filter |= (
+                    Q(last_name__icontains=b)
+                    & Q(first_name__icontains=a)
+                    & Q(birth_year=int(c))
+                )
             else:
-                q_filter |= (Q(last_name__icontains=a) & Q(
-                    first_name__icontains=f"{b} {c}"))
-                q_filter |= (Q(last_name__icontains=b) & Q(
-                    first_name__icontains=f"{a} {c}"))
+                q_filter |= Q(last_name__icontains=a) & Q(
+                    first_name__icontains=f"{b} {c}"
+                )
+                q_filter |= Q(last_name__icontains=b) & Q(
+                    first_name__icontains=f"{a} {c}"
+                )
 
     if last_name:
         q_filter &= Q(last_name__icontains=last_name)
@@ -101,7 +109,11 @@ async def get_athlete(id: int):
         raise APIError(ErrorCode.ATHLETE_NOT_FOUND)
 
 
-@router.put("/{athlete_id}", dependencies=[Depends(admin_required)], response_model=Athlete_Pydantic)
+@router.put(
+    "/{athlete_id}",
+    dependencies=[Depends(admin_required)],
+    response_model=Athlete_Pydantic,
+)
 async def update_athlete(athlete_id: int, athlete: AthleteIn_Pydantic):
     db_athlete = await Athlete.get_or_none(id=athlete_id)
     if not db_athlete:
@@ -121,7 +133,7 @@ async def update_athlete(athlete_id: int, athlete: AthleteIn_Pydantic):
 
 @router.get("/{athlete_id}/performances", response_model=UserAthleteResults)
 async def get_athlete_results(athlete_id: int, redis=Depends(get_redis)):
-    cache_key = f'performances:{athlete_id}'
+    cache_key = f"performances:{athlete_id}"
     cache = RedisCachePickleCompressed(redis)
     cached = await cache.get(cache_key)
     if cached:
@@ -129,7 +141,9 @@ async def get_athlete_results(athlete_id: int, redis=Depends(get_redis)):
 
     try:
         athlete = await Athlete.get(id=athlete_id)
-        results_query = await Result.filter(athlete=athlete).prefetch_related("competition")
+        results_query = await Result.filter(athlete=athlete).prefetch_related(
+            "competition"
+        )
     except DoesNotExist:
         raise APIError(ErrorCode.ATHLETE_NOT_FOUND)
 
@@ -146,13 +160,15 @@ async def get_athlete_results(athlete_id: int, redis=Depends(get_redis)):
 
     rank_calls: List[Tuple[Result, time]] = []
     for result in results_query:
-        min_time = (result.final if result.final and result.final <=
-                    result.result else result.result)
+        min_time = (
+            result.final
+            if result.final and result.final <= result.result
+            else result.result
+        )
         rank_calls.append((result, min_time))
 
     tasks = [
-        get_rank_safe(athlete.gender, result.stroke,
-                      result.distance, min_time)
+        get_rank_safe(athlete.gender, result.stroke, result.distance, min_time)
         for result, min_time in rank_calls
     ]
     ranks = await asyncio.gather(*tasks)
@@ -165,7 +181,7 @@ async def get_athlete_results(athlete_id: int, redis=Depends(get_redis)):
                 "date": result.competition.date,
                 "start_date": result.competition.start_date,
                 "competition": result.competition.name,
-                "performances": []
+                "performances": [],
             }
 
         performances = {
@@ -180,29 +196,33 @@ async def get_athlete_results(athlete_id: int, redis=Depends(get_redis)):
             "dsq": result.dsq,
             "dsq_final": result.dsq_final,
             "min_time": min_time,
-            "top_rank": top_rank
+            "top_rank": top_rank,
         }
 
         key = (result.stroke, result.distance)
         best_performance = best_results.get(key)
-        if min_time and (best_performance is None or (best_performance['min_time'] > min_time)):
+        if min_time and (
+            best_performance is None or (best_performance["min_time"] > min_time)
+        ):
             if best_performance:
-                best_performance.pop('best', None)
-            performances['best'] = True
+                best_performance.pop("best", None)
+            performances["best"] = True
             best_results[key] = performances
 
         competitions[competition_id]["performances"].append(performances)
 
-    competitions = dict(sorted(competitions.items(),
-                        key=lambda item: item[1]['start_date'],
-                        reverse=True))
+    competitions = dict(
+        sorted(
+            competitions.items(), key=lambda item: item[1]["start_date"], reverse=True
+        )
+    )
     competition_results = [
-        UserCompetitionResult(**comp)
-        for comp in competitions.values()
+        UserCompetitionResult(**comp) for comp in competitions.values()
     ]
-    model = UserAthleteResults(athlete_id=athlete.id,
-                               results=competition_results).model_dump()
-    await cache.set(cache_key, model, expire_seconds=60*15)
+    model = UserAthleteResults(
+        athlete_id=athlete.id, results=competition_results
+    ).model_dump()
+    await cache.set(cache_key, model, expire_seconds=60 * 15)
     return model
 
 

@@ -5,7 +5,7 @@ from models.models import StandardCategory
 from schemas.standards import StandardIn, StandardOut
 from misc.security import admin_required
 
-router = APIRouter(prefix='/standard', tags=["standards"])
+router = APIRouter(prefix="/standard", tags=["standards"])
 
 
 @router.post("/", dependencies=[Depends(admin_required)], response_model=StandardOut)
@@ -16,7 +16,7 @@ async def create_standard(data: StandardIn):
         distance=data.distance,
         gender=data.gender,
         type=data.type,
-        is_active=True
+        is_active=True,
     ).update(is_active=False)
 
     standard = await StandardCategory.create(**data.model_dump())
@@ -29,7 +29,7 @@ async def list_standards(
     distance: Optional[int] = None,
     gender: Optional[str] = None,
     type: Optional[str] = None,
-    code: Optional[str] = None
+    code: Optional[str] = None,
 ):
     filters = {"is_active": True}
     if stroke:

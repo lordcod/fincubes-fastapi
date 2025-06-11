@@ -1,15 +1,14 @@
-from typing import List,  Optional, final
+from typing import List, Optional
 from pydantic import BaseModel
 from models.flexible_time import FlexibleTime
-from models.models import Competition, Result
+from models.models import Result
 
 from schemas import with_nested, create_pydantic_model
 from schemas.athlete import Athlete_Pydantic
 from schemas.competition import Competition_Pydantic
 
 
-ResultIn_Pydantic = with_nested(
-    create_pydantic_model(Result, exclude_readonly=True))
+ResultIn_Pydantic = with_nested(create_pydantic_model(Result, exclude_readonly=True))
 Result_Pydantic = with_nested(
     create_pydantic_model(Result),
     athlete=Athlete_Pydantic,

@@ -1,16 +1,14 @@
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from fastapi import Depends
-from fastapi.security import OAuth2PasswordBearer, OAuth2AuthorizationCodeBearer, OAuth2
-from tortoise.exceptions import DoesNotExist
+from fastapi.security import OAuth2PasswordBearer
 import jwt
-from typing import Any
 from misc.errors import APIError, ErrorCode
 from models.models import User
 from config import ALGORITHM, SECRET_KEY
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 PASSWORD_EXPIRATION_DAYS = 90
 

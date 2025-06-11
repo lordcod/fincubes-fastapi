@@ -5,7 +5,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends
 from misc.security import admin_required
 
-router = APIRouter(prefix='/record', tags=['record'])
+router = APIRouter(prefix="/record", tags=["record"])
 
 
 @router.post("/", dependencies=[Depends(admin_required)], response_model=RecordOut)
@@ -14,7 +14,7 @@ async def create_record(data: RecordIn):
         stroke=data.stroke,
         distance=data.distance,
         gender_age=data.gender_age,
-        is_active=True
+        is_active=True,
     ).update(is_active=False)
 
     record = await Record.create(**data.dict(), is_active=True)
@@ -25,7 +25,7 @@ async def create_record(data: RecordIn):
 async def list_records(
     stroke: Optional[str] = None,
     distance: Optional[int] = None,
-    gender: Optional[str] = None
+    gender: Optional[str] = None,
 ):
     filters = {"is_active": True}
 

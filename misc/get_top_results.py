@@ -88,12 +88,11 @@ async def get_top_results(
     min_age: Optional[int] = None,
     max_age: Optional[int] = None,
     season: Optional[int] = None,
-    current_season: Optional[bool] = False
+    current_season: Optional[bool] = False,
 ):
     cache = RedisCachePickleCompressed(client)
     cache_key_raw = f"{stroke}:{distance}:{gender}:{limit}:{offset}:{min_age}:{max_age}:{season}:{current_season}"
-    cache_key = "top_results:" + \
-        hashlib.sha256(cache_key_raw.encode()).hexdigest()
+    cache_key = "top_results:" + hashlib.sha256(cache_key_raw.encode()).hexdigest()
     cached = await cache.get(cache_key)
     if cached:
         return cached
@@ -124,12 +123,12 @@ async def get_top_results(
     if min_age is not None:
         birth_max = current_year - min_age
         params.append(birth_max)
-        conditions.append(f'CAST(a.birth_year AS INTEGER) <= ${len(params)}')
+        conditions.append(f"CAST(a.birth_year AS INTEGER) <= ${len(params)}")
 
     if max_age is not None:
         birth_min = current_year - max_age
         params.append(birth_min)
-        conditions.append(f'CAST(a.birth_year AS INTEGER) >= ${len(params)}')
+        conditions.append(f"CAST(a.birth_year AS INTEGER) >= ${len(params)}")
     if season_start is not None and season_end is not None:
         params.append(season_start)
         conditions.append(f"c.start_date >= ${len(params)}")
@@ -137,19 +136,19 @@ async def get_top_results(
         conditions.append(f"c.end_date <= ${len(params)}")
 
     if conditions:
-        where = 'WHERE ' + ' AND '.join(conditions)
+        where = "WHERE " + " AND ".join(conditions)
     else:
-        where = ''
+        where = ""
 
     params.append(offset)
     offset_num = len(params)
     params.append(limit)
     limit_num = len(params)
 
-    sql_raw = sql.format(where=where,
-                         offset=offset_num,
-                         limit=limit_num)
-    results = await Tortoise.get_connection("default").execute_query_dict(sql_raw, params)
+    sql_raw = sql.format(where=where, offset=offset_num, limit=limit_num)
+    results = await Tortoise.get_connection("default").execute_query_dict(
+        sql_raw, params
+    )
 
-    await cache.set(cache_key, results, expire_seconds=60*60)
+    await cache.set(cache_key, results, expire_seconds=60 * 60)
     return results

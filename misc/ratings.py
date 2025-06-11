@@ -1,5 +1,4 @@
 from collections import defaultdict
-import json
 import logging
 from tortoise import Tortoise
 from datetime import time
@@ -91,30 +90,22 @@ def as_duration(result: time):
         result.hour * 60 * 60
         + result.minute * 60
         + result.second
-        + ((result.microsecond // 1000)/1000)
+        + ((result.microsecond // 1000) / 1000)
     )
 
 
 async def get_rank(
-    client: redis.Redis,
-    gender: str,
-    stroke: str,
-    distance: int,
-    result_time: time
+    client: redis.Redis, gender: str, stroke: str, distance: int, result_time: time
 ):
     result = as_duration(result_time)
 
-    rank = await client.eval(lua_script, 1,
-                             f"top:{gender}:{stroke}:{distance}",
-                             result)
-    return rank+1
+    rank = await client.eval(lua_script, 1, f"top:{gender}:{stroke}:{distance}", result)
+    return rank + 1
 
 
 async def get_best_results_raw():
-    results = (
-        await Tortoise
-        .get_connection("default")
-        .execute_query_dict(ranking_sql_raw)
+    results = await Tortoise.get_connection("default").execute_query_dict(
+        ranking_sql_raw
     )
     return [parse_best_full_result(res) for res in results]
 

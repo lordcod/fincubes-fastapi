@@ -1,16 +1,12 @@
-from datetime import datetime, timezone
 from typing import List, Optional
-from fastapi import APIRouter, Body,  Depends, File, UploadFile
-from fastapi.background import P
+from fastapi import APIRouter, Body, Depends, File, UploadFile
 from misc.errors import APIError, ErrorCode
 from misc.ratelimit import create_ratelimit
-from models.deps import get_redis
 from models.enums import UserRoleEnum
 from models.models import Athlete, Coach, CoachAthlete
 from routers.users.utils import get_role
 from schemas.athlete import Athlete_Pydantic
 from misc.yandexcloud import delete_file, upload_file
-from redis.asyncio import Redis as RedisClient
 
 from schemas.users.coach import CoachOut, CoachOutWithStatus
 
@@ -25,21 +21,19 @@ async def get_content(file: UploadFile):
     return content
 
 
-router = APIRouter(
-    prefix='/athletes')
+router = APIRouter(prefix="/athletes")
 
 
-@router.get('/', response_model=Athlete_Pydantic)
-async def get_athlete_me(
-        athlete: Athlete = Depends(get_role(UserRoleEnum.ATHLETE))):
+@router.get("/", response_model=Athlete_Pydantic)
+async def get_athlete_me(athlete: Athlete = Depends(get_role(UserRoleEnum.ATHLETE))):
     return await Athlete_Pydantic.from_tortoise_orm(athlete)
 
 
-@router.put('/', response_model=Athlete_Pydantic)
+@router.put("/", response_model=Athlete_Pydantic)
 async def edit_athlete_me(
     city: Optional[str] = Body(embed=True, default=None),
     club: Optional[str] = Body(embed=True, default=None),
-    athlete: Athlete = Depends(get_role(UserRoleEnum.ATHLETE))
+    athlete: Athlete = Depends(get_role(UserRoleEnum.ATHLETE)),
 ):
     if city is None and club is None:
         raise APIError(ErrorCode.EMPTY_DATA)
@@ -55,29 +49,26 @@ async def edit_athlete_me(
     return await Athlete_Pydantic.from_tortoise_orm(athlete)
 
 
-@router.post('/avatar', response_model=Athlete_Pydantic)
+@router.post("/avatar", response_model=Athlete_Pydantic)
 async def upload_avatar(
     file: UploadFile = File(...),
     athlete: Athlete = Depends(get_role(UserRoleEnum.ATHLETE)),
-    send_limit=Depends(create_ratelimit(
-        'upload_avatar', UPLOAD_INTERVAL_SECONDS))
+    send_limit=Depends(create_ratelimit("upload_avatar", UPLOAD_INTERVAL_SECONDS)),
 ):
     await send_limit(athlete.id)
 
     content = await get_content(file)
-    ext = file.filename.split('.')[-1]
+    ext = file.filename.split(".")[-1]
 
-    avatar_url = await upload_file(content, f'{athlete.id}.{ext}')
+    avatar_url = await upload_file(content, f"{athlete.id}.{ext}")
     athlete.avatar_url = avatar_url
     await athlete.save()
 
     return await Athlete_Pydantic.from_tortoise_orm(athlete)
 
 
-@router.delete('/avatar', response_model=Athlete_Pydantic)
-async def delete_avatar(
-    athlete: Athlete = Depends(get_role(UserRoleEnum.ATHLETE))
-):
+@router.delete("/avatar", response_model=Athlete_Pydantic)
+async def delete_avatar(athlete: Athlete = Depends(get_role(UserRoleEnum.ATHLETE))):
     if athlete.avatar_url:
         await delete_file(url=athlete.avatar_url)
         athlete.avatar_url = None
@@ -85,58 +76,45 @@ async def delete_avatar(
     return await Athlete_Pydantic.from_tortoise_orm(athlete)
 
 
-@router.get('/coach/', response_model=List[CoachOutWithStatus])
-async def get_coach(
-    athlete: Athlete = Depends(get_role(UserRoleEnum.ATHLETE))
-):
-    linked = await CoachAthlete.filter(
-        athlete=athlete
-    ).select_related('coach')
+@router.get("/coach/", response_model=List[CoachOutWithStatus])
+async def get_coach(athlete: Athlete = Depends(get_role(UserRoleEnum.ATHLETE))):
+    linked = await CoachAthlete.filter(athlete=athlete).select_related("coach")
 
     return [
-        {
-            **(await CoachOut.from_tortoise_orm(link.coach)).dict(),
-            'status': link.status
-        }
+        {**(await CoachOut.from_tortoise_orm(link.coach)).dict(), "status": link.status}
         for link in linked
     ]
 
 
-@router.post('/coach/')
+@router.post("/coach/")
 async def add_coach(
     coach_id: int = Body(embed=True),
-    athlete: Athlete = Depends(get_role(UserRoleEnum.ATHLETE))
+    athlete: Athlete = Depends(get_role(UserRoleEnum.ATHLETE)),
 ):
     coach = await Coach.get(id=coach_id)
     link = await CoachAthlete.filter(coach=coach, athlete=athlete).first()
 
-    if not link or link.status in ('pending', 'rejected_athlete'):
-        status = 'accepted'
+    if not link or link.status in ("pending", "rejected_athlete"):
+        status = "accepted"
     else:
-        return {
-            'success': False,
-            'status': link.status
-        }
+        return {"success": False, "status": link.status}
     if link:
         link.status = status
         await link.save()
     else:
         await CoachAthlete.create(coach=coach, athlete=athlete, status=status)
-    return {
-        'success': True,
-        'status': status
-    }
+    return {"success": True, "status": status}
 
 
-@router.delete('/coach/', status_code=204)
+@router.delete("/coach/", status_code=204)
 async def reject_coach(
     coach_id: int = Body(embed=True),
-    athlete: Athlete = Depends(get_role(UserRoleEnum.ATHLETE))
+    athlete: Athlete = Depends(get_role(UserRoleEnum.ATHLETE)),
 ):
     coach = await Coach.get(id=coach_id)
     link = await CoachAthlete.filter(coach=coach, athlete=athlete).first()
     if not link:
         raise APIError(ErrorCode.ATHLETE_COACH_NOT_FOUND)
 
-    link.status = 'rejected_athlete'
+    link.status = "rejected_athlete"
     await link.save()

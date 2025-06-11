@@ -1,4 +1,3 @@
-
 from datetime import datetime
 from fastapi import Depends
 from redis.asyncio import Redis as RedisClient
@@ -8,9 +7,7 @@ from models.deps import get_redis
 
 
 def create_ratelimit(name: str, interval: int):
-    async def wrapped(
-        redis: RedisClient = Depends(get_redis)
-    ):
+    async def wrapped(redis: RedisClient = Depends(get_redis)):
         async def active(key):
             key = f"ratelimit:{name}:{key}"
             now = datetime.now().timestamp()
@@ -20,6 +17,7 @@ def create_ratelimit(name: str, interval: int):
                 if now - last < interval:
                     raise APIError(ErrorCode.RATE_LIMIT_EXCEEDED)
             await redis.set(key, now)
+
         return active
 
     return wrapped
