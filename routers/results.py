@@ -6,9 +6,10 @@ from misc.errors import APIError, ErrorCode
 from models.deps import get_redis
 from models.models import Athlete, Competition, Result
 from schemas.top import RandomTop, BestFullResult, parse_best_full_result, TopResponse
+from misc.redis_cache_compressed import RedisCachePickleCompressed
 from schemas.result import BulkCreateResult, BulkCreateResultResponse, Result_Pydantic, ResultIn_Pydantic
 from misc.security import admin_required
-from misc.utils import get_rank
+from misc.ratings import get_rank
 from misc.get_top_results import get_top_results
 
 router = APIRouter(prefix='/results', tags=['results', 'top'])
