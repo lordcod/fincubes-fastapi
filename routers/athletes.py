@@ -3,7 +3,7 @@ from datetime import time
 from fastapi import APIRouter, Depends
 from misc.errors import APIError, ErrorCode
 from misc.redis_cache_compressed import RedisCachePickleCompressed
-from misc.ratings import get_rank
+from misc.ratings import get_rank, get_ratings
 from models.deps import get_redis
 from models.models import Athlete, Result
 from schemas.performance import UserAthleteResults, UserCompetitionResult
@@ -13,6 +13,7 @@ from tortoise.exceptions import DoesNotExist
 from tortoise.expressions import Q
 
 from misc.security import admin_required
+from schemas.top import BestFullResult
 
 router = APIRouter(prefix='/athletes', tags=['athletes'])
 
@@ -203,3 +204,8 @@ async def get_athlete_results(athlete_id: int, redis=Depends(get_redis)):
                                results=competition_results).model_dump()
     await cache.set(cache_key, model, expire_seconds=60*15)
     return model
+
+
+@router.get("/{athlete_id}/top", response_model=List[BestFullResult])
+async def get_athlete_top(athlete_id: int, redis=Depends(get_redis)):
+    return await get_ratings(redis, athlete_id)

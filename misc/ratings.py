@@ -123,11 +123,10 @@ async def update_ratings(client: redis.Redis):
     _log.debug("Start updating athlete rankings")
 
     results = await get_best_results_raw()
-    athlete_results = defaultdict(dict)
+    athlete_results = defaultdict(list)
 
     for top in results:
-        key = f"{top.athlete.gender}:{top.result.stroke}:{top.result.distance}"
-        athlete_results[top.athlete.id][key] = top.model_dump()
+        athlete_results[top.athlete.id].append(top.model_dump())
 
     pipe = client.pipeline()
     cache = RedisCachePickleCompressed(pipe)
