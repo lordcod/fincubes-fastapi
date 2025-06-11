@@ -15,8 +15,8 @@ class Athlete(BaseModel):
     last_name: str
     gender: str
     birth_year: str
-    club: str
-    city: str
+    club: Optional[str] = None
+    city: Optional[str] = None
 
 
 class Competition(BaseModel):
