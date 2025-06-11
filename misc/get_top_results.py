@@ -1,11 +1,9 @@
-import zlib
-import pickle
 import hashlib
-from redis.asyncio import Redis
 from tortoise import Tortoise
-from typing import Any, Optional
+from typing import Optional
 from datetime import date
 from models.redis_client import client
+from misc.redis_cache_compressed import RedisCachePickleCompressed
 
 
 sql = """
@@ -77,23 +75,6 @@ WHERE row_num > ${offset}
 ORDER BY row_num
 LIMIT ${limit};
 """
-
-
-class RedisCachePickleCompressed:
-    def __init__(self, redis: Redis):
-        self.redis = redis
-
-    async def set(self, key: str, value: Any, expire_seconds: Optional[int] = None):
-        data = pickle.dumps(value)
-        compressed = zlib.compress(data)
-        await self.redis.set(key, compressed, ex=expire_seconds)
-
-    async def get(self, key: str) -> Optional[Any]:
-        compressed = await self.redis.get(key)
-        if compressed is None:
-            return None
-        data = zlib.decompress(compressed)
-        return pickle.loads(data)
 
 
 async def get_top_results(
@@ -168,5 +149,5 @@ async def get_top_results(
                          limit=limit_num)
     results = await Tortoise.get_connection("default").execute_query_dict(sql_raw, params)
 
-    await cache.set(cache_key, results, expire_seconds=60*15)
+    await cache.set(cache_key, results, expire_seconds=60*60)
     return results
