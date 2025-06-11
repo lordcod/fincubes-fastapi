@@ -34,15 +34,18 @@ if dev_mode:
     allowed_hosts = ["*"]
     app.servers = [{"url": "https://localhost:8000", "description": "Local server"}]
 else:
-    origins = ["https://fincubes.ru", "https://dev.fincubes.ru"]
+    origins = [
+        "https://fincubes.ru",
+        "https://dev.fincubes.ru",
+        "http://localhost:5173",
+        "http://localhost:4173",
+    ]
     allowed_hosts = [
         "testserver",
         "localhost",
         "127.0.0.1",
         "fincubes.ru",
         "*.fincubes.ru",
-        "http://localhost:5173",
-        "http://localhost:4173",
     ]
 
 
