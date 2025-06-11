@@ -15,6 +15,8 @@ class Athlete(BaseModel):
     last_name: str
     gender: str
     birth_year: str
+    club: str
+    city: str
 
 
 class Competition(BaseModel):
@@ -64,7 +66,9 @@ def parse_best_full_result(row: dict) -> BestFullResult:
             first_name=row["athlete_first_name"],
             last_name=row["athlete_last_name"],
             gender=row["athlete_gender"],
-            birth_year=row.get("athlete_birth_year")
+            birth_year=row.get("athlete_birth_year"),
+            club=row.get("athlete_club"),
+            city=row.get("athlete_city"),
         ),
         competition=Competition(
             id=row["competition_id"],

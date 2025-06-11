@@ -87,6 +87,7 @@ jobs:
           script: |
             cd ~/fincubes 
             source ~/fincubes_venv/bin/activate
+            git add *
             git pull origin main --rebase --autostash
             git status 
             pip install -r requirements.txt

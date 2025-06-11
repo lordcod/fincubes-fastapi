@@ -36,18 +36,20 @@ best_results AS (
 best_full_results AS (
     SELECT
         r.id AS result_id,
-        r.athlete_id,
         r.stroke,
         r.distance,
         r.result AS result_result,
         r.final AS result_final,
-        r.competition_id,
 
+        r.athlete_id,
         a.first_name AS athlete_first_name,
         a.last_name AS athlete_last_name,
         a.gender AS athlete_gender,
         a.birth_year AS athlete_birth_year,
+        a.club AS athlete_club,
+        a.city AS athlete_city,
 
+        r.competition_id,
         c.name AS competition_name,
         c.date AS competition_date,
         c.start_date AS competition_start_date,

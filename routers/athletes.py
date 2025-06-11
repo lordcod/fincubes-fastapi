@@ -1,6 +1,5 @@
 import asyncio
 from datetime import time
-from turtle import mode
 from fastapi import APIRouter, Depends
 from misc.errors import APIError, ErrorCode
 from misc.redis_cache_compressed import RedisCachePickleCompressed
