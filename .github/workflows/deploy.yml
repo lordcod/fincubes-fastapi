@@ -5,8 +5,8 @@ on:
     branches: ["main"]
   pull_request:
     branches: ["main"]
+
 env:
-  registry: my_registry_name
   DB_HOST: localhost
   DB_USERNAME: postgres
   DB_PASSWORD: postgres
@@ -23,7 +23,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: postgres
         ports:
-          - 5432/tcp
+          - 5432:5432
         options: >-
           --health-cmd pg_isready 
           --health-interval 10s
@@ -32,40 +32,38 @@ jobs:
       redis:
         image: redis
         ports:
-          - 6379/tcp
+          - 6379:6379
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-          --entrypoint redis-server
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: "3.12"
-      - name: Create env file
+
+      - name: Create .env file
         run: |
-          touch .env
-          echo SECRET_KEY=your-256-bit-secret >> .env
-          cat .env
+          echo SECRET_KEY=your-256-bit-secret > .env
+
       - name: Install dependencies
         run: |
           python -m venv venv
           source venv/bin/activate
           pip install -r requirements.txt
 
-      - name: Run test
+      - name: Run tests
         run: |
           source venv/bin/activate
-
-      - name: Run app
-        run: |
-          source venv/bin/activate
-          python tests/test.py
+          pytest -v
         env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+          REDIS_URL: redis://localhost:6379
           TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
@@ -74,21 +72,18 @@ jobs:
           AWS_KEY_ID: ${{ secrets.AWS_KEY_ID }}
           AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
           BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
-          DATABASE_URL: postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}
-          REDIS_URL: redis://@localhost:${{ job.services.redis.ports[6379] }}
 
-      - name: Deploy using ssh
+      - name: Deploy using SSH
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.SERVER_HOST  }}
-          username: ${{ secrets.SERVER_USER  }}
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 22
           script: |
-            cd ~/fincubes 
+            cd ~/fincubes
+            git reset --hard
+            git pull origin main
             source ~/fincubes_venv/bin/activate
-            git add *
-            git pull origin main --rebase --autostash
-            git status 
             pip install -r requirements.txt
             sudo systemctl restart fincubes.service
