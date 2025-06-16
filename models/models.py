@@ -1,8 +1,8 @@
 from tortoise import fields
 from tortoise.models import Model
 
-from models.flexible_time import FlexibleTimeField
 from models.enums import UserRoleEnum
+from models.flexible_time import FlexibleTimeField
 
 
 class TimestampedModel(Model):
@@ -185,3 +185,14 @@ class UserRole(TimestampedModel):
     user = fields.ForeignKeyField("models.User", related_name="roles")
     role_type = fields.CharEnumField(enum_type=UserRoleEnum)
     profile_id = fields.IntField()
+
+
+class Region(TimestampedModel):
+    id = fields.IntField(pk=True)
+    region = fields.CharField(max_length=255)
+    organization = fields.CharField(max_length=512)
+    president = fields.CharField(max_length=255)
+    emails = fields.JSONField()
+    phones = fields.JSONField()
+    socials = fields.JSONField()
+    rating = fields.FloatField()

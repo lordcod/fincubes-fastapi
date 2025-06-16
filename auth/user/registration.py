@@ -2,8 +2,8 @@ from typing import Optional
 
 from misc.errors import APIError, ErrorCode
 from misc.security import hash_password
-from models.models import Athlete, Coach, Parent, User, UserRole
 from models.enums import UserRoleEnum
+from models.models import Athlete, Coach, Parent, User, UserRole
 from schemas.auth import UserCreate
 
 

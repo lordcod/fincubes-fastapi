@@ -1,9 +1,24 @@
+from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
 
 from fastapi import Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from dataclasses import dataclass
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.status import (
+    HTTP_400_BAD_REQUEST,
+    HTTP_401_UNAUTHORIZED,
+    HTTP_403_FORBIDDEN,
+    HTTP_404_NOT_FOUND,
+    HTTP_405_METHOD_NOT_ALLOWED,
+    HTTP_406_NOT_ACCEPTABLE,
+    HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+    HTTP_422_UNPROCESSABLE_ENTITY,
+    HTTP_429_TOO_MANY_REQUESTS,
+    HTTP_500_INTERNAL_SERVER_ERROR,
+    HTTP_503_SERVICE_UNAVAILABLE,
+)
 
 
 @dataclass(frozen=True)
@@ -22,11 +37,13 @@ class ErrorCode(Enum):
     )
     ALREADY_VERIFIED = ErrorInfo(1004, "Пользователь уже верифицирован", 400)
     INVALID_TOKEN = ErrorInfo(1005, "Неверный токен", 403)
+    INVALID_TYPE_TOKEN = ErrorInfo(1006, "Неверный тип токена", 403)
     VERIFICATION_FAILED = ErrorInfo(
-        1006, "Верификация не пройдена, пройдите её чтобы продолжить", 400
+        1007, "Верификация не пройдена, пройдите её чтобы продолжить", 400
     )
-    INCORRECT_CURRENT_PASSWORD = ErrorInfo(1007, "Неверный текущий пароль", 400)
-    CAPTCHA_FAILED = ErrorInfo(1008, "Ошибка капчи", 400)
+    INCORRECT_CURRENT_PASSWORD = ErrorInfo(1008, "Неверный текущий пароль", 400)
+    CAPTCHA_FAILED = ErrorInfo(1009, "Ошибка капчи", 400)
+    EXPIRED_TOKEN = ErrorInfo(1010, "Срок действия токена истек", 403)
 
     # 2xxx — Пользователь / учётные данные
     USER_NOT_FOUND = ErrorInfo(2001, "Пользователь не найден", 404)
@@ -63,6 +80,33 @@ class ErrorCode(Enum):
     FILE_TOO_LARGE = ErrorInfo(4002, "Файл слишком большой", 413)
     RATE_LIMIT_EXCEEDED = ErrorInfo(4003, "Превышено количество запросов", 429)
 
+    # 5xxx — Ошибки Starlette / HTTP-протокола
+    BAD_REQUEST = ErrorInfo(5000, "Некорректный запрос", HTTP_400_BAD_REQUEST)
+    UNAUTHORIZED = ErrorInfo(5001, "Неавторизован", HTTP_401_UNAUTHORIZED)
+    FORBIDDEN = ErrorInfo(5002, "Доступ запрещён", HTTP_403_FORBIDDEN)
+    NOT_FOUND = ErrorInfo(5003, "Ресурс не найден", HTTP_404_NOT_FOUND)
+    METHOD_NOT_ALLOWED = ErrorInfo(
+        5004, "Метод не поддерживается", HTTP_405_METHOD_NOT_ALLOWED
+    )
+    NOT_ACCEPTABLE = ErrorInfo(
+        5005, "Неприемлемый формат ответа", HTTP_406_NOT_ACCEPTABLE
+    )
+    UNSUPPORTED_MEDIA_TYPE = ErrorInfo(
+        5006, "Неподдерживаемый тип данных", HTTP_415_UNSUPPORTED_MEDIA_TYPE
+    )
+    UNPROCESSABLE_ENTITY = ErrorInfo(
+        5007, "Ошибка валидации данных", HTTP_422_UNPROCESSABLE_ENTITY
+    )
+    TOO_MANY_REQUESTS = ErrorInfo(
+        5008, "Слишком много запросов", HTTP_429_TOO_MANY_REQUESTS
+    )
+    INTERNAL_SERVER_ERROR = ErrorInfo(
+        5009, "Внутренняя ошибка сервера", HTTP_500_INTERNAL_SERVER_ERROR
+    )
+    SERVICE_UNAVAILABLE = ErrorInfo(
+        5010, "Сервис временно недоступен", HTTP_503_SERVICE_UNAVAILABLE
+    )
+
     @property
     def code(self):
         return self.value.code
@@ -86,6 +130,21 @@ class APIError(Exception):
         self.message = error_code.message
 
 
+error_map = {
+    400: ErrorCode.BAD_REQUEST,
+    401: ErrorCode.UNAUTHORIZED,
+    403: ErrorCode.FORBIDDEN,
+    404: ErrorCode.NOT_FOUND,
+    405: ErrorCode.METHOD_NOT_ALLOWED,
+    406: ErrorCode.NOT_ACCEPTABLE,
+    415: ErrorCode.UNSUPPORTED_MEDIA_TYPE,
+    422: ErrorCode.UNPROCESSABLE_ENTITY,
+    429: ErrorCode.TOO_MANY_REQUESTS,
+    500: ErrorCode.INTERNAL_SERVER_ERROR,
+    503: ErrorCode.SERVICE_UNAVAILABLE,
+}
+
+
 async def api_error_handler(request: Request, exc: APIError):
     return JSONResponse(
         status_code=exc.status_code,
@@ -93,5 +152,43 @@ async def api_error_handler(request: Request, exc: APIError):
             "error_code": exc.error_code,
             "error_name": exc.error_name,
             "message": exc.message,
+        },
+    )
+
+
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    error = ErrorCode.UNPROCESSABLE_ENTITY
+    return JSONResponse(
+        status_code=error.http_status,
+        content={
+            "error_code": error.code,
+            "error_name": error.name,
+            "message": error.message,
+            "details": exc.errors(),
+        },
+    )
+
+
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    error = error_map.get(exc.status_code, ErrorCode.INTERNAL_SERVER_ERROR)
+
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error_code": error.code,
+            "error_name": error.name,
+            "message": error.message,
+        },
+    )
+
+
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    error = ErrorCode.INTERNAL_SERVER_ERROR
+    return JSONResponse(
+        status_code=error.http_status,
+        content={
+            "error_code": error.code,
+            "error_name": error.name,
+            "message": error.message,
         },
     )

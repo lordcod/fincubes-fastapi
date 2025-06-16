@@ -1,16 +1,19 @@
 import random
+
 from fastapi import APIRouter, Body, Depends
+
 from misc.errors import APIError, ErrorCode
 from misc.mail import send_confirm_code
+from misc.security import TokenType, UserAuthSecurity
 from models.models import User, UserVerification
-from misc.security import get_current_user
-
 
 router = APIRouter()
 
 
 @router.post("/send-verify-code", status_code=204)
-async def send_verify_code(current_user: User = Depends(get_current_user)):
+async def send_verify_code(
+    current_user: User = Depends(UserAuthSecurity(TokenType.access)),
+):
     if current_user.verified:
         raise APIError(ErrorCode.ALREADY_VERIFIED)
 
@@ -26,7 +29,8 @@ async def send_verify_code(current_user: User = Depends(get_current_user)):
 
 @router.post("/verify", status_code=204)
 async def verify_email(
-    code: str = Body(..., embed=True), current_user: User = Depends(get_current_user)
+    code: str = Body(..., embed=True),
+    current_user: User = Depends(UserAuthSecurity(TokenType.access)),
 ):
     if current_user.verified:
         raise APIError(ErrorCode.ALREADY_VERIFIED)

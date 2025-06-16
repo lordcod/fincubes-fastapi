@@ -1,26 +1,36 @@
 import logging
 import sys
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI
+
 import uvicorn
+from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.middleware.trustedhost import TrustedHostMiddleware
+from tortoise.contrib.fastapi import register_tortoise
+
 from config import DATABASE_URL
-from misc.errors import APIError, api_error_handler
+from misc.errors import (
+    APIError,
+    api_error_handler,
+    http_exception_handler,
+    unhandled_exception_handler,
+    validation_exception_handler,
+)
 from routers import (
+    athletes,
+    auth,
     coaches,
+    competitions,
     distances,
     record,
+    region,
     results,
-    athletes,
     standard,
     top_recent,
     users,
-    competitions,
-    auth,
 )
-from tortoise.contrib.fastapi import register_tortoise
 from services import lifespan
-from starlette.middleware.trustedhost import TrustedHostMiddleware
-
 
 app = FastAPI(title="FinCubes API", lifespan=lifespan)
 
@@ -62,6 +72,9 @@ app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)
 # app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.add_exception_handler(APIError, api_error_handler)
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
+app.add_exception_handler(StarletteHTTPException, http_exception_handler)
+app.add_exception_handler(Exception, unhandled_exception_handler)
 
 app.include_router(competitions.router)
 app.include_router(results.router)
@@ -73,6 +86,7 @@ app.include_router(record.router)
 app.include_router(standard.router)
 app.include_router(auth.router)
 app.include_router(coaches.router)
+app.include_router(region.router)
 
 
 register_tortoise(
