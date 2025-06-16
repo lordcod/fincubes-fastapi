@@ -1,8 +1,8 @@
 from tortoise import fields
 from tortoise.models import Model
 
-from models.flexible_time import FlexibleTimeField
 from models.enums import UserRoleEnum
+from models.flexible_time import FlexibleTimeField
 
 
 class TimestampedModel(Model):
@@ -63,7 +63,8 @@ class Athlete(TimestampedModel):
 
 class Result(TimestampedModel):
     id = fields.IntField(pk=True)
-    athlete: Athlete = fields.ForeignKeyField("models.Athlete", related_name="results")
+    athlete: Athlete = fields.ForeignKeyField(
+        "models.Athlete", related_name="results")
     competition: Competition = fields.ForeignKeyField(
         "models.Competition", related_name="results"
     )
@@ -84,7 +85,8 @@ class Result(TimestampedModel):
 
 class TopAthlete(TimestampedModel):
     id = fields.IntField(pk=True)
-    athlete = fields.ForeignKeyField("models.Athlete", related_name="top_mentions")
+    athlete = fields.ForeignKeyField(
+        "models.Athlete", related_name="top_mentions")
 
     class Meta:
         table = "top_athletes"
@@ -154,8 +156,10 @@ class Parent(TimestampedModel):
 
 class CoachAthlete(TimestampedModel):
     id = fields.IntField(pk=True)
-    coach = fields.ForeignKeyField("models.Coach", related_name="coach_athletes")
-    athlete = fields.ForeignKeyField("models.Athlete", related_name="athlete_coaches")
+    coach = fields.ForeignKeyField(
+        "models.Coach", related_name="coach_athletes")
+    athlete = fields.ForeignKeyField(
+        "models.Athlete", related_name="athlete_coaches")
     # pending, accepted, rejected_athlete, rejected_coach
     status = fields.CharField(max_length=50, default="active")
 
@@ -185,3 +189,14 @@ class UserRole(TimestampedModel):
     user = fields.ForeignKeyField("models.User", related_name="roles")
     role_type = fields.CharEnumField(enum_type=UserRoleEnum)
     profile_id = fields.IntField()
+
+
+class Region(TimestampedModel):
+    id = fields.IntField(pk=True)
+    region = fields.CharField(max_length=255)
+    organization = fields.CharField(max_length=512)
+    president = fields.CharField(max_length=255)
+    emails = fields.JSONField()
+    phones = fields.JSONField()
+    socials = fields.JSONField()
+    rating = fields.FloatField()

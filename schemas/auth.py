@@ -1,10 +1,9 @@
-from typing import Literal, Dict, Any, Optional
-from pydantic import BaseModel, EmailStr
+from typing import Any, Dict, Literal, Optional
 
+from pydantic import BaseModel, EmailStr
 from tortoise.contrib.pydantic import pydantic_model_creator
 
 from models.models import User
-
 
 UserResponse = pydantic_model_creator(User, exclude=("hashed_password",))
 
@@ -31,6 +30,7 @@ class UserCreate(BaseModel):
 
 class TokenResponse(BaseModel):
     access_token: str
+    refresh_token: Optional[str]
     token_type: str
 
     class Config:

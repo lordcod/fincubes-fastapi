@@ -1,9 +1,9 @@
 from fastapi import Depends
-from misc.errors import APIError, ErrorCode
-from models.models import Athlete, Parent, User, UserRole, Coach
-from models.enums import UserRoleEnum
-from misc.security import get_current_user
 
+from misc.errors import APIError, ErrorCode
+from misc.security import TokenType, UserAuthSecurity
+from models.enums import UserRoleEnum
+from models.models import Athlete, Coach, Parent, User, UserRole
 
 model_map = {
     UserRoleEnum.ATHLETE: Athlete,
@@ -27,7 +27,7 @@ async def get_profile(
 
 
 def get_role(expected_role: UserRoleEnum, required_verification: bool = True):
-    async def wrapped(user: User = Depends(get_current_user)):
+    async def wrapped(user: User = Depends(UserAuthSecurity(TokenType.access))):
         return await get_profile(user, expected_role, required_verification)
 
     return wrapped

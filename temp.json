@@ -1,0 +1,775 @@
+[
+    {
+        "id": 1,
+        "region": "Республика Алтай",
+        "organization": "Региональная общественная организация «Спортивная Федерация Подводного Спорта Республики Алтай»",
+        "emails": [
+            "serdykov_93@mail.ru"
+        ],
+        "phones": [
+            "+7 (961) 893 04 29"
+        ],
+        "socials": {
+            "website": null,
+            "telegram": null,
+            "vk": null
+        },
+        "rating": 0.0,
+        "president": "Сердюков Трофим Викторович"
+    },
+    {
+        "id": 2,
+        "region": "Республика Карелия",
+        "organization": "Карельская региональная общественная организация «Федерация подводного спорта Республики Карелия»",
+        "emails": [
+            "asamoylikov75@mail.ru"
+        ],
+        "phones": [
+            "+7 (921) 223 25 27"
+        ],
+        "socials": {
+            "website": null,
+            "telegram": null,
+            "vk": null
+        },
+        "rating": 0.0,
+        "president": "Самойликов Алексей Александрович"
+    },
+    {
+        "id": 3,
+        "region": "Кабардино-Балкарская Республика",
+        "organization": "Общественная организация «Кабардино-Балкарская Федерация подводного спорта»",
+        "emails": [
+            "kbrdiving@mail.ru",
+            "petro_n@mail.ru"
+        ],
+        "phones": [
+            "+7 (928) 080 31 00"
+        ],
+        "socials": {
+            "website": null,
+            "telegram": null,
+            "vk": null
+        },
+        "rating": 0.0,
+        "president": "Кучеренко Анжелла Анатольевна"
+    },
+    {
+        "id": 4,
+        "region": "Республика Крым",
+        "organization": "Региональная общественная организация \"Федерация подводного спорта Республики Крым\"",
+        "emails": [
+            "kochergina@neptunworld.com"
+        ],
+        "phones": [
+            "+7 (916) 508 72 78"
+        ],
+        "socials": {
+            "website": "https://rufdiving.ru/",
+            "telegram": null,
+            "vk": "https://vk.com/rufcrimea"
+        },
+        "rating": 6.7,
+        "president": "Кочергина Ирина Николаевна"
+    },
+    {
+        "id": 5,
+        "region": "Республика Мордовия",
+        "organization": "Мордовская региональная общественная организация \"Федерация подводного спорта\"",
+        "emails": [
+            "festdiving@rambler.ru"
+        ],
+        "phones": [
+            "+7 (8342) 24 26 74"
+        ],
+        "socials": {
+            "website": null,
+            "telegram": null,
+            "vk": "https://vk.com/underwater13rus"
+        },
+        "rating": 2.7,
+        "president": "Потапов Игорь Борисович"
+    },
+    {
+        "id": 6,
+        "region": "Республика Татарстан",
+        "organization": "Региональная общественная организация «Федерация подводного спорта Республики Татарстан»",
+        "emails": [
+            "kazandive@mail.ru"
+        ],
+        "phones": [
+            "+7 (8432) 40 34 24"
+        ],
+        "socials": {
+            "website": null,
+            "telegram": null,
+            "vk": "https://vk.com/public218792761"
+        },
+        "rating": 4.7,
+        "president": "Шиллер Дмитрий Августович"
+    },
+    {
+        "id": 7,
+        "region": "Алтайский край",
+        "organization": "Региональная общественная организация \"Федерация Подводного Спорта Алтайского края\"",
+        "emails": [
+            "gudzoleg@yandex.ru"
+        ],
+        "phones": [
+            "+7 (3852) 31 04 28",
+            "+7 (905) 985 09 73"
+        ],
+        "socials": {
+            "website": null,
+            "telegram": null,
+            "vk": null
+        },
+        "rating": 0.0,
+        "president": "Гудз Олег Владимирович"
+    },
+    {
+        "id": 8,
+        "region": "Краснодарский край",
+        "organization": "Региональная общественная организация \"Федерация подводного спорта Краснодарского края\"",
+        "emails": [
+            "nmsrosto@mail.ru",
+            "grigoriev-e@mail.ru"
+        ],
+        "phones": [
+            "+7 (8617) 71 99 39",
+            "+7 (905) 494 38 34"
+        ],
+        "socials": {
+            "website": null,
+            "telegram": null,
+            "vk": null
+        },
+        "rating": 0.0,
+        "president": "Гуляй Геннадий Витальевич"
+    },
+    {
+        "id": 9,
+        "region": "Красноярский край",
+        "organization": "Региональная общественная организация \"Федерация подводного спорта Красноярского края\"",
+        "emails": [
+            "tia965@mail.ru"
+        ],
+        "phones": [
+            "+7 (913) 539 80 61",
+            "+7 (3912) 64 47 09"
+        ],
+        "socials": {
+            "website": "https://fpskk.com",
+            "telegram": null,
+            "vk": "https://vk.com/public202181807"
+        },
+        "rating": 8.7,
+        "president": "Толстопятов Игорь Анатольевич"
+    },
+    {
+        "id": 10,
+        "region": "Пермский край",
+        "organization": "Региональная общественная организация \"Пермская краевая Федерация подводного спорта\"",
+        "emails": [
+            "cahhbl4@mail.ru"
+        ],
+        "phones": [
+            "+7 (912) 584 38 34"
+        ],
+        "socials": {
+            "website": null,
+            "telegram": null,
+            "vk": "https://vk.com/club229093561"
+        },
+        "rating": 4.7,
+        "president": "Горбунов Андрей Анатольевич"
+    },
+    {
+        "id": 11,
+        "region": "Приморский край",
+        "organization": "Региональная общественная организация «Федерация подводного спорта Приморского края»",
+        "emails": [
+            "fpspk@mail.ru"
+        ],
+        "phones": [
+            "+7 (902) 556 77 76"
+        ],
+        "socials": {
+            "website": "https://www.seaswim.ru/",
+            "telegram": "https://t.me/anashkindmitry",
+            "vk": null
+        },
+        "rating": 10.0,
+        "president": "Анашкин Дмитрий Валентинович"
+    },
+    {
+        "id": 12,
+        "region": "Хабаровский край",
+        "organization": "Региональная общественная организация «Федерация подводного спорта Хабаровского края»",
+        "emails": [
+            "evgeny.karpus@gmail.com"
+        ],
+        "phones": [
+            "+7 (914) 542 07 02"
+        ],
+        "socials": {
+            "website": null,
+            "telegram": "https://t.me/minsport27",
+            "vk": "https://vk.com/khvfps"
+        },
+        "rating": 3.3,
+        "president": "Карпусь Евгений Александрович"
+    },
+    {
+        "id": 13,
+        "region": "Брянская область",
+        "organization": "Региональная общественная организация «Федерация подводного спорта Брянской области»",
+        "emails": [
+            "lutovinovaen@mail.ru"
+        ],
+        "phones": [
+            "+7 (910) 331 62 17"
+        ],
+        "socials": {
+            "website": null,
+            "telegram": null,
+            "vk": "https://vk.com/public192360296"
+        },
+        "rating": 3.3,
+        "president": "Ильюшина Анастасия Дмитриевна"
+    },
+    {
+        "id": 14,
+        "region": "Вологодская область",
+        "organization": "Вологодская региональная физкультурно-спортивная общественная организация «Вологодская областная федерация подводного спорта»",
+        "emails": [
+            "kidsfreediving35@gmail.com"
+        ],
+        "phones": [
+            "+7 (820) 254-05-74"
+        ],
+        "socials": {
+            "website": null,
+            "telegram": null,
+            "vk": "https://vk.com/fpvs35"
+        },
+        "rating": 3.3,
+        "president": "Скрипунцова Евгения Михайловна"
+    },
+    {
+        "id": 15,
+        "region": "Воронежская область",
+        "organization": "Воронежская областная общественная организация \"Федерация подводного спорта\"",
+        "director2": "Черных Елена Викторовна",
+        "emails": [
+            "elen.vodniki@mail.ru"
+        ],
+        "phones": [
+            "+7 (960) 124 02 70"
+        ],
+        "socials": {
+            "website": null,
+            "telegram": null,
+            "vk": "https://vk.com/club38840662"
+        },
+        "rating": 3.3,
+        "president": "Черных Елена Владимировна"
+    },
+    {
+        "id": 16,
+        "region": "Иркутская область",
+        "organization": "Иркутская региональная физкультурно-спортивная общественная организация «Федерация подводного спорта»",
+        "emails": [
+            "chistodlyalol94@mail.ru",
+            "aleepishina@yandex.ru"
+        ],
+        "phones": [
+            "+7 (999) 422 06 05",
+            "+7 (902) 515 78 32"
+        ],
+        "socials": {
+            "website": null,
+            "telegram": null,
+            "vk": null
+        },
+        "rating": 0.0,
+        "president": "Дубовик Данила Андреевич"
+    },
+    {
+        "id": 17,
+        "region": "Калининградская область",
+        "organization": "Калининградская региональная общественная организация «Федерация подводного спорта Калининградской области»",
+        "emails": [
+            "oksana_ginko@mail.ru"
+        ],
+        "phones": [
+            "+7 (962) 269 11 86"
+        ],
+        "socials": {
+            "website": null,
+            "telegram": null,
+            "vk": "https://vk.com/kroo_fpsko"
+        },
+        "rating": 3.3,
+        "president": "Гинько Оксана Геннадьевна"
+    },
+    {
+        "id": 18,
+        "region": "Кемеровская область - Кузбасс",
+        "organization": "Региональная общественная организация «Федерация Подводного спорта Кемеровской области – Кузбасса»",
+        "emails": [
+            "davydenko721@gmail.com"
+        ],
+        "phones": [
+            "+7 (961) 705 93 93"
+        ],
+        "socials": {
+            "website": null,
+            "telegram": null,
+            "vk": "https://vk.com/public209080146"
+        },
+        "rating": 3.3,
+        "president": "Давыденко Андрей Викторович"
+    },
+    {
+        "id": 19,
+        "region": "Кировская область",
+        "organization": "Региональная общественная организация «Федерация подводного спорта Кировской области»",
+        "emails": [
+            "gesha1986@list.ru"
+        ],
+        "phones": [
+            "+7 (912) 337 66 78"
+        ],
+        "socials": {
+            "website": null,
+            "telegram": null,
+            "vk": "https://vk.com/pds_43"
+        },
+        "rating": 3.3,
+        "president": "Ермолина Евгения Олеговна"
+    },
+    {
+        "id": 20,
+        "region": "Ленинградская область",
+        "organization": "Региональная общественная физкультурно-спортивная организация «Федерация подводного спорта Ленинградской области»",
+        "emails": [
+            "natalya.ovodova@mail.ru"
+        ],
+        "phones": [
+            "+7 (960) 273 09 46"
+        ],
+        "socials": {
+            "website": null,
+            "telegram": null,
+            "vk": "https://vk.com/underwater_federation_lo"
+        },
+        "rating": 3.3,
+        "president": "Бабич Наталья Андреевна"
+    },
+    {
+        "id": 21,
+        "region": "г. Москва",
+        "organization": "Региональная общественная организация \"Московская федерация подводного спорта\"",
+        "emails": [
+            "mfps-info@mail.ru",
+            "t_morozov@hotmail.com"
+        ],
+        "phones": [
+            "+7 (919) 963 59 00"
+        ],
+        "socials": {
+            "website": "https://mfps-info.ru/",
+            "telegram": "https://t.me/mfps_info",
+            "vk": "https://vk.com/mfpsinfo"
+        },
+        "rating": 10.0,
+        "president": "Морозов Тимофей Васильевич"
+    },
+    {
+        "id": 22,
+        "region": "Московская область",
+        "organization": "Региональная физкультурно-спортивная общественная организация «Федерация подводного спорта Московской области»",
+        "emails": [
+            "ev-kulik@yandex.ru"
+        ],
+        "phones": [
+            "+7 (929) 565-86-18"
+        ],
+        "socials": {
+            "website": null,
+            "telegram": null,
+            "vk": "https://vk.com/public209549357"
+        },
+        "rating": 4.7,
+        "president": "Кулик Евгений Викторович"
+    },
+    {
+        "id": 23,
+        "region": "Нижегородская область",
+        "organization": "Региональная общественная организация \"Нижегородская Федерация подводного спорта\"",
+        "emails": [
+            "T-Antonova@mail.ru"
+        ],
+        "phones": [
+            "+7 (831) 439 21 79",
+            "+7 (903) 657 36 71"
+        ],
+        "socials": {
+            "website": null,
+            "telegram": null,
+            "vk": "https://vk.com/club228123514"
+        },
+        "rating": 3.3,
+        "president": "Антонова Татьяна Викторовна"
+    },
+    {
+        "id": 24,
+        "region": "Новосибирская область",
+        "organization": "Общественная организация Новосибирской области \"Новосибирская региональная Федерация подводного спорта\"",
+        "emails": [
+            "fpsnso@mail.ru",
+            "v-deg@mail.ru"
+        ],
+        "phones": [
+            "+7 (913) 895 60 36"
+        ],
+        "socials": {
+            "website": null,
+            "telegram": null,
+            "vk": "https://vk.com/fpsnovosibirsk"
+        },
+        "rating": 3.3,
+        "president": "Глухих Анастасия Владимировна"
+    },
+    {
+        "id": 25,
+        "region": "Омская область",
+        "organization": "Омская региональная физкультурно‑спортивная общественная организация «Федерация Подводного Спорта»",
+        "emails": [
+            "izah50@mail.ru"
+        ],
+        "phones": [
+            "+7 (913) 970 52 35"
+        ],
+        "socials": {
+            "website": null,
+            "telegram": null,
+            "vk": "https://vk.com/club205293154"
+        },
+        "rating": 3.3,
+        "president": "Захаров Игорь Викторович"
+    },
+    {
+        "id": 26,
+        "region": "Оренбургская область",
+        "organization": "Региональная общественная организация «Федерация подводного спорта Оренбургской области»",
+        "emails": [
+            "sima07021963@gmail.com"
+        ],
+        "phones": [
+            "+7 (905) 895 43 45"
+        ],
+        "socials": {
+            "website": null,
+            "telegram": null,
+            "vk": null
+        },
+        "rating": 0.0,
+        "president": "Симакова Ирина Павловна"
+    },
+    {
+        "id": 27,
+        "region": "Пензенская область",
+        "organization": "Региональная общественная организация «Федерация подводного спорта Пензенской области»",
+        "emails": [
+            "diving@chugreev58.ru"
+        ],
+        "phones": [
+            "+7 (927) 289 39 11",
+            "+7 (904) 264 98 69"
+        ],
+        "socials": {
+            "website": null,
+            "telegram": "https://t.me/fpspo",
+            "vk": "https://vk.com/deep58"
+        },
+        "rating": 5.3,
+        "president": "Чугреев Сергей Олегович"
+    },
+    {
+        "id": 28,
+        "region": "Псковская область",
+        "organization": "Региональная общественная организация \"Федерация подводного спорта Псковской области\"",
+        "emails": [
+            "usfpr@mail.ru"
+        ],
+        "phones": [
+            "+7 (953) 235 50 08",
+            "+7 (921) 114 83 90"
+        ],
+        "socials": {
+            "website": "https://fps-pskov.ru",
+            "telegram": null,
+            "vk": "https://vk.com/usfpr60"
+        },
+        "rating": 4.0,
+        "president": "Курманаевский Дмитрий Дмитриевич"
+    },
+    {
+        "id": 29,
+        "region": "Ростовская область",
+        "organization": "Ростовская областная общественная организация \"Федерация подводного спорта Ростовской области\"",
+        "emails": [
+            "fps_ro2016@mail.ru"
+        ],
+        "phones": [
+            "+7 (909) 404 46 89"
+        ],
+        "socials": {
+            "website": null,
+            "telegram": null,
+            "vk": null
+        },
+        "rating": 0.0,
+        "president": "Гривцова Елена Викторовна"
+    },
+    {
+        "id": 30,
+        "region": "Рязанская область",
+        "organization": "Рязанская региональная общественная организация \"Рязанская областная Федерация подводного спорта\"",
+        "emails": [
+            "divedmitriy@mail.ru"
+        ],
+        "phones": [
+            "+7 (910) 900 24 33"
+        ],
+        "socials": {
+            "website": "https://rofps.ru/",
+            "telegram": null,
+            "vk": "https://vk.com/rofps"
+        },
+        "rating": 4.7,
+        "president": "Спиридонов Дмитрий Александрович"
+    },
+    {
+        "id": 31,
+        "region": "г. Санкт-Петербург",
+        "organization": "Региональная общественная организация «Спортивная федерация подводного спорта Санкт-Петербурга»",
+        "emails": [
+            "hcruf@mail.ru"
+        ],
+        "phones": [
+            "+7 (921) 973 41 69"
+        ],
+        "socials": {
+            "website": null,
+            "telegram": null,
+            "vk": null
+        },
+        "rating": 0.0,
+        "president": "Авдеев Алексей Владимирович"
+    },
+    {
+        "id": 32,
+        "region": "Самарская область",
+        "organization": "Региональная общественная организация «Федерация подводного спорта по Самарской области»",
+        "emails": [
+            "sfsso.63@mail.ru"
+        ],
+        "phones": [
+            "+7 (964) 984-84-98"
+        ],
+        "rating": 0.0,
+        "socials": {
+            "website": null,
+            "telegram": null,
+            "vk": null
+        },
+        "president": "Надеждин Захар Алексеевич"
+    },
+    {
+        "id": 33,
+        "region": "Саратовская область",
+        "organization": "Саратовская региональная общественная организация \"Спортивная федерация подводного спорта\"",
+        "emails": [
+            "golohvastov_a@mail.ru"
+        ],
+        "phones": [
+            "+7 (927) 622 95 93"
+        ],
+        "rating": 0.0,
+        "socials": {
+            "website": null,
+            "telegram": null,
+            "vk": null
+        },
+        "president": "Быков Валерий Алексеевич"
+    },
+    {
+        "id": 34,
+        "region": "Свердловская область",
+        "organization": "Региональная общественная организация «Свердловская федерация подводного спорта»",
+        "emails": [
+            "petrovsfps@mail.ru"
+        ],
+        "phones": [
+            "+7 (922) 124 00 78"
+        ],
+        "socials": {
+            "website": "https://sfus.ru/",
+            "telegram": null,
+            "vk": "https://vk.com/finswimming_bereza"
+        },
+        "rating": 9.3,
+        "president": "Исаков Тарас Мамаджанович"
+    },
+    {
+        "id": 35,
+        "region": "г. Севастополь",
+        "organization": "Региональная общественная организация «Федерация подводного спорта Севастополя»",
+        "emails": [
+            "anastasiya108@inbox.ru"
+        ],
+        "phones": [
+            "+7 (912) 051 56 32"
+        ],
+        "socials": {
+            "website": "https://sevfps.ru/",
+            "telegram": null,
+            "vk": "https://vk.com/sevfps"
+        },
+        "rating": 5.3,
+        "president": "Каталова Ольга Андреевна"
+    },
+    {
+        "id": 36,
+        "region": "Смоленская область",
+        "organization": "Региональная общественная организация «Федерация подводного спорта Смоленской области»",
+        "emails": [
+            "dimovna@yandex.ru"
+        ],
+        "phones": [
+            "+7 (4812) 55 96 62",
+            "+7 (915) 634 08 11"
+        ],
+        "socials": {
+            "website": null,
+            "telegram": null,
+            "vk": "https://vk.com/smolenskfinswimming"
+        },
+        "rating": 4.0,
+        "president": "Коробов Владимир Васильевич"
+    },
+    {
+        "id": 37,
+        "region": "Тверская область",
+        "organization": "Региональная Общественная организация «Федерация подводного спорта по Тверской области»",
+        "emails": [
+            "fps-to@mail.ru"
+        ],
+        "phones": [
+            "+7 (910) 937 42 41"
+        ],
+        "socials": {
+            "website": "https://fps-to.tilda.ws/",
+            "telegram": null,
+            "vk": "https://vk.com/club64292589"
+        },
+        "rating": 5.3,
+        "president": "Сомова Анастасия Андреевна"
+    },
+    {
+        "id": 38,
+        "region": "Томская область",
+        "organization": "Региональная общественная организация «Федерация подводного спорта Томской области»",
+        "emails": [
+            "burakovanata@gmail.com"
+        ],
+        "phones": [
+            "+7 (962) 779 71 91",
+            "+7 (382) 251‑45‑95"
+        ],
+        "socials": {
+            "website": "https://trusf.ru/",
+            "telegram": "https://t.me/trusfru",
+            "vk": "https://vk.com/trusfru"
+        },
+        "rating": 10.0,
+        "president": "Коробов Владимир Васильевич"
+    },
+    {
+        "id": 39,
+        "region": "Тульская область",
+        "organization": "Региональная общественная организация «Федерация подводного спорта Тульской области»",
+        "emails": [
+            "roofpsto@mail.ru"
+        ],
+        "phones": [
+            "+7 (4872) 27 12 56",
+            "+7 (903) 038 51 45"
+        ],
+        "socials": {
+            "website": null,
+            "telegram": null,
+            "vk": "https://vk.com/club60372443"
+        },
+        "rating": 4.0,
+        "president": "Дудченко Павел Григорьевич"
+    },
+    {
+        "id": 40,
+        "region": "Ульяновская область",
+        "organization": "Региональная общественная организация «Федерация подводного спорта Ульяновской области»",
+        "emails": [
+            "myswimsmile@mail.ru"
+        ],
+        "phones": [
+            "+7 (960) 368 65‑81"
+        ],
+        "socials": {
+            "website": "https://roofpsy.orgs.biz/",
+            "telegram": null,
+            "vk": "https://vk.com/roofpsy"
+        },
+        "rating": 5.3,
+        "president": "Прохорова Ольга Андреевна"
+    },
+    {
+        "id": 41,
+        "region": "Челябинская область",
+        "organization": "Региональная общественная организация «Федерация прыжков в воду, подводного спорта и синхронного плавания Челябинской области»",
+        "emails": [
+            "bogdiving@mail.ru"
+        ],
+        "phones": [
+            "+7 (3512) 31 92 86",
+            "+7 (3512) 61 77 95"
+        ],
+        "socials": {
+            "website": null,
+            "telegram": null,
+            "vk": "https://vk.com/fws174"
+        },
+        "rating": 4.0,
+        "president": "Горбунов Игорь Владимирович"
+    },
+    {
+        "id": 42,
+        "region": "Ярославская область",
+        "organization": "Ярославская региональная общественная организация «Ярославская областная федерация подводного спорта»",
+        "emails": [
+            "AlexsandrArgunov@list.ru"
+        ],
+        "phones": [
+            "+7 (915) 972 65 56"
+        ],
+        "socials": {
+            "website": null,
+            "telegram": null,
+            "vk": "https://vk.com/public131264917"
+        },
+        "rating": 6.0,
+        "president": "Аргунов Александр Юрьевич"
+    }
+]

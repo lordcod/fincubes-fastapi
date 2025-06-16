@@ -187,3 +187,4 @@ migrations/
 # Keys
 localhost-key.pem
 localhost.pem
+.vscode
