@@ -4,9 +4,14 @@ from passlib.context import CryptContext
 from auth.user.registration import get_registration_handler
 from misc.cloudflare import check_verification
 from misc.errors import APIError, ErrorCode
-from misc.security import (TokenType, UserAuthSecurity, create_access_token,
-                           create_refresh_token, hash_password,
-                           verify_password)
+from misc.security import (
+    TokenType,
+    UserAuthSecurity,
+    create_access_token,
+    create_refresh_token,
+    hash_password,
+    verify_password,
+)
 from models.models import User
 from schemas.auth import TokenResponse, UserCreate, UserLogin
 
@@ -26,7 +31,7 @@ async def register_user(user_create: UserCreate):
     return {
         "refresh_token": refresh_token,
         "access_token": access_token,
-        "token_type": "Bearer"
+        "token_type": "Bearer",
     }
 
 
@@ -49,21 +54,17 @@ async def login_user(user_login: UserLogin):
     return {
         "refresh_token": refresh_token,
         "access_token": access_token,
-        "token_type": "Bearer"
+        "token_type": "Bearer",
     }
 
 
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh_token(
-    current_user: User = Depends(UserAuthSecurity(TokenType.refresh))
+    current_user: User = Depends(UserAuthSecurity(TokenType.refresh)),
 ):
     access_token = create_access_token(current_user.id, fresh=False)
 
-    return {
-        "refresh_token": None,
-        "access_token": access_token,
-        "token_type": "Bearer"
-    }
+    return {"refresh_token": None, "access_token": access_token, "token_type": "Bearer"}
 
 
 @router.put("/change-password", status_code=204)

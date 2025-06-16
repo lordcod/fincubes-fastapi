@@ -10,11 +10,26 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from tortoise.contrib.fastapi import register_tortoise
 
 from config import DATABASE_URL
-from misc.errors import (APIError, api_error_handler, http_exception_handler,
-                         unhandled_exception_handler,
-                         validation_exception_handler)
-from routers import (athletes, auth, coaches, competitions, distances, record,
-                     region, results, standard, top_recent, users)
+from misc.errors import (
+    APIError,
+    api_error_handler,
+    http_exception_handler,
+    unhandled_exception_handler,
+    validation_exception_handler,
+)
+from routers import (
+    athletes,
+    auth,
+    coaches,
+    competitions,
+    distances,
+    record,
+    region,
+    results,
+    standard,
+    top_recent,
+    users,
+)
 from services import lifespan
 
 app = FastAPI(title="FinCubes API", lifespan=lifespan)
@@ -27,8 +42,7 @@ if dev_mode:
     origins = ["*"]
     origins = ["http://localhost:5173", "http://localhost:4173"]
     allowed_hosts = ["*"]
-    app.servers = [{"url": "https://localhost:8000",
-                    "description": "Local server"}]
+    app.servers = [{"url": "https://localhost:8000", "description": "Local server"}]
 else:
     origins = [
         "https://fincubes.ru",

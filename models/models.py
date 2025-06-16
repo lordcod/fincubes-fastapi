@@ -63,8 +63,7 @@ class Athlete(TimestampedModel):
 
 class Result(TimestampedModel):
     id = fields.IntField(pk=True)
-    athlete: Athlete = fields.ForeignKeyField(
-        "models.Athlete", related_name="results")
+    athlete: Athlete = fields.ForeignKeyField("models.Athlete", related_name="results")
     competition: Competition = fields.ForeignKeyField(
         "models.Competition", related_name="results"
     )
@@ -85,8 +84,7 @@ class Result(TimestampedModel):
 
 class TopAthlete(TimestampedModel):
     id = fields.IntField(pk=True)
-    athlete = fields.ForeignKeyField(
-        "models.Athlete", related_name="top_mentions")
+    athlete = fields.ForeignKeyField("models.Athlete", related_name="top_mentions")
 
     class Meta:
         table = "top_athletes"
@@ -156,10 +154,8 @@ class Parent(TimestampedModel):
 
 class CoachAthlete(TimestampedModel):
     id = fields.IntField(pk=True)
-    coach = fields.ForeignKeyField(
-        "models.Coach", related_name="coach_athletes")
-    athlete = fields.ForeignKeyField(
-        "models.Athlete", related_name="athlete_coaches")
+    coach = fields.ForeignKeyField("models.Coach", related_name="coach_athletes")
+    athlete = fields.ForeignKeyField("models.Athlete", related_name="athlete_coaches")
     # pending, accepted, rejected_athlete, rejected_coach
     status = fields.CharField(max_length=50, default="active")
 

@@ -25,8 +25,8 @@ PASSWORD_EXPIRATION_DAYS = 90
 
 
 class TokenType(StrEnum):
-    access: str = 'access'
-    refresh: str = 'refresh'
+    access: str = "access"
+    refresh: str = "refresh"
 
 
 def hash_password(password: str):
@@ -51,20 +51,20 @@ def _create_token(
     issued_at = now
     not_before = now
     data = {
-        'type': type_token,
-        'sub': subject,
-        'jti': jwt_id,
-        'nbf': not_before,
-        'iat': issued_at,
+        "type": type_token,
+        "sub": subject,
+        "jti": jwt_id,
+        "nbf": not_before,
+        "iat": issued_at,
     }
-    if type_token == 'access':
-        data['fresh'] = fresh
+    if type_token == "access":
+        data["fresh"] = fresh
     if issuer is not None:
-        data['iss'] = issuer
+        data["iss"] = issuer
     if audience is not None:
-        data['aud'] = audience
+        data["aud"] = audience
     if expires_delta is not None:
-        data['exp'] = now + expires_delta
+        data["exp"] = now + expires_delta
     if user_claims:
         data.update(user_claims)
 
@@ -75,8 +75,7 @@ def _create_token(
 def create_access_token(
     subject: Union[str, int],
     fresh: Optional[bool] = False,
-    expires_delta: Optional[timedelta] = timedelta(
-        minutes=15),
+    expires_delta: Optional[timedelta] = timedelta(minutes=15),
     issuer: Optional[str] = None,
     audience: Optional[str] = None,
 ) -> str:
@@ -106,8 +105,7 @@ def create_refresh_token(
 
 
 class UserAuthSecurityModel(SecurityBase):
-    type_: SecuritySchemeType = Field(
-        default=SecuritySchemeType.apiKey, alias="type")
+    type_: SecuritySchemeType = Field(default=SecuritySchemeType.apiKey, alias="type")
 
 
 class UserAuthSecurity(SecurityBase):
@@ -132,7 +130,7 @@ class UserAuthSecurity(SecurityBase):
                 key=SECRET_KEY,
                 algorithms=[ALGORITHM],
                 leeway=1.0,
-                options={"verify_sub": False}
+                options={"verify_sub": False},
             )
         except jwt.ExpiredSignatureError as exc:
             raise APIError(ErrorCode.EXPIRED_TOKEN) from exc
@@ -142,7 +140,7 @@ class UserAuthSecurity(SecurityBase):
         return payload
 
     def validate_token_type(self, payload: dict):
-        token_type = payload.get('type')
+        token_type = payload.get("type")
         # TODO DELETE 21 JUNE
         if token_type and token_type != self.required_token_type:
             raise APIError(ErrorCode.INVALID_TYPE_TOKEN)
@@ -157,7 +155,7 @@ class UserAuthSecurity(SecurityBase):
         else:
             # TODO DELETE 21 JUNE
             user = await User.filter(email=id).first()
-            _log.warning('User %s uses an outdated token system', id)
+            _log.warning("User %s uses an outdated token system", id)
 
         if not user:
             raise APIError(ErrorCode.USER_NOT_FOUND)
@@ -166,7 +164,7 @@ class UserAuthSecurity(SecurityBase):
 
 
 async def admin_required(
-    current_user: User = Depends(UserAuthSecurity(TokenType.access))
+    current_user: User = Depends(UserAuthSecurity(TokenType.access)),
 ) -> None:
     if not current_user.admin:
         raise APIError(ErrorCode.INSUFFICIENT_PRIVILEGES)

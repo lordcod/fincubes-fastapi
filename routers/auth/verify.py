@@ -12,7 +12,8 @@ router = APIRouter()
 
 @router.post("/send-verify-code", status_code=204)
 async def send_verify_code(
-        current_user: User = Depends(UserAuthSecurity(TokenType.access))):
+    current_user: User = Depends(UserAuthSecurity(TokenType.access)),
+):
     if current_user.verified:
         raise APIError(ErrorCode.ALREADY_VERIFIED)
 
@@ -29,7 +30,7 @@ async def send_verify_code(
 @router.post("/verify", status_code=204)
 async def verify_email(
     code: str = Body(..., embed=True),
-    current_user: User = Depends(UserAuthSecurity(TokenType.access))
+    current_user: User = Depends(UserAuthSecurity(TokenType.access)),
 ):
     if current_user.verified:
         raise APIError(ErrorCode.ALREADY_VERIFIED)
