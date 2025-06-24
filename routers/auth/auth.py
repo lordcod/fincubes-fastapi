@@ -4,14 +4,8 @@ from passlib.context import CryptContext
 from auth.user.registration import get_registration_handler
 from misc.cloudflare import check_verification
 from misc.errors import APIError, ErrorCode
-from misc.security import (
-    TokenType,
-    UserAuthSecurity,
-    create_access_token,
-    create_refresh_token,
-    hash_password,
-    verify_password,
-)
+from misc.security import (TokenType, UserAuthSecurity, create_access_token,
+                           create_refresh_token)
 from models.models import User
 from schemas.auth import TokenResponse, UserCreate, UserLogin
 
@@ -59,23 +53,9 @@ async def login_user(user_login: UserLogin):
 
 
 @router.post("/refresh", response_model=TokenResponse)
-async def refresh_token(
+async def refresh(
     current_user: User = Depends(UserAuthSecurity(TokenType.refresh)),
 ):
     access_token = create_access_token(current_user.id, fresh=False)
 
     return {"refresh_token": None, "access_token": access_token, "token_type": "Bearer"}
-
-
-@router.put("/change-password", status_code=204)
-async def change_password(
-    current_password: str,
-    new_password: str,
-    current_user: User = Depends(UserAuthSecurity(TokenType.access)),
-):
-    if not verify_password(current_user.hashed_password, current_password):
-        raise APIError(ErrorCode.INCORRECT_CURRENT_PASSWORD)
-
-    hashed_new_password = hash_password(new_password)
-    current_user.hashed_password = hashed_new_password
-    await current_user.save()

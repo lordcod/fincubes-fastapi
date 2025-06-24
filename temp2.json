@@ -1,0 +1,474 @@
+{
+  "season:junior_senior": [
+    {
+      "result": {
+        "id": 11653,
+        "result": "03:51.53",
+        "final": null,
+        "competition_id": 8,
+        "athlete_id": 1007,
+        "stroke": "BIFINS",
+        "distance": 400
+      },
+      "athlete": {
+        "id": 1007,
+        "first_name": "Даниил",
+        "last_name": "Аникин",
+        "gender": "M",
+        "birth_year": "2008",
+        "club": "МКСШОР \"Восток\"",
+        "city": "г. Москва"
+      },
+      "competition": {
+        "id": 8,
+        "name": "Кубок России по подводному спорту",
+        "start_date": "2025-02-11",
+        "end_date": "2025-02-17",
+        "date": " 11-17.02.2025 "
+      },
+      "best": "03:51.53",
+      "row_num": 41
+    },
+    {
+      "result": {
+        "id": 61910,
+        "result": "01:47.80",
+        "final": null,
+        "competition_id": 68,
+        "athlete_id": 1007,
+        "stroke": "BIFINS",
+        "distance": 200
+      },
+      "athlete": {
+        "id": 1007,
+        "first_name": "Даниил",
+        "last_name": "Аникин",
+        "gender": "M",
+        "birth_year": "2008",
+        "club": "МКСШОР \"Восток\"",
+        "city": "г. Москва"
+      },
+      "competition": {
+        "id": 68,
+        "name": "Всероссийские соревнования по подводному спорту",
+        "start_date": "2024-11-05",
+        "end_date": "2024-11-07",
+        "date": "05-07 ноября 2024"
+      },
+      "best": "01:47.80",
+      "row_num": 71
+    },
+    {
+      "result": {
+        "id": 65851,
+        "result": "00:48.61",
+        "final": null,
+        "competition_id": 36,
+        "athlete_id": 1007,
+        "stroke": "BIFINS",
+        "distance": 100
+      },
+      "athlete": {
+        "id": 1007,
+        "first_name": "Даниил",
+        "last_name": "Аникин",
+        "gender": "M",
+        "birth_year": "2008",
+        "club": "МКСШОР \"Восток\"",
+        "city": "г. Москва"
+      },
+      "competition": {
+        "id": 36,
+        "name": "Московские ласты. Май.",
+        "start_date": "2025-05-31",
+        "end_date": "2025-05-31",
+        "date": " 31 мая 2025"
+      },
+      "best": "00:48.61",
+      "row_num": 115
+    },
+    {
+      "result": {
+        "id": 55488,
+        "result": "00:22.81",
+        "final": null,
+        "competition_id": 54,
+        "athlete_id": 1007,
+        "stroke": "BIFINS",
+        "distance": 50
+      },
+      "athlete": {
+        "id": 1007,
+        "first_name": "Даниил",
+        "last_name": "Аникин",
+        "gender": "M",
+        "birth_year": "2008",
+        "club": "МКСШОР \"Восток\"",
+        "city": "г. Москва"
+      },
+      "competition": {
+        "id": 54,
+        "name": "Кубок Москвы по подводному спорту",
+        "start_date": "2024-10-06",
+        "end_date": "2024-10-06",
+        "date": "06 октября 2024"
+      },
+      "best": "00:22.81",
+      "row_num": 140
+    }
+  ],
+  "season:absolute": [
+    {
+      "result": {
+        "id": 11653,
+        "result": "03:51.53",
+        "final": null,
+        "competition_id": 8,
+        "athlete_id": 1007,
+        "stroke": "BIFINS",
+        "distance": 400
+      },
+      "athlete": {
+        "id": 1007,
+        "first_name": "Даниил",
+        "last_name": "Аникин",
+        "gender": "M",
+        "birth_year": "2008",
+        "club": "МКСШОР \"Восток\"",
+        "city": "г. Москва"
+      },
+      "competition": {
+        "id": 8,
+        "name": "Кубок России по подводному спорту",
+        "start_date": "2025-02-11",
+        "end_date": "2025-02-17",
+        "date": " 11-17.02.2025 "
+      },
+      "best": "03:51.53",
+      "row_num": 63
+    },
+    {
+      "result": {
+        "id": 61910,
+        "result": "01:47.80",
+        "final": null,
+        "competition_id": 68,
+        "athlete_id": 1007,
+        "stroke": "BIFINS",
+        "distance": 200
+      },
+      "athlete": {
+        "id": 1007,
+        "first_name": "Даниил",
+        "last_name": "Аникин",
+        "gender": "M",
+        "birth_year": "2008",
+        "club": "МКСШОР \"Восток\"",
+        "city": "г. Москва"
+      },
+      "competition": {
+        "id": 68,
+        "name": "Всероссийские соревнования по подводному спорту",
+        "start_date": "2024-11-05",
+        "end_date": "2024-11-07",
+        "date": "05-07 ноября 2024"
+      },
+      "best": "01:47.80",
+      "row_num": 115
+    },
+    {
+      "result": {
+        "id": 65851,
+        "result": "00:48.61",
+        "final": null,
+        "competition_id": 36,
+        "athlete_id": 1007,
+        "stroke": "BIFINS",
+        "distance": 100
+      },
+      "athlete": {
+        "id": 1007,
+        "first_name": "Даниил",
+        "last_name": "Аникин",
+        "gender": "M",
+        "birth_year": "2008",
+        "club": "МКСШОР \"Восток\"",
+        "city": "г. Москва"
+      },
+      "competition": {
+        "id": 36,
+        "name": "Московские ласты. Май.",
+        "start_date": "2025-05-31",
+        "end_date": "2025-05-31",
+        "date": " 31 мая 2025"
+      },
+      "best": "00:48.61",
+      "row_num": 180
+    },
+    {
+      "result": {
+        "id": 55488,
+        "result": "00:22.81",
+        "final": null,
+        "competition_id": 54,
+        "athlete_id": 1007,
+        "stroke": "BIFINS",
+        "distance": 50
+      },
+      "athlete": {
+        "id": 1007,
+        "first_name": "Даниил",
+        "last_name": "Аникин",
+        "gender": "M",
+        "birth_year": "2008",
+        "club": "МКСШОР \"Восток\"",
+        "city": "г. Москва"
+      },
+      "competition": {
+        "id": 54,
+        "name": "Кубок Москвы по подводному спорту",
+        "start_date": "2024-10-06",
+        "end_date": "2024-10-06",
+        "date": "06 октября 2024"
+      },
+      "best": "00:22.81",
+      "row_num": 204
+    }
+  ],
+  "global:junior_senior": [
+    {
+      "result": {
+        "id": 11653,
+        "result": "03:51.53",
+        "final": null,
+        "competition_id": 8,
+        "athlete_id": 1007,
+        "stroke": "BIFINS",
+        "distance": 400
+      },
+      "athlete": {
+        "id": 1007,
+        "first_name": "Даниил",
+        "last_name": "Аникин",
+        "gender": "M",
+        "birth_year": "2008",
+        "club": "МКСШОР \"Восток\"",
+        "city": "г. Москва"
+      },
+      "competition": {
+        "id": 8,
+        "name": "Кубок России по подводному спорту",
+        "start_date": "2025-02-11",
+        "end_date": "2025-02-17",
+        "date": " 11-17.02.2025 "
+      },
+      "best": "03:51.53",
+      "row_num": 50
+    },
+    {
+      "result": {
+        "id": 61910,
+        "result": "01:47.80",
+        "final": null,
+        "competition_id": 68,
+        "athlete_id": 1007,
+        "stroke": "BIFINS",
+        "distance": 200
+      },
+      "athlete": {
+        "id": 1007,
+        "first_name": "Даниил",
+        "last_name": "Аникин",
+        "gender": "M",
+        "birth_year": "2008",
+        "club": "МКСШОР \"Восток\"",
+        "city": "г. Москва"
+      },
+      "competition": {
+        "id": 68,
+        "name": "Всероссийские соревнования по подводному спорту",
+        "start_date": "2024-11-05",
+        "end_date": "2024-11-07",
+        "date": "05-07 ноября 2024"
+      },
+      "best": "01:47.80",
+      "row_num": 78
+    },
+    {
+      "result": {
+        "id": 65851,
+        "result": "00:48.61",
+        "final": null,
+        "competition_id": 36,
+        "athlete_id": 1007,
+        "stroke": "BIFINS",
+        "distance": 100
+      },
+      "athlete": {
+        "id": 1007,
+        "first_name": "Даниил",
+        "last_name": "Аникин",
+        "gender": "M",
+        "birth_year": "2008",
+        "club": "МКСШОР \"Восток\"",
+        "city": "г. Москва"
+      },
+      "competition": {
+        "id": 36,
+        "name": "Московские ласты. Май.",
+        "start_date": "2025-05-31",
+        "end_date": "2025-05-31",
+        "date": " 31 мая 2025"
+      },
+      "best": "00:48.61",
+      "row_num": 122
+    },
+    {
+      "result": {
+        "id": 55488,
+        "result": "00:22.81",
+        "final": null,
+        "competition_id": 54,
+        "athlete_id": 1007,
+        "stroke": "BIFINS",
+        "distance": 50
+      },
+      "athlete": {
+        "id": 1007,
+        "first_name": "Даниил",
+        "last_name": "Аникин",
+        "gender": "M",
+        "birth_year": "2008",
+        "club": "МКСШОР \"Восток\"",
+        "city": "г. Москва"
+      },
+      "competition": {
+        "id": 54,
+        "name": "Кубок Москвы по подводному спорту",
+        "start_date": "2024-10-06",
+        "end_date": "2024-10-06",
+        "date": "06 октября 2024"
+      },
+      "best": "00:22.81",
+      "row_num": 152
+    }
+  ],
+  "global:absolute": [
+    {
+      "result": {
+        "id": 11653,
+        "result": "03:51.53",
+        "final": null,
+        "competition_id": 8,
+        "athlete_id": 1007,
+        "stroke": "BIFINS",
+        "distance": 400
+      },
+      "athlete": {
+        "id": 1007,
+        "first_name": "Даниил",
+        "last_name": "Аникин",
+        "gender": "M",
+        "birth_year": "2008",
+        "club": "МКСШОР \"Восток\"",
+        "city": "г. Москва"
+      },
+      "competition": {
+        "id": 8,
+        "name": "Кубок России по подводному спорту",
+        "start_date": "2025-02-11",
+        "end_date": "2025-02-17",
+        "date": " 11-17.02.2025 "
+      },
+      "best": "03:51.53",
+      "row_num": 122
+    },
+    {
+      "result": {
+        "id": 61910,
+        "result": "01:47.80",
+        "final": null,
+        "competition_id": 68,
+        "athlete_id": 1007,
+        "stroke": "BIFINS",
+        "distance": 200
+      },
+      "athlete": {
+        "id": 1007,
+        "first_name": "Даниил",
+        "last_name": "Аникин",
+        "gender": "M",
+        "birth_year": "2008",
+        "club": "МКСШОР \"Восток\"",
+        "city": "г. Москва"
+      },
+      "competition": {
+        "id": 68,
+        "name": "Всероссийские соревнования по подводному спорту",
+        "start_date": "2024-11-05",
+        "end_date": "2024-11-07",
+        "date": "05-07 ноября 2024"
+      },
+      "best": "01:47.80",
+      "row_num": 186
+    },
+    {
+      "result": {
+        "id": 55488,
+        "result": "00:22.81",
+        "final": null,
+        "competition_id": 54,
+        "athlete_id": 1007,
+        "stroke": "BIFINS",
+        "distance": 50
+      },
+      "athlete": {
+        "id": 1007,
+        "first_name": "Даниил",
+        "last_name": "Аникин",
+        "gender": "M",
+        "birth_year": "2008",
+        "club": "МКСШОР \"Восток\"",
+        "city": "г. Москва"
+      },
+      "competition": {
+        "id": 54,
+        "name": "Кубок Москвы по подводному спорту",
+        "start_date": "2024-10-06",
+        "end_date": "2024-10-06",
+        "date": "06 октября 2024"
+      },
+      "best": "00:22.81",
+      "row_num": 252
+    },
+    {
+      "result": {
+        "id": 65851,
+        "result": "00:48.61",
+        "final": null,
+        "competition_id": 36,
+        "athlete_id": 1007,
+        "stroke": "BIFINS",
+        "distance": 100
+      },
+      "athlete": {
+        "id": 1007,
+        "first_name": "Даниил",
+        "last_name": "Аникин",
+        "gender": "M",
+        "birth_year": "2008",
+        "club": "МКСШОР \"Восток\"",
+        "city": "г. Москва"
+      },
+      "competition": {
+        "id": 36,
+        "name": "Московские ласты. Май.",
+        "start_date": "2025-05-31",
+        "end_date": "2025-05-31",
+        "date": " 31 мая 2025"
+      },
+      "best": "00:48.61",
+      "row_num": 257
+    }
+  ]
+}

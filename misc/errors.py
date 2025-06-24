@@ -6,19 +6,15 @@ from fastapi import Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from starlette.status import (
-    HTTP_400_BAD_REQUEST,
-    HTTP_401_UNAUTHORIZED,
-    HTTP_403_FORBIDDEN,
-    HTTP_404_NOT_FOUND,
-    HTTP_405_METHOD_NOT_ALLOWED,
-    HTTP_406_NOT_ACCEPTABLE,
-    HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-    HTTP_422_UNPROCESSABLE_ENTITY,
-    HTTP_429_TOO_MANY_REQUESTS,
-    HTTP_500_INTERNAL_SERVER_ERROR,
-    HTTP_503_SERVICE_UNAVAILABLE,
-)
+from starlette.status import (HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED,
+                              HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND,
+                              HTTP_405_METHOD_NOT_ALLOWED,
+                              HTTP_406_NOT_ACCEPTABLE,
+                              HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+                              HTTP_422_UNPROCESSABLE_ENTITY,
+                              HTTP_429_TOO_MANY_REQUESTS,
+                              HTTP_500_INTERNAL_SERVER_ERROR,
+                              HTTP_503_SERVICE_UNAVAILABLE)
 
 
 @dataclass(frozen=True)
@@ -31,7 +27,8 @@ class ErrorInfo:
 class ErrorCode(Enum):
     # 1xxx — Аутентификация / авторизация
     INVALID_VERIFICATION_CODE = ErrorInfo(1001, "Неправильный код", 400)
-    VERIFICATION_NOT_FOUND = ErrorInfo(1002, "Не найдена попытка верификации", 404)
+    VERIFICATION_NOT_FOUND = ErrorInfo(
+        1002, "Не найдена попытка верификации", 404)
     VERIFICATION_ATTEMPTS_EXPIRED = ErrorInfo(
         1003, "Попытки истекли, запросите код заново", 400
     )
@@ -41,15 +38,19 @@ class ErrorCode(Enum):
     VERIFICATION_FAILED = ErrorInfo(
         1007, "Верификация не пройдена, пройдите её чтобы продолжить", 400
     )
-    INCORRECT_CURRENT_PASSWORD = ErrorInfo(1008, "Неверный текущий пароль", 400)
+    INCORRECT_CURRENT_PASSWORD = ErrorInfo(
+        1008, "Неверный текущий пароль", 400)
     CAPTCHA_FAILED = ErrorInfo(1009, "Ошибка капчи", 400)
     EXPIRED_TOKEN = ErrorInfo(1010, "Срок действия токена истек", 403)
+    VERIFICATION_EXPIRED = ErrorInfo(
+        1002, "Срок действия подтверждения истек", 403)
 
     # 2xxx — Пользователь / учётные данные
     USER_NOT_FOUND = ErrorInfo(2001, "Пользователь не найден", 404)
     EMAIL_ALREADY_TAKEN = ErrorInfo(2002, "Email уже занят", 400)
     INSUFFICIENT_PRIVILEGES = ErrorInfo(2003, "Недостаточно прав", 403)
-    USER_ALREADY_HAS_ATHLETE = ErrorInfo(2004, "Пользователь уже имеет атлета", 400)
+    USER_ALREADY_HAS_ATHLETE = ErrorInfo(
+        2004, "Пользователь уже имеет атлета", 400)
     ATHLETE_ALREADY_BOUND_TO_OTHER_USER = ErrorInfo(
         2005, "Атлет уже привязан к другому пользователю", 400
     )
@@ -60,16 +61,19 @@ class ErrorCode(Enum):
     DISTANCE_NOT_FOUND = ErrorInfo(3003, "Дистанция не найдена", 404)
     RECORD_NOT_FOUND = ErrorInfo(3004, "Рекорд не найден", 404)
     RESULT_NOT_FOUND = ErrorInfo(3005, "Результат не найден", 404)
-    SOME_DISTANCES_NOT_FOUND = ErrorInfo(3006, "Некоторые дистанции не найдены", 404)
+    SOME_DISTANCES_NOT_FOUND = ErrorInfo(
+        3006, "Некоторые дистанции не найдены", 404)
     ATHLETE_COACH_RELATIONSHIP_NOT_FOUND = ErrorInfo(
         3007, "Связь атлета с тренером не найдена", 404
     )
     INVALID_USER_ROLE = ErrorInfo(3008, "Неверный тип пользователя", 400)
     EMPTY_DATA = ErrorInfo(3009, "Пустые данные", 422)
     CLUB_CANNOT_BE_EMPTY = ErrorInfo(3010, "Клуб не может быть пустым", 422)
-    ATHLETE_ALREADY_ADDED = ErrorInfo(3011, "Атлет уже добавлен в профиль", 400)
+    ATHLETE_ALREADY_ADDED = ErrorInfo(
+        3011, "Атлет уже добавлен в профиль", 400)
     STANDARD_NOT_FOUND = ErrorInfo(3012, "Стандарт не найден", 404)
-    ATHLETE_COACH_NOT_FOUND = ErrorInfo(3013, "Связь с тренером не найдена", 404)
+    ATHLETE_COACH_NOT_FOUND = ErrorInfo(
+        3013, "Связь с тренером не найдена", 404)
     ALREADY_ADDED_ATHLETE = ErrorInfo(3014, "Атлет уже добавлен", 400)
     INVALID_ROLE = ErrorInfo(3015, "Неверная роль", 403)
 

@@ -1,12 +1,13 @@
-from collections import defaultdict
 import logging
-from tortoise import Tortoise
+from collections import defaultdict
 from datetime import time
-import redis.asyncio as redis
 
+import redis.asyncio as redis
+from tortoise import Tortoise
+
+from misc.get_top_results import get_top_results
 from misc.redis_cache_compressed import RedisCachePickleCompressed
 from schemas.top import parse_best_full_result
-
 
 _log = logging.getLogger(__name__)
 
@@ -20,69 +21,68 @@ if exists == false then
 end
 return redis.call('ZRANK', zset_name, score)
 """
-ranking_sql_raw = """
-WITH results_with_effective AS (
-    SELECT
-        r.*,
-        a.gender,
-        CASE
-            WHEN r.final IS NOT NULL AND (r.result IS NULL OR r.final < r.result)
-            THEN r.final
-            ELSE r.result
-        END AS effective_result
-    FROM results r
-    JOIN athletes a ON a.id = r.athlete_id
-    WHERE (r.result IS NOT NULL OR r.final IS NOT NULL)
-),
-best_results AS (
-    SELECT
-        athlete_id,
-        stroke,
-        distance,
-        gender,
-        MIN(effective_result) AS best_result
-    FROM results_with_effective
-    GROUP BY athlete_id, stroke, distance, gender
-),
-best_full_results AS (
-    SELECT
-        r.id AS result_id,
-        r.stroke,
-        r.distance,
-        r.result AS result_result,
-        r.final AS result_final,
-
-        r.athlete_id,
-        a.first_name AS athlete_first_name,
-        a.last_name AS athlete_last_name,
-        a.gender AS athlete_gender,
-        a.birth_year AS athlete_birth_year,
-
-        r.competition_id,
-        c.name AS competition_name,
-        c.date AS competition_date,
-        c.start_date AS competition_start_date,
-        c.end_date AS competition_end_date,
-
-        r.effective_result AS best,
-
-        DENSE_RANK() OVER (
-            PARTITION BY r.stroke, r.distance, a.gender
-            ORDER BY r.effective_result
-        ) AS row_num
-    FROM results_with_effective r
-    JOIN athletes a ON a.id = r.athlete_id
-    JOIN competitions c ON c.id = r.competition_id
-    JOIN best_results br
-      ON r.athlete_id = br.athlete_id
-     AND r.stroke = br.stroke
-     AND r.distance = br.distance
-     AND r.effective_result = br.best_result
-)
-SELECT *
-FROM best_full_results
-ORDER BY row_num;
-"""
+categories = [
+    {
+        "name": "Малыши",
+        "id": "kids",
+        "min_age": 0,
+        "max_age": 9
+    },
+    {
+        "name": "Юные",
+        "id": "young",
+        "min_age": 10,
+        "max_age": 11
+    },
+    {
+        "name": "Юниоры",
+        "id": "junior",
+        "min_age": 12,
+        "max_age": 13
+    },
+    {
+        "name": "Кадеты",
+        "id": "cadet",
+        "min_age": 14,
+        "max_age": 15
+    },
+    {
+        "name": "Юниоры старшие",
+        "id": "junior_senior",
+        "min_age": 16,
+        "max_age": 17
+    },
+    {
+        "name": "Молодёжь",
+        "id": "youth",
+        "min_age": 18,
+        "max_age": 21
+    },
+    {
+        "name": "Взрослые",
+        "id": "adult",
+        "min_age": 22,
+        "max_age": 34
+    },
+    {
+        "name": "Мастера",
+        "id": "masters",
+        "min_age": 35,
+        "max_age": 44
+    },
+    {
+        "name": "Легенды",
+        "id": "legends",
+        "min_age": 45,
+        "max_age": 150
+    },
+    {
+        "name": "Общий зачёт",
+        "id": "absolute",
+        "min_age": None,
+        "max_age": None
+    }
+]
 
 
 def as_duration(result: time):
@@ -103,27 +103,28 @@ async def get_rank(
     return rank + 1
 
 
-async def get_best_results_raw():
-    results = await Tortoise.get_connection("default").execute_query_dict(
-        ranking_sql_raw
-    )
-    return [parse_best_full_result(res) for res in results]
-
-
 async def update_ratings(client: redis.Redis):
     _log.debug("Start updating athlete rankings")
 
-    results = await get_best_results_raw()
-    athlete_results = defaultdict(list)
+    athlete_results = defaultdict(lambda: defaultdict(list))
 
-    for top in results:
-        athlete_results[top.athlete.id].append(top.model_dump())
+    for season in [True, False]:
+        for category in categories:
+            _log.debug('Parse category: %s (season:%s)',
+                       category['name'], season)
+            results = await get_top_results(min_age=category['min_age'],
+                                            max_age=category['max_age'],
+                                            current_season=season)
+            results = [parse_best_full_result(res) for res in results]
+            for top in results:
+                athlete_results[top.athlete.id][('season' if season else 'global') + ':' + category['id']
+                                                ].append(top.model_dump())
 
     pipe = client.pipeline()
     cache = RedisCachePickleCompressed(pipe)
     for athlete_id, results in athlete_results.items():
         cache_key = f"athlete:ranking:{athlete_id}"
-        await cache.set(cache_key, results)
+        await cache.set(cache_key, dict(results))
     await pipe.execute()
 
 

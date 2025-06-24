@@ -1,12 +1,13 @@
 import hashlib
-from tortoise import Tortoise
-from typing import Optional
 from datetime import date
-from models.redis_client import client
+from typing import Optional
+
+from tortoise import Tortoise
+
 from misc.redis_cache_compressed import RedisCachePickleCompressed
+from models.redis_client import client
 
-
-sql = """
+BASE_SQL = """
 WITH results_with_effective AS (
     SELECT
         r.*,
@@ -18,10 +19,8 @@ WITH results_with_effective AS (
         END AS effective_result
     FROM results r
     JOIN athletes a ON a.id = r.athlete_id
-    WHERE r.stroke = $1
-      AND r.distance = $2
-      AND a.gender = $3
-      AND (r.result IS NOT NULL OR r.final IS NOT NULL)
+    WHERE (r.result IS NOT NULL OR r.final IS NOT NULL)
+      {where1}
 ),
 best_results AS (
     SELECT
@@ -69,22 +68,22 @@ best_full_results AS (
      AND r.stroke = br.stroke
      AND r.distance = br.distance
      AND r.effective_result = br.best_result
-    {where}
+    {where2}
 )
 SELECT *
 FROM best_full_results
-WHERE row_num > ${offset}
+{offset}
 ORDER BY row_num
-LIMIT ${limit};
+{limit}
 """
 
 
 async def get_top_results(
-    distance: int,
-    stroke: str,
-    gender: str,
-    limit: int = 3,
-    offset: int = 0,
+    distance: Optional[int] = None,
+    stroke: Optional[str] = None,
+    gender: Optional[str] = None,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
     min_age: Optional[int] = None,
     max_age: Optional[int] = None,
     season: Optional[int] = None,
@@ -92,63 +91,72 @@ async def get_top_results(
 ):
     cache = RedisCachePickleCompressed(client)
     cache_key_raw = f"{stroke}:{distance}:{gender}:{limit}:{offset}:{min_age}:{max_age}:{season}:{current_season}"
-    cache_key = "top_results:" + hashlib.sha256(cache_key_raw.encode()).hexdigest()
+    cache_key = "top_results:" + \
+        hashlib.sha256(cache_key_raw.encode()).hexdigest()
     cached = await cache.get(cache_key)
     if cached:
         return cached
 
     current_date = date.today()
     current_year = current_date.year
-
     if current_season:
-        if current_date.month >= 9:
-            season = current_year
-        else:
-            season = current_year - 1
+        season = current_year if current_date.month >= 9 else current_year - 1
+    season_start = date(season, 9, 1) if season is not None else None
+    season_end = date(season + 1, 8, 31) if season is not None else None
 
-    if season is not None:
-        season_start = date(season, 9, 1)
-        season_end = date(season + 1, 8, 31)
-    else:
-        season_start = None
-        season_end = None
+    params = []
+    where1 = []
+    where2 = []
 
-    params = [
-        stroke,
-        distance,
-        gender,
-    ]
-    conditions = []
+    if stroke is not None:
+        params.append(stroke)
+        where1.append(f"AND r.stroke = ${len(params)}")
+
+    if distance is not None:
+        params.append(distance)
+        where1.append(f"AND r.distance = ${len(params)}")
+
+    if gender is not None:
+        params.append(gender)
+        where1.append(f"AND a.gender = ${len(params)}")
 
     if min_age is not None:
         birth_max = current_year - min_age
         params.append(birth_max)
-        conditions.append(f"CAST(a.birth_year AS INTEGER) <= ${len(params)}")
+        where2.append(f"CAST(a.birth_year AS INTEGER) <= ${len(params)}")
 
     if max_age is not None:
         birth_min = current_year - max_age
         params.append(birth_min)
-        conditions.append(f"CAST(a.birth_year AS INTEGER) >= ${len(params)}")
-    if season_start is not None and season_end is not None:
+        where2.append(f"CAST(a.birth_year AS INTEGER) >= ${len(params)}")
+
+    if season_start and season_end:
         params.append(season_start)
-        conditions.append(f"c.start_date >= ${len(params)}")
+        where2.append(f"c.start_date >= ${len(params)}")
         params.append(season_end)
-        conditions.append(f"c.end_date <= ${len(params)}")
+        where2.append(f"c.end_date <= ${len(params)}")
 
-    if conditions:
-        where = "WHERE " + " AND ".join(conditions)
+    if offset is not None:
+        params.append(offset)
+        offset = f"WHERE row_num > ${len(params)}"
     else:
-        where = ""
+        offset = ''
 
-    params.append(offset)
-    offset_num = len(params)
-    params.append(limit)
-    limit_num = len(params)
+    if limit is not None:
+        params.append(limit)
+        limit = f'LIMIT ${len(params)};'
+    else:
+        limit = ''
 
-    sql_raw = sql.format(where=where, offset=offset_num, limit=limit_num)
-    results = await Tortoise.get_connection("default").execute_query_dict(
-        sql_raw, params
+    sql_final = BASE_SQL.format(
+        where1=" " + " ".join(where1) if where1 else "",
+        where2="WHERE " + " AND ".join(where2) if where2 else "",
+        offset=offset,
+        limit=limit
     )
 
+    results = await Tortoise.get_connection(
+        "default").execute_query_dict(
+            sql_final, params)
     await cache.set(cache_key, results, expire_seconds=60 * 60)
     return results

@@ -1,17 +1,18 @@
 from typing import List, Optional
+
 from fastapi import APIRouter, Body, Depends, File, UploadFile
+
 from misc.errors import APIError, ErrorCode
 from misc.ratelimit import create_ratelimit
+from misc.yandexcloud import delete_file, upload_file
 from models.enums import UserRoleEnum
 from models.models import Athlete, Coach, CoachAthlete
 from routers.users.utils import get_role
 from schemas.athlete import Athlete_Pydantic
-from misc.yandexcloud import delete_file, upload_file
-
 from schemas.users.coach import CoachOut, CoachOutWithStatus
 
 MAX_SIZE = 16 * 1024 * 1024
-UPLOAD_INTERVAL_SECONDS = 0  # 60 * 60 # TODO REQUIRED CHANGE
+UPLOAD_INTERVAL_SECONDS = 60 * 60  # TODO REQUIRED CHANGE
 
 
 async def get_content(file: UploadFile):
@@ -53,7 +54,8 @@ async def edit_athlete_me(
 async def upload_avatar(
     file: UploadFile = File(...),
     athlete: Athlete = Depends(get_role(UserRoleEnum.ATHLETE)),
-    send_limit=Depends(create_ratelimit("upload_avatar", UPLOAD_INTERVAL_SECONDS)),
+    send_limit=Depends(create_ratelimit(
+        "upload_avatar", UPLOAD_INTERVAL_SECONDS)),
 ):
     await send_limit(athlete.id)
 
@@ -81,7 +83,7 @@ async def get_coach(athlete: Athlete = Depends(get_role(UserRoleEnum.ATHLETE))):
     linked = await CoachAthlete.filter(athlete=athlete).select_related("coach")
 
     return [
-        {**(await CoachOut.from_tortoise_orm(link.coach)).dict(), "status": link.status}
+        {**(await CoachOut.from_tortoise_orm(link.coach)).model_dump(), "status": link.status}
         for link in linked
     ]
 

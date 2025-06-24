@@ -1,20 +1,18 @@
 import random
-from fastapi import APIRouter, Depends
 from typing import List, Optional
+
+from fastapi import APIRouter, Depends
 from tortoise.exceptions import DoesNotExist
+
 from misc.errors import APIError, ErrorCode
+from misc.get_top_results import get_top_results
+from misc.ratings import get_rank
+from misc.security import admin_required
 from models.deps import get_redis
 from models.models import Athlete, Competition, Result
-from schemas.top import RandomTop, parse_best_full_result, TopResponse
-from schemas.result import (
-    BulkCreateResult,
-    BulkCreateResultResponse,
-    Result_Pydantic,
-    ResultIn_Pydantic,
-)
-from misc.security import admin_required
-from misc.ratings import get_rank
-from misc.get_top_results import get_top_results
+from schemas.result import (BulkCreateResult, BulkCreateResultResponse,
+                            Result_Pydantic, ResultIn_Pydantic)
+from schemas.top import RandomTop, TopResponse, parse_best_full_result
 
 router = APIRouter(prefix="/results", tags=["results", "top"])
 
@@ -112,7 +110,7 @@ async def bulk_create_results(
     ignore_exception: bool = True,
     redis=Depends(get_redis),
 ):
-    response = []
+    results = []
     errors = []
     competitions = {}
 
@@ -124,19 +122,19 @@ async def bulk_create_results(
             if bulk_request.competition_id not in competitions:
                 try:
                     competition = await Competition.get(id=bulk_request.competition_id)
-                except DoesNotExist:
-                    raise APIError(ErrorCode.COMPETITION_NOT_FOUND)
+                except DoesNotExist as exc:
+                    raise APIError(ErrorCode.COMPETITION_NOT_FOUND) from exc
                 competitions[bulk_request.competition_id] = competition
             else:
                 competition = competitions[bulk_request.competition_id]
 
             try:
                 athlete = await Athlete.get(id=bulk_request.athlete_id)
-            except DoesNotExist:
-                raise APIError(ErrorCode.ATHLETE_NOT_FOUND)
+            except DoesNotExist as exc:
+                raise APIError(ErrorCode.ATHLETE_NOT_FOUND) from exc
 
             for result in bulk_request.results:
-                db_result = await Result.create(
+                db_result = Result(
                     athlete=athlete,
                     competition=competition,
                     stroke=result.stroke,
@@ -167,7 +165,7 @@ async def bulk_create_results(
                         result.distance,
                         db_result.final,
                     )
-                response.append(db_result)
+                results.append(db_result)
         except Exception as exc:
             if not ignore_exception:
                 raise
@@ -181,6 +179,7 @@ async def bulk_create_results(
                     }
                 )
 
+    response = await Result.bulk_create(results)
     return {"results": response, "errors": errors}
 
 
@@ -203,7 +202,7 @@ async def create_result(
             ErrorCode.ATHLETE_NOT_FOUND
             if exc.model is Athlete
             else ErrorCode.COMPETITION_NOT_FOUND
-        )
+        ) from exc
 
     db_result = await Result.create(
         athlete=athlete,
@@ -249,7 +248,7 @@ async def update_result(
             ErrorCode.ATHLETE_NOT_FOUND
             if exc.model is Athlete
             else ErrorCode.COMPETITION_NOT_FOUND
-        )
+        ) from exc
 
     db_result = (
         await Result.filter(id=result_id, competition=competition, athlete=athlete)

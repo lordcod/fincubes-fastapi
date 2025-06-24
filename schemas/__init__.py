@@ -6,7 +6,7 @@ from tortoise.contrib.pydantic import PydanticModel, pydantic_model_creator
 T = TypeVar("T")
 
 
-def with_nested(base_model, **nested_fields) -> PydanticModel:
+def with_nested(base_model: T, **nested_fields) -> T:
     annotations = {}
     namespace = {"__module__": base_model.__module__}
 

@@ -1,7 +1,9 @@
 from email.message import EmailMessage
 from typing import Optional
+
 from aiosmtplib import SMTP
-from config import SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD
+
+from config import SMTP_HOST, SMTP_PASSWORD, SMTP_PORT, SMTP_USER
 from misc.errors import APIError, ErrorCode
 from misc.templates import get_template
 
@@ -29,11 +31,24 @@ async def send_email(
         raise APIError(ErrorCode.SEND_EMAIL_EXCEPTION) from exc
 
 
-async def send_confirm_code(email: str, code: int):
+async def send_confirm_code(email: str, code: str):
     html = get_template("mail_confirm_code.html", code=code)
+    text = f"""Код подтверждения для аккаунта FinCubes:\n\n{code}\n\nЕсли вы не запрашивали это действие, просто проигнорируйте письмо."""
     await send_email(
         to_email=email,
-        subject="Подтверждение аккаунта",
-        body_text=f"Ваш код: {code}",
+        subject="📧 Подтверждение аккаунта — FinCubes",
+        body_text=text,
+        body_html=html,
+    )
+
+
+async def send_reset_password(email: str, user_id: int, token: str):
+    html = get_template("mail_reset_password.html",
+                        user_id=user_id, token=token)
+    text = f"""Вы запросили сброс пароля на FinCubes.\n\nЧтобы сбросить пароль, перейдите по ссылке:\nhttps://fincubes.ru/reset-password?token={token}&user_id={user_id}\n\nЕсли вы не запрашивали сброс, проигнорируйте это сообщение."""
+    await send_email(
+        to_email=email,
+        subject="🔐 Сброс пароля — FinCubes",
+        body_text=text,
         body_html=html,
     )

@@ -7,3 +7,8 @@ class UserRoleEnum(StrEnum):
     PARENT = "PARENT"
     ADMIN = "ADMIN"
     ORGANIZER = "ORGANIZER"
+
+
+class VerificationTokenEnum(StrEnum):
+    RESET_PASSWORD = "RESET_PASSWORD"
+    VERIFY_EMAIL = "VERIFY_EMAIL"

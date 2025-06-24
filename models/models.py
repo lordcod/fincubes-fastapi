@@ -1,7 +1,9 @@
+from email.policy import default
+
 from tortoise import fields
 from tortoise.models import Model
 
-from models.enums import UserRoleEnum
+from models.enums import UserRoleEnum, VerificationTokenEnum
 from models.flexible_time import FlexibleTimeField
 
 
@@ -63,7 +65,8 @@ class Athlete(TimestampedModel):
 
 class Result(TimestampedModel):
     id = fields.IntField(pk=True)
-    athlete: Athlete = fields.ForeignKeyField("models.Athlete", related_name="results")
+    athlete: Athlete = fields.ForeignKeyField(
+        "models.Athlete", related_name="results")
     competition: Competition = fields.ForeignKeyField(
         "models.Competition", related_name="results"
     )
@@ -84,7 +87,8 @@ class Result(TimestampedModel):
 
 class TopAthlete(TimestampedModel):
     id = fields.IntField(pk=True)
-    athlete = fields.ForeignKeyField("models.Athlete", related_name="top_mentions")
+    athlete = fields.ForeignKeyField(
+        "models.Athlete", related_name="top_mentions")
 
     class Meta:
         table = "top_athletes"
@@ -154,8 +158,10 @@ class Parent(TimestampedModel):
 
 class CoachAthlete(TimestampedModel):
     id = fields.IntField(pk=True)
-    coach = fields.ForeignKeyField("models.Coach", related_name="coach_athletes")
-    athlete = fields.ForeignKeyField("models.Athlete", related_name="athlete_coaches")
+    coach = fields.ForeignKeyField(
+        "models.Coach", related_name="coach_athletes")
+    athlete = fields.ForeignKeyField(
+        "models.Athlete", related_name="athlete_coaches")
     # pending, accepted, rejected_athlete, rejected_coach
     status = fields.CharField(max_length=50, default="active")
 
@@ -175,9 +181,14 @@ class User(TimestampedModel):
 class UserVerification(TimestampedModel):
     id = fields.IntField(pk=True)
     user = fields.ForeignKeyField("models.User", related_name="verifications")
-    code = fields.CharField(max_length=6)
     attempt = fields.IntField(default=0)
     is_active = fields.BooleanField(default=True)
+
+    token = fields.CharField(max_length=256)
+    token_expiry = fields.DatetimeField()
+    token_type = fields.CharEnumField(
+        enum_type=VerificationTokenEnum,
+        default=VerificationTokenEnum.VERIFY_EMAIL)  # TODO DELETE DEFAULT
 
 
 class UserRole(TimestampedModel):
