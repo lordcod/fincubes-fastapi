@@ -1,6 +1,8 @@
-from pydantic import BaseModel
-from typing import List, Optional
 from datetime import date
+from typing import Dict, List, Optional
+
+from pydantic import BaseModel
+
 from models.flexible_time import FlexibleTime
 
 
@@ -43,6 +45,9 @@ class BestFullResult(BaseModel):
     competition: Competition
     best: Optional[FlexibleTime]
     row_num: int
+
+
+AthleteTopResponse = Dict[str, List[BestFullResult]]
 
 
 class TopResponse(BaseModel):

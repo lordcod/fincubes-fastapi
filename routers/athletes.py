@@ -1,19 +1,20 @@
 import asyncio
 from datetime import time
-from fastapi import APIRouter, Depends
-from misc.errors import APIError, ErrorCode
-from misc.redis_cache_compressed import RedisCachePickleCompressed
-from misc.ratings import get_rank, get_ratings
-from models.deps import get_redis
-from models.models import Athlete, Result
-from schemas.performance import UserAthleteResults, UserCompetitionResult
-from schemas.athlete import Athlete_Pydantic, AthleteIn_Pydantic
 from typing import List, Tuple
+
+from fastapi import APIRouter, Depends
 from tortoise.exceptions import DoesNotExist
 from tortoise.expressions import Q
 
+from misc.errors import APIError, ErrorCode
+from misc.ratings import get_rank, get_ratings
+from misc.redis_cache_compressed import RedisCachePickleCompressed
 from misc.security import admin_required
-from schemas.top import BestFullResult
+from models.deps import get_redis
+from models.models import Athlete, Result
+from schemas.athlete import Athlete_Pydantic, AthleteIn_Pydantic
+from schemas.performance import UserAthleteResults, UserCompetitionResult
+from schemas.top import AthleteTopResponse, BestFullResult
 
 router = APIRouter(prefix="/athletes", tags=["athletes"])
 
@@ -202,7 +203,8 @@ async def get_athlete_results(athlete_id: int, redis=Depends(get_redis)):
         key = (result.stroke, result.distance)
         best_performance = best_results.get(key)
         if min_time and (
-            best_performance is None or (best_performance["min_time"] > min_time)
+            best_performance is None or (
+                best_performance["min_time"] > min_time)
         ):
             if best_performance:
                 best_performance.pop("best", None)
@@ -226,6 +228,6 @@ async def get_athlete_results(athlete_id: int, redis=Depends(get_redis)):
     return model
 
 
-@router.get("/{athlete_id}/top", response_model=List[BestFullResult])
+@router.get("/{athlete_id}/top", response_model=AthleteTopResponse)
 async def get_athlete_top(athlete_id: int, redis=Depends(get_redis)):
     return await get_ratings(redis, athlete_id)

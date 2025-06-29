@@ -25,14 +25,18 @@ logger = logging.getLogger(__name__)
 if dev_mode:
     print("Start app in dev mode")
     origins = ["*"]
-    origins = ["http://localhost:5173", "http://localhost:4173"]
     allowed_hosts = ["*"]
-    app.servers = [{"url": "https://localhost:8000",
+    app.servers = [{"url": "http://localhost:8000",
                     "description": "Local server"}]
 else:
     origins = [
         "https://fincubes.ru",
         "https://dev.fincubes.ru",
+
+        "https://next.fincubes.ru",
+        "https://fincubes.online",
+        "https://fincubes-nextjs.vercel.app",
+
         "http://localhost:5173",
         "http://localhost:4173",
         "http://localhost:3000",

@@ -32,20 +32,10 @@ async def get_athlete_me(athlete: Athlete = Depends(get_role(UserRoleEnum.ATHLET
 
 @router.put("/", response_model=Athlete_Pydantic)
 async def edit_athlete_me(
-    city: Optional[str] = Body(embed=True, default=None),
     club: Optional[str] = Body(embed=True, default=None),
     athlete: Athlete = Depends(get_role(UserRoleEnum.ATHLETE)),
 ):
-    if city is None and club is None:
-        raise APIError(ErrorCode.EMPTY_DATA)
-    if club is not None and not club:
-        raise APIError(ErrorCode.CLUB_CANNOT_BE_EMPTY)
-    if club is not None:
-        athlete.club = club
-    if city is not None:
-        athlete.city = city
-    if city == "":
-        athlete.city = None
+    athlete.club = club
     await athlete.save()
     return await Athlete_Pydantic.from_tortoise_orm(athlete)
 

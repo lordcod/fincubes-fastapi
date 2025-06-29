@@ -1,13 +1,15 @@
 import asyncio
+
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from misc.ratings import update_ratings
+from models.redis_client import client
 
 scheduler = BackgroundScheduler()
 
 
 def daily_task():
-    asyncio.create_task(update_ratings())
+    asyncio.create_task(update_ratings(client))
 
 
 def start_scheduler():
