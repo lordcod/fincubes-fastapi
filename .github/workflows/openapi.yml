@@ -81,9 +81,12 @@ jobs:
 
       - name: Send OpenAPI file to Postman
         run: |
-          COLLECTION_DATA=$(cat .cache/openapi.json)
+          echo "{\"collection\": $(cat .cache/openapi.json)}" > temp_collection.json
+
           curl -X PUT \
           https://api.getpostman.com/collections/${{ secrets.POSTMAN_COLLECTION_ID }} \
           -H "X-Api-Key: ${{ secrets.POSTMAN_API_KEY }}" \
           -H "Content-Type: application/json" \
-          -d "{\"collection\": $COLLECTION_DATA}"
+          -d @temp_collection.json
+
+          rm temp_collection.json
