@@ -75,6 +75,6 @@ jobs:
       - name: Send OpenAPI file to Postman
         run: |
           curl -X PUT \
-            https://api.getpostman.com/collections/{{collection_uid}} \
+            https://api.getpostman.com/collections/${{ secrets.POSTMAN_COLLECTION_ID }} \
             -H "X-Api-Key: ${{ secrets.POSTMAN_API_KEY }}" \
             -F "file=@.cache/openapi.json"  # Отправляем файл .cache/openapi.json
