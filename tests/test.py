@@ -1,9 +1,11 @@
 import asyncio
 import os
 import sys
+
 from fastapi.testclient import TestClient
 
 sys.path.append(os.getcwd())
+
 test_data_competition = {
     "name": "Соревнование",
     "date": "25 июля 2020",
