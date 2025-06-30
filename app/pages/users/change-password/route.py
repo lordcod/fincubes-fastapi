@@ -15,7 +15,7 @@ async def change_password(
     new_password: str,
     current_user: User = Depends(UserAuthSecurity(TokenType.access)),
 ):
-    if not verify_password(current_user.hashed_password, current_password):
+    if not verify_password(current_password, current_user.hashed_password):
         raise APIError(ErrorCode.INCORRECT_CURRENT_PASSWORD)
 
     hashed_new_password = hash_password(new_password)

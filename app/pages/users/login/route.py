@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from app.core.errors import APIError, ErrorCode
+from app.core.security.hashing import verify_password
 from app.core.security.token import create_access_token, create_refresh_token
 from app.integrations.cloudflare import check_verification
 from app.models.user.user import User
@@ -19,7 +20,7 @@ async def login_user(user_login: UserLogin):
     if not user:
         raise APIError(ErrorCode.USER_NOT_FOUND)
 
-    if not pwd_context.verify(user_login.password, user.hashed_password):
+    if not verify_password(user_login.password, user.hashed_password):
         raise APIError(ErrorCode.INCORRECT_CURRENT_PASSWORD)
 
     refresh_token = create_refresh_token(user.id)

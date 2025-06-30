@@ -31,5 +31,5 @@ class UserCompetitionResult(BaseModel):
 
 
 class UserAthleteResults(BaseModel):
-    athlete_id: int
+    id: int
     results: List[UserCompetitionResult]

@@ -19,15 +19,15 @@ router = APIRouter()
 
 
 @router.get("/", response_model=UserAthleteResults)
-async def get_athlete_results(athlete_id: int, redis=Depends(get_redis)):
-    cache_key = f"performances:{athlete_id}"
+async def get_athlete_results(id: int, redis=Depends(get_redis)):
+    cache_key = f"performances:{id}"
     cache = RedisCachePickleCompressed(redis)
     cached = await cache.get(cache_key)
     if cached:
         return cached
 
     try:
-        athlete = await Athlete.get(id=athlete_id)
+        athlete = await Athlete.get(id=id)
         results_query = await Result.filter(athlete=athlete).prefetch_related(
             "competition"
         )
@@ -108,7 +108,7 @@ async def get_athlete_results(athlete_id: int, redis=Depends(get_redis)):
         UserCompetitionResult(**comp) for comp in competitions.values()
     ]
     model = UserAthleteResults(
-        athlete_id=athlete.id, results=competition_results
+        id=athlete.id, results=competition_results
     ).model_dump()
     await cache.set(cache_key, model, expire_seconds=60 * 15)
     return model
