@@ -44,6 +44,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Cache Python dependencies
+        uses: actions/cache@v2
+        with:
+          path: venv
+          key: ${{ runner.os }}-python-dependencies-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: ${{ runner.os }}-python-dependencies-
+
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
@@ -77,4 +84,5 @@ jobs:
           curl -X PUT \
             https://api.getpostman.com/collections/${{ secrets.POSTMAN_COLLECTION_ID }} \
             -H "X-Api-Key: ${{ secrets.POSTMAN_API_KEY }}" \
-            -F "file=@.cache/openapi.json"  # Отправляем файл .cache/openapi.json
+            -F "file=@.cache/openapi.json" \
+            -F "collection=${{ secrets.POSTMAN_COLLECTION_ID }}"
