@@ -45,7 +45,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Cache Python dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: venv
           key: ${{ runner.os }}-python-dependencies-${{ hashFiles('**/requirements.txt') }}
