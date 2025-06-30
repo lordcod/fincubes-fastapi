@@ -6,7 +6,7 @@ from fastapi import FastAPI
 
 from app.jobs.daily_ranking import shutdown_scheduler, start_scheduler
 from app.shared.clients import session
-from app.shared.clients.redis import client
+from app.shared.clients.redis import client, settings
 
 _log = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ _log = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     _log.info("Starting application lifespan...")
 
-    _log.debug("Pinging Redis...")
+    _log.debug("Pinging Redis %s...", settings.REDIS_URL)
     await client.ping()
     app.state.redis = client
     _log.info("Connected to Redis.")
