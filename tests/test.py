@@ -19,7 +19,7 @@ test_data_competition = {
 
 
 async def test():
-    from main import app
+    from app.main import app
 
     with TestClient(app) as client:
         response = client.get("/")
