@@ -23,4 +23,4 @@ async def edit_athlete_me(
 ):
     athlete.club = club
     await athlete.save()
-    return await Athlete_Pydantic.from_tortoise_orm(athlete)
+    return athlete

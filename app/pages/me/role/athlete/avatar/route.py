@@ -21,7 +21,7 @@ async def get_content(file: UploadFile):
     return content
 
 
-router = APIRouter(prefix="/athletes")
+router = APIRouter()
 
 
 @router.post("/", response_model=Athlete_Pydantic)
