@@ -1,10 +1,7 @@
 import importlib.util
-import os
 from pathlib import Path
 
 from fastapi import APIRouter, FastAPI
-
-ROUTES_DIR = Path(os.getcwd()) / 'app' / 'pages_v2'
 
 
 def path_from_dir(relative: Path) -> str:
@@ -45,6 +42,9 @@ def build_router_tree(route_dir: Path) -> APIRouter:
     return router
 
 
-def include_routes(app: FastAPI):
-    root_router = build_router_tree(ROUTES_DIR)
+def include_routes(
+    app: FastAPI,
+    pages_dir: str = 'pages'
+):
+    root_router = build_router_tree(Path(pages_dir))
     app.include_router(root_router)
