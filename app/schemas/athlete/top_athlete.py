@@ -6,5 +6,6 @@ from app.schemas.athlete.athlete import Athlete_Pydantic
 
 TopAthleteIn = pydantic_model_creator(TopAthlete, exclude_readonly=True)
 TopAthleteOut = with_nested(
-    pydantic_model_creator(TopAthlete), athlete=Athlete_Pydantic
+    pydantic_model_creator(TopAthlete),
+    athlete=Athlete_Pydantic
 )

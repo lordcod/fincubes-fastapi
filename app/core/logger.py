@@ -1,8 +1,23 @@
 import json
+import logging
 
+import sentry_sdk
 from cordlog import setup_logging as setup_cordlog
+from sentry_sdk.integrations.logging import LoggingIntegration
+
+from app.core.config import settings
 
 config_path = "app/core/config/log_config.json"
+
+sentry_logging = LoggingIntegration(
+    level=logging.DEBUG,
+    event_level=logging.WARNING
+)
+sentry_sdk.init(
+    dsn=settings.SENTRY_DNS,
+    send_default_pii=True,
+    integrations=[sentry_logging]
+)
 
 
 def setup_logging():

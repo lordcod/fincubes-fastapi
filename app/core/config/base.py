@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     AWS_SECRET_KEY: str
     BUCKET_NAME: str
     TURNSTILE_SECRET_KEY: str
+    SENTRY_DNS: str
     ALGORITHM: str = "HS256"
 
     model_config = SettingsConfigDict(

@@ -2,13 +2,12 @@ import importlib.util
 import os
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import APIRouter, FastAPI
 
-ROUTES_DIR = Path(os.getcwd()) / 'app' / 'pages'
+ROUTES_DIR = Path(os.getcwd()) / 'app' / 'pages_v2'
 
 
-def path_from_dir(route_dir: Path) -> str:
-    relative = route_dir.relative_to(ROUTES_DIR)
+def path_from_dir(relative: Path) -> str:
     parts = list(relative.parts)
 
     cleaned = []
@@ -30,19 +29,22 @@ def import_router_from_file(route_file: Path):
     return getattr(module, "router", None)
 
 
+def build_router_tree(route_dir: Path) -> APIRouter:
+    route_path = route_dir / "route.py"
+    router = import_router_from_file(
+        route_path) if route_path.exists() else None
+    if router is None:
+        router = APIRouter()
+
+    for sub_dir in route_dir.iterdir():
+        if sub_dir.is_dir():
+            sub_router = build_router_tree(sub_dir)
+            prefix = path_from_dir(sub_dir.relative_to(route_dir))
+            router.include_router(sub_router, prefix=prefix)
+
+    return router
+
+
 def include_routes(app: FastAPI):
-    for route_dir in ROUTES_DIR.rglob("*"):
-        route_file = route_dir / "route.py"
-        if route_file.exists():
-            prefix = path_from_dir(route_dir)
-            router = import_router_from_file(route_file)
-
-            if router:
-                relative = route_dir.relative_to(ROUTES_DIR)
-                tag_parts = [
-                    part for part in relative.parts
-                    if not (part.startswith('(') and part.endswith(')'))
-                ]
-                tag = tag_parts[0] if tag_parts else None
-
-                app.include_router(router, prefix=prefix, tags=[tag])
+    root_router = build_router_tree(ROUTES_DIR)
+    app.include_router(root_router)
