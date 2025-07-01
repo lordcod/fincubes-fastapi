@@ -1,12 +1,16 @@
 [tool.poetry]
-name = "your-app-name"
+name = "fincubes-fastapi"
 version = "0.1.0"
 description = "FastAPI-based application with Tortoise ORM, Redis, Auth, Email, and integrations"
-authors = ["Your Name <your@email.com>"]
+authors = ["Dybfuo"]
 license = "MIT"
 
+packages = [
+  { include = "app" }
+]
+
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 
 fastapi = "0.115.12"
 uvicorn = { extras = ["standard"], version = "0.34.2" }
@@ -21,7 +25,7 @@ pyjwt = "2.10.1"
 
 redis = { extras = ["asyncio"], version = "6.0.0" }
 
-apscheduler = "^3.10.4"  # У тебя не указана версия, оставляю как есть
+apscheduler = "^3.10.4"
 
 aiosmtplib = "4.0.1"
 email-validator = "2.2.0"
@@ -31,11 +35,16 @@ jinja2 = "3.1.6"
 botocore = "1.38.21"
 pytest = "^8.2.0"
 httpx = "0.28.1"
+fastfsx = "^1.0.3"
+sentry-sdk = "^2.32.0"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.poetry.scripts]
+start = "app.main:run"
+dev = "run:dev"
 
 [tool.aerich]
 tortoise_orm = "app.services.config.TORTOISE_ORM"

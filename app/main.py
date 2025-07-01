@@ -4,21 +4,20 @@ from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI
+from fastfsx import FileRouter
 
 from app.core.logger import setup_logging
 from app.core.startup.database import register_db
 from app.core.startup.exception_handler import add_exception_handler
 from app.core.startup.lifespan import lifespan
 from app.core.startup.middleware import add_middleware
-from app.shared.utils.dynamic_routes import include_routes
 
 PAGES_DIR = Path(os.getcwd()) / 'app' / 'pages'
 
 _log = logging.getLogger(__name__)
 
 app = FastAPI(title="FinCubes API", lifespan=lifespan)
-
-include_routes(app, PAGES_DIR)
+app.include_router(FileRouter(PAGES_DIR).build())
 
 _log.debug("Registering database...")
 register_db(app)

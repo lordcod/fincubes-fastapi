@@ -15,7 +15,8 @@ def path_from_dir(relative: Path) -> str:
             cleaned.append("{" + part[1:-1] + "}")
         else:
             cleaned.append(part)
-
+    if len(cleaned) == 0:
+        return ''
     return "/" + "/".join(cleaned)
 
 
