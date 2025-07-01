@@ -11,5 +11,5 @@ router = APIRouter(tags=['Internal/Standard'])
 async def get_standard(id: int):
     standard = await StandardCategory.filter(id=id).first()
     if not standard:
-        raise APIError(ErrorCode.STANDARD_NOT_FOUND, status_code=404)
+        raise APIError(ErrorCode.STANDARD_NOT_FOUND)
     return await StandardOut.from_tortoise_orm(standard)

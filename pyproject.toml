@@ -16,7 +16,7 @@ fastapi = "0.115.12"
 uvicorn = { extras = ["standard"], version = "0.34.2" }
 aiohttp = "3.11.18"
 
-tortoise-orm = "0.25.1"
+tortoise-orm = {extras = ["asyncpg"], version = "^0.25.1"}
 pydantic = "2.11.4"
 pydantic-settings = "2.2.1"
 
@@ -37,6 +37,9 @@ pytest = "^8.2.0"
 httpx = "0.28.1"
 fastfsx = "^1.0.3"
 sentry-sdk = "^2.32.0"
+cordlog = "^1.0.0"
+python-multipart = "^0.0.20"
+bcrypt = "^4.3.0"
 
 [build-system]
 requires = ["poetry-core"]
