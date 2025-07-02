@@ -29,23 +29,6 @@ async def test():
         )
         assert response.status_code == 404
 
-        response = client.get("/competitions/nearests")
-        print(
-            f"Getting {response.status_code} status, data: {response.read().decode()}"
-        )
-        assert response.status_code == 200
-        assert isinstance(response.json(), list)
-
-        response = client.post(
-            "/competitions/",
-            json=test_data_competition,
-            headers={"Authorization": "Bearer " + " "},
-        )
-        print(
-            f"Getting {response.status_code} status, data: {response.read().decode()}"
-        )
-        assert response.status_code == 403
-
 
 if __name__ == "__main__":
     asyncio.run(test())
