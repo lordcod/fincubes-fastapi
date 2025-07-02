@@ -1,3 +1,5 @@
+from typing import Optional
+
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -16,7 +18,7 @@ class Settings(BaseSettings):
     AWS_SECRET_KEY: str
     BUCKET_NAME: str
     TURNSTILE_SECRET_KEY: str
-    SENTRY_DNS: str
+    SENTRY_DNS: Optional[str] = None
     ALGORITHM: str = "HS256"
 
     model_config = SettingsConfigDict(
