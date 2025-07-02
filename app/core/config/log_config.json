@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "disable_existing_loggers": false,
+
+  "formatters": {
+    "default": {
+      "format": "[%(asctime)s][%(name)s][%(levelname)s]  %(message)s (%(filename)s:%(lineno)d)",
+      "datefmt": "%Y-%m-%d %H:%M:%S"
+    },
+    "colored": {
+      "()": "cordlog.ColoredFormatter",
+      "format": "[%(asctime)s][%(name)s][%(levelname)s]  %(message)s (%(filename)s:%(lineno)d)"
+    }
+  },
+
+  "handlers": {
+    "console": {
+      "class": "logging.StreamHandler",
+      "formatter": "colored",
+      "level": "TRACE"
+    },
+    "access_file": {
+      "class": "logging.FileHandler",
+      "filename": "logs/access.log",
+      "formatter": "default",
+      "level": "INFO",
+      "encoding": "utf8"
+    },
+    "error_file": {
+      "class": "logging.FileHandler",
+      "filename": "logs/error.log",
+      "formatter": "default",
+      "level": "ERROR",
+      "encoding": "utf8"
+    }
+  },
+
+  "loggers": {
+    "app": {
+      "handlers": ["console", "access_file", "error_file"],
+      "level": "TRACE",
+      "propagate": false
+    },
+    "httpx": {
+      "handlers": ["console", "access_file"],
+      "level": "INFO",
+      "propagate": false
+    },
+    "aiosqlite": {
+      "handlers": ["console", "access_file"],
+      "level": "INFO",
+      "propagate": false
+    },
+    "tortoise": {
+      "handlers": ["console", "access_file"],
+      "level": "INFO",
+      "propagate": false
+    },
+    "uvicorn": {
+      "handlers": ["console", "access_file"],
+      "level": "INFO",
+      "propagate": false
+    }
+  },
+
+  "root": {
+    "level": "WARNING",
+    "handlers": ["console", "error_file"]
+  }
+}
