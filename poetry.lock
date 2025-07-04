@@ -604,13 +604,13 @@ standard = ["email-validator (>=2.0.0)", "fastapi-cli[standard] (>=0.0.5)", "htt
 
 [[package]]
 name = "fastfsx"
-version = "1.0.3"
+version = "1.0.5"
 description = "Filesystem-based router for FastAPI, inspired by Next.js `pages/`"
 optional = false
 python-versions = "<4.0,>=3.11"
 files = [
-    {file = "fastfsx-1.0.3-py3-none-any.whl", hash = "sha256:5ec2f63fdde25a13eaf6758c0af7ca5d7bff9a6e646e0904e6b5cc07b3c1abe4"},
-    {file = "fastfsx-1.0.3.tar.gz", hash = "sha256:d3ac55f0236118c6dc5de47cdbdd53630280e9d32a0fbd68a1a054a2667b39cb"},
+    {file = "fastfsx-1.0.5-py3-none-any.whl", hash = "sha256:f4b731dc8e19486397955d011c750b1bcaeebfd2aaaecbd335864793f96bb1d1"},
+    {file = "fastfsx-1.0.5.tar.gz", hash = "sha256:187d0e16c83263c75efbfb269041684914f1cc618049a92b55ed75a94e9dea4f"},
 ]
 
 [package.dependencies]
@@ -2193,4 +2193,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "9d844585844f73ddd889cf9a7b80352897f291d1b6865b41979c0cf892358c51"
+content-hash = "fb11cc071e0cfe0a579363a3ad8ae6268b9100b81e670d143a5b002b85173792"
