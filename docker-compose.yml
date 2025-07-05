@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  fincubes-fastapi:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=asyncpg://postgres:postgres@postgres:5432/postgres
+    depends_on:
+      - redis
+      - postgres
+    command: poetry run start
+
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

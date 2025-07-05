@@ -14,7 +14,7 @@ python = "^3.11"
 
 fastapi = "0.115.12"
 uvicorn = { extras = ["standard"], version = "0.34.2" }
-aiohttp = "3.11.18"
+aiohttp = "^3.11.18"
 
 tortoise-orm = {extras = ["asyncpg"], version = "^0.25.1"}
 pydantic = "2.11.4"
@@ -48,6 +48,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry.scripts]
 start = "app.main:run"
 dev = "run:dev"
+test = "tests.test:run"
 
 [tool.aerich]
 tortoise_orm = "app.services.config.TORTOISE_ORM"

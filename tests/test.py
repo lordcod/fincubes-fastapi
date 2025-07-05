@@ -1,10 +1,6 @@
 import asyncio
-import os
-import sys
-
 from fastapi.testclient import TestClient
-
-sys.path.append(os.getcwd())
+from app.main import app
 
 test_data_competition = {
     "name": "Соревнование",
@@ -19,8 +15,6 @@ test_data_competition = {
 
 
 async def test():
-    from app.main import app
-
     with TestClient(app) as client:
         response = client.get("/")
         print(response.headers, response.request.headers)
@@ -30,5 +24,9 @@ async def test():
         assert response.status_code == 404
 
 
-if __name__ == "__main__":
+def run():
     asyncio.run(test())
+
+
+if __name__ == "__main__":
+    run()
