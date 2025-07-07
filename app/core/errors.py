@@ -44,6 +44,36 @@ class ErrorCode(Enum):
     EXPIRED_TOKEN = ErrorInfo(1010, "Срок действия токена истек", 403)
     VERIFICATION_EXPIRED = ErrorInfo(
         1002, "Срок действия подтверждения истек", 403)
+    PROTECTION_TOKEN_EXPIRED = ErrorInfo(
+        1011, "Ошибка защиты: срок действия токена истёк", 401
+    )
+    PROTECTION_FP_MISMATCH = ErrorInfo(
+        1011, "Ошибка защиты: отпечаток устройства не совпадает", 400
+    )
+    PROTECTION_JKT_MISMATCH = ErrorInfo(
+        1011, "Ошибка защиты: несоответствие ключа подтверждения (jkt)", 400
+    )
+    PROTECTION_BAD_DPOP = ErrorInfo(
+        1011, "Ошибка защиты: недействительный DPoP токен", 400
+    )
+    PROTECTION_INVALID_DPOP_HEADER = ErrorInfo(
+        1011, "Ошибка защиты: некорректный заголовок DPoP", 400
+    )
+    PROTECTION_INVALID_DPOP_HTM = ErrorInfo(
+        1011, "Ошибка защиты: несоответствие метода DPoP (htm mismatch)", 400
+    )
+    PROTECTION_INVALID_DPOP_HTU = ErrorInfo(
+        1011, "Ошибка защиты: несоответствие пути DPoP (htu mismatch)", 400
+    )
+    PROTECTION_INVALID_DPOP_IAT = ErrorInfo(
+        1011, "Ошибка защиты: недопустимое время подписи DPoP (iat)", 400
+    )
+    PROTECTION_INVALID_POW = ErrorInfo(
+        1011, "Ошибка защиты: неверное доказательство выполнения работы (PoW)", 400
+    )
+    PROTECTION_NONCE_REUSED = ErrorInfo(
+        1011, "Ошибка защиты: повторное использование nonce", 400
+    )
 
     # 2xxx — Пользователь / учётные данные
     USER_NOT_FOUND = ErrorInfo(2001, "Пользователь не найден", 404)

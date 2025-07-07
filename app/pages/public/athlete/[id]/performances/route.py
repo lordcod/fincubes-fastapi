@@ -8,6 +8,7 @@ from tortoise.exceptions import DoesNotExist
 
 from app.core.deps.redis import get_redis
 from app.core.errors import APIError, ErrorCode
+from app.core.protection.secure_request import SecureRequest
 from app.models.athlete.athlete import Athlete
 from app.models.competition.result import Result
 from app.repositories.ratings import get_rank
@@ -18,7 +19,7 @@ from app.shared.cache.redis_compressed import RedisCachePickleCompressed
 router = APIRouter()
 
 
-@router.get("/", response_model=UserAthleteResults)
+@router.get("/", response_model=UserAthleteResults, dependencies=[Depends(SecureRequest(['athlete.results:read']))])
 async def get_athlete_results(id: int, redis=Depends(get_redis)):
     cache_key = f"performances:{id}"
     cache = RedisCachePickleCompressed(redis)

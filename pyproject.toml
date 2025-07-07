@@ -40,6 +40,7 @@ cordlog = "^1.0.0"
 python-multipart = "^0.0.20"
 bcrypt = "^4.3.0"
 fastfsx = "^1.0.5"
+python-jose = {extras = ["cryptography"], version = "^3.5.0"}
 
 [build-system]
 requires = ["poetry-core"]
