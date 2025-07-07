@@ -41,9 +41,15 @@ class SecureRequest:
     def _parse_and_verify_token(self, token: str) -> Dict[str, Any]:
         try:
             payload = jwt.decode(
-                token, settings.SECRET_KEY, algorithms=["HS256"])
+                token,
+                settings.SECRET_KEY,
+                algorithms=[settings.ALGORITHM],
+                options={"verify_sub": False,
+                         "verify_aud": False,
+                         "verify_iss": False},
+            )
         except JWTError as exc:
-            raise APIError(ErrorCode.PROTECTION_BAD_DPOP) from exc
+            raise APIError(ErrorCode.PROTECTION_BAD_PAGE_TOKEN) from exc
 
         if payload["exp"] < int(time.time()):
             raise APIError(ErrorCode.PROTECTION_TOKEN_EXPIRED)

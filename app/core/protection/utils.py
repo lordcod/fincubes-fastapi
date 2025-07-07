@@ -56,7 +56,14 @@ def verify_dpop(method: str, url: str, dpop_jwt: str, jwk_pub: dict):
         if header.get("typ") != "dpop+jwt":
             raise APIError(ErrorCode.PROTECTION_INVALID_DPOP_HEADER)
 
-        payload = jwt.decode(dpop_jwt, key, algorithms=[alg])
+        payload = jwt.decode(
+            dpop_jwt,
+            key,
+            algorithms=[alg],
+            options={"verify_sub": False,
+                     "verify_aud": False,
+                     "verify_iss": False},
+        )
         if payload["htm"] != method:
             raise APIError(ErrorCode.PROTECTION_INVALID_DPOP_HTM)
 
@@ -68,4 +75,5 @@ def verify_dpop(method: str, url: str, dpop_jwt: str, jwk_pub: dict):
 
         return True
     except (JWTError, KeyError, TypeError, ValueError) as exc:
+        print(type(exc), exc)
         raise APIError(ErrorCode.PROTECTION_BAD_DPOP) from exc

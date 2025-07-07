@@ -29,7 +29,7 @@ async def request_reset_password(
     if not user:
         raise APIError(ErrorCode.USER_NOT_FOUND)
 
-    await send_limit(user.id)
+    # await send_limit(user.id)
 
     await UserVerification.filter(
         user_id=user.id,

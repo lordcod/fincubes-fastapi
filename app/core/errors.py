@@ -53,6 +53,9 @@ class ErrorCode(Enum):
     PROTECTION_JKT_MISMATCH = ErrorInfo(
         1011, "Ошибка защиты: несоответствие ключа подтверждения (jkt)", 400
     )
+    PROTECTION_BAD_PAGE_TOKEN = ErrorInfo(
+        1011, "Ошибка защиты: недействительный Page-Token токен", 400
+    )
     PROTECTION_BAD_DPOP = ErrorInfo(
         1011, "Ошибка защиты: недействительный DPoP токен", 400
     )
