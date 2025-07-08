@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Request
 
-from app.core.security.auth import UserAuthSecurity
+from app.core.security.deps.user_auth import UserAuthSecurity
 from app.core.security.schema import TokenType
 from app.core.security.token import create_access_token
 from app.models.user.user import User

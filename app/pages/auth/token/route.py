@@ -1,7 +1,7 @@
 from datetime import timedelta
 from fastapi import APIRouter, Request
 from app.core.errors import APIError, ErrorCode
-from app.core.security.auth import UserAuthSecurity
+from app.core.security.deps.user_auth import UserAuthSecurity
 from app.core.security.schema import TokenType
 from app.core.security.token import _create_token as create_jwt_token
 from app.schemas.auth.protection import ProtectionRequest

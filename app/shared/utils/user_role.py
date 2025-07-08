@@ -1,7 +1,7 @@
 from fastapi import Depends
 
 from app.core.errors import APIError, ErrorCode
-from app.core.security.auth import UserAuthSecurity
+from app.core.security.deps.user_auth import UserAuthSecurity
 from app.core.security.schema import TokenType
 from app.models.athlete.athlete import Athlete
 from app.models.roles.coach import Coach

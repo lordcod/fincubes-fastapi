@@ -8,6 +8,7 @@ from .competition.recent_event import RecentEvent
 from .competition.result import Result
 from .misc.region import Region
 from .misc.standard_category import StandardCategory
+from .misc.bot import Bot
 from .roles.coach import Coach
 from .roles.coach_athlete import CoachAthlete
 from .roles.parent import Parent

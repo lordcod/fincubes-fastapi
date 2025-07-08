@@ -11,7 +11,7 @@ class TokenType(StrEnum):
     service = "service"
 
 
-class UserAuthSecurityModel(SecurityBase):
+class AuthSecurityModel(SecurityBase):
     type_: SecuritySchemeType = Field(
         default=SecuritySchemeType.apiKey,
         alias="type",

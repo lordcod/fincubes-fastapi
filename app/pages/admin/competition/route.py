@@ -3,7 +3,7 @@ from typing import List
 
 from fastapi import APIRouter, Depends
 
-from app.core.security.permissions import admin_required
+from app.core.security.deps.permissions import admin_required
 from app.models.competition.competition import Competition
 from app.schemas.competition.competition import (Competition_Pydantic,
                                                  CompetitionIn_Pydantic)

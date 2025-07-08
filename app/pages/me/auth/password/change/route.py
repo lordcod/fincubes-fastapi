@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from app.core.errors import APIError, ErrorCode
-from app.core.security.auth import UserAuthSecurity
+from app.core.security.deps.user_auth import UserAuthSecurity
 from app.core.security.hashing import hash_password, verify_password
 from app.core.security.schema import TokenType
 from app.models.user.user import User

@@ -87,6 +87,8 @@ class ErrorCode(Enum):
     ATHLETE_ALREADY_BOUND_TO_OTHER_USER = ErrorInfo(
         2005, "Атлет уже привязан к другому пользователю", 400
     )
+    BOT_NOT_FOUND = ErrorInfo(2006, "Бот не найден", 404)
+    BOT_DISABLED = ErrorInfo(2007, "Бот отключен", 403)
 
     # 3xxx — Данные / ресурсы / бизнес-логика
     ATHLETE_NOT_FOUND = ErrorInfo(3001, "Атлет не найден", 404)

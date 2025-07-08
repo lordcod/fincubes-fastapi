@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 
 from app.core.deps.ratelimit import create_ratelimit
 from app.core.errors import APIError, ErrorCode
-from app.core.security.auth import UserAuthSecurity
+from app.core.security.deps.user_auth import UserAuthSecurity
 from app.core.security.schema import TokenType
 from app.integrations.mail import send_confirm_code
 from app.models.user.user import User
