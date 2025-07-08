@@ -16,9 +16,6 @@ class SecureRequest:
 
     RATE_LIMIT = 60  # req / minute per thumbprint
 
-    def __init__(self, required_scopes: Iterable[str] | None = None) -> None:
-        self.required_scopes: Set[str] = set(required_scopes or [])
-
     async def __call__(
         self,
         request: Request,
@@ -88,5 +85,5 @@ class SecureRequest:
         token_scopes = set(payload.get("scopes", []))
         if "*" in token_scopes:
             return
-        if not self.required_scopes.issubset(token_scopes):
-            raise APIError(ErrorCode.RATE_LIMIT_EXCEEDED)
+        # if not self.required_scopes.issubset(token_scopes):
+        #     raise APIError(ErrorCode.RATE_LIMIT_EXCEEDED)

@@ -19,7 +19,7 @@ from app.shared.cache.redis_compressed import RedisCachePickleCompressed
 router = APIRouter()
 
 
-@router.get("/", response_model=UserAthleteResults, dependencies=[Depends(SecureRequest(['athlete.results:read']))])
+@router.get("/", response_model=UserAthleteResults, dependencies=[Depends(SecureRequest())])
 async def get_athlete_results(id: int, redis=Depends(get_redis)):
     cache_key = f"performances:{id}"
     cache = RedisCachePickleCompressed(redis)

@@ -12,7 +12,7 @@ router = APIRouter()
 
 @router.get("/",
             response_model=TopResponse,
-            dependencies=[Depends(SecureRequest([]))]
+            dependencies=[Depends(SecureRequest())]
             )
 async def get_top(
     distance: int,

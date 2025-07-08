@@ -13,7 +13,7 @@ router = APIRouter(tags=['Public/Client/Athlete'])
 
 @router.get("/",
             response_model=List[Athlete_Pydantic],
-            dependencies=[Depends(SecureRequest(['athlete.search:read']))])
+            dependencies=[Depends(SecureRequest())])
 async def get_athletes(
     query: str,
     limit: int = 15,

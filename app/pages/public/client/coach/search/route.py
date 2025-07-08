@@ -13,7 +13,7 @@ router = APIRouter(tags=['Public/Client/Coach'])
 
 @router.get("/",
             response_model=List[CoachOut],
-            dependencies=[Depends(SecureRequest(['coach.search:read']))])
+            dependencies=[Depends(SecureRequest())])
 async def search_coach(q: str):
     if not q.strip():
         return []

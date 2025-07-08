@@ -12,7 +12,7 @@ router = APIRouter(tags=['Public/Client/Results'])
 
 @router.get("/",
             response_model=List[Result_Pydantic],
-            dependencies=[Depends(SecureRequest(['athlete.results:read']))])
+            dependencies=[Depends(SecureRequest())])
 async def get_results(
     competition_id: int,
     stroke: str,
