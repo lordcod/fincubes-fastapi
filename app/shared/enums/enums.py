@@ -12,3 +12,15 @@ class UserRoleEnum(StrEnum):
 class VerificationTokenEnum(StrEnum):
     RESET_PASSWORD = "RESET_PASSWORD"
     VERIFY_EMAIL = "VERIFY_EMAIL"
+
+
+class GenderEnum(StrEnum):
+    FEMALE = "F"
+    MALE = "M"
+
+
+class CoachAthleteStatusEnum(StrEnum):
+    ACCEPTED = 'accepted'
+    PENDING = 'pending'
+    REJECTED_COACH = 'rejected_coach'
+    REJECTED_ATHLETE = 'rejected_athlete'

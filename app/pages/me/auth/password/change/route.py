@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Body, Depends
 
 from app.core.errors import APIError, ErrorCode
 from app.core.security.deps.user_auth import UserAuthSecurity
@@ -11,8 +11,8 @@ router = APIRouter()
 
 @router.put("/", status_code=204)
 async def change_password(
-    current_password: str,
-    new_password: str,
+    current_password: str = Body(embed=True),
+    new_password: str = Body(embed=True),
     current_user: User = Depends(UserAuthSecurity(TokenType.access)),
 ):
     if not verify_password(current_password, current_user.hashed_password):

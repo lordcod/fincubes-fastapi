@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     TURNSTILE_SECRET_KEY: str
     SENTRY_DNS: Optional[str] = None
     ALGORITHM: str = "HS256"
-    POW_BITS: int = 16
+    POW_BITS: int = 8
 
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -1,5 +1,6 @@
 import time
 from typing import Iterable, Set, Dict, Any
+from typing_extensions import Self
 
 from fastapi import Header, Request
 

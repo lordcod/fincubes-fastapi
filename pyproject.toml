@@ -50,8 +50,8 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-start = "app.main:run"
-dev = "run:dev"
+start = "app.main:start"
+dev = "app.main:dev"
 test = "tests.test:run"
 
 [tool.aerich]

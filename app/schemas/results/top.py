@@ -1,14 +1,24 @@
 from datetime import date
 from typing import Dict, List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.shared.utils.flexible_time import FlexibleTime
+from app.shared.enums.enums import GenderEnum
+
+
+class AgeCategory(BaseModel):
+    name: str
+    id: str
+    min_age: Optional[int] = Field(default=None, ge=0)
+    max_age: Optional[int] = Field(default=None, ge=0)
 
 
 class RandomTop(BaseModel):
     stroke: str
     distance: int
+    category: AgeCategory
+    gender: GenderEnum
 
 
 class Athlete(BaseModel):

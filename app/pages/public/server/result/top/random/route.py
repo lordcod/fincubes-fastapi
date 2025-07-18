@@ -1,30 +1,55 @@
-
-
 import random
+import logging
+from datetime import date, datetime
 
 from fastapi import APIRouter
 
+from app.models.competition.result import Result
 from app.schemas.results.top import RandomTop
+from app.shared.utils.metadata import COMBINATIONS
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
-swim_styles = [
-    {"stroke": "APNEA", "distance": 50},
-    {"stroke": "BIFINS", "distance": 50},
-    {"stroke": "BIFINS", "distance": 100},
-    {"stroke": "BIFINS", "distance": 200},
-    {"stroke": "BIFINS", "distance": 400},
-    {"stroke": "IMMERSION", "distance": 100},
-    {"stroke": "IMMERSION", "distance": 400},
-    {"stroke": "SURFACE", "distance": 50},
-    {"stroke": "SURFACE", "distance": 100},
-    {"stroke": "SURFACE", "distance": 200},
-    {"stroke": "SURFACE", "distance": 400},
-    {"stroke": "SURFACE", "distance": 800},
-    {"stroke": "SURFACE", "distance": 1500},
-]
 
 
 @router.get("/", response_model=RandomTop)
 async def get_random_top():
-    item = random.choice(swim_styles)
-    return item
+    current_year = datetime.now().year
+    combinations = COMBINATIONS.copy()
+    random.shuffle(combinations)
+
+    for style, gender, category in combinations:
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "Trying combination: style=%s, gender=%s, category=%s",
+                style, gender, category
+            )
+
+        max_age = category.get("max_age")
+        min_age = category.get("min_age")
+
+        filters = {**style}
+        if max_age is not None:
+            filters["athlete__birth_year__gte"] = current_year - max_age
+        if min_age is not None:
+            filters["athlete__birth_year__lte"] = current_year - min_age
+
+        today = date.today()
+        season_year = current_year if today.month >= 9 else current_year - 1
+
+        filters["competition__start_date__gte"] = date(season_year, 9, 1)
+        filters["competition__start_date__lte"] = date(season_year + 1, 8, 31)
+        filters["athlete__gender"] = gender
+
+        results = await Result.filter(**filters)
+
+        if len(results) >= 3:
+            logger.info(
+                "Results found for combination: style=%s, gender=%s, category=%s",
+                style, gender, category
+            )
+            return RandomTop(
+                **style,
+                gender=gender,
+                category=category,
+            )

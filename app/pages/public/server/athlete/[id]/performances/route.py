@@ -8,7 +8,6 @@ from tortoise.exceptions import DoesNotExist
 
 from app.core.deps.redis import get_redis
 from app.core.errors import APIError, ErrorCode
-from app.core.protection.secure_request import SecureRequest
 from app.models.athlete.athlete import Athlete
 from app.models.competition.result import Result
 from app.repositories.ratings import get_rank
@@ -19,7 +18,7 @@ from app.shared.cache.redis_compressed import RedisCachePickleCompressed
 router = APIRouter()
 
 
-@router.get("/", response_model=UserAthleteResults, dependencies=[Depends(SecureRequest())])
+@router.get("/", response_model=UserAthleteResults)
 async def get_athlete_results(id: int, redis=Depends(get_redis)):
     cache_key = f"performances:{id}"
     cache = RedisCachePickleCompressed(redis)
@@ -65,10 +64,7 @@ async def get_athlete_results(id: int, redis=Depends(get_redis)):
         competition_id = result.competition.id
         if competition_id not in competitions:
             competitions[competition_id] = {
-                "id": result.competition.id,
-                "date": result.competition.date,
-                "start_date": result.competition.start_date,
-                "competition": result.competition.name,
+                "competition": result.competition,
                 "performances": [],
             }
 
@@ -102,14 +98,17 @@ async def get_athlete_results(id: int, redis=Depends(get_redis)):
 
     competitions = dict(
         sorted(
-            competitions.items(), key=lambda item: item[1]["start_date"], reverse=True
+            competitions.items(),
+            key=lambda item: item[1]['competition'].start_date,
+            reverse=True
         )
     )
     competition_results = [
         UserCompetitionResult(**comp) for comp in competitions.values()
     ]
     model = UserAthleteResults(
-        id=athlete.id, results=competition_results
+        id=athlete.id,
+        results=competition_results
     ).model_dump()
     await cache.set(cache_key, model, expire_seconds=60 * 15)
     return model

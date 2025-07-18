@@ -7,7 +7,7 @@ from app.models.athlete.athlete import Athlete
 from app.models.roles.coach import Coach
 from app.models.roles.coach_athlete import CoachAthlete
 from app.schemas.users.coach import CoachOut, CoachOutWithStatus
-from app.shared.enums.enums import UserRoleEnum
+from app.shared.enums.enums import CoachAthleteStatusEnum, UserRoleEnum
 from app.shared.utils.user_role import get_role
 
 router = APIRouter()
@@ -31,15 +31,17 @@ async def add_coach(
     coach = await Coach.get(id=coach_id)
     link = await CoachAthlete.filter(coach=coach, athlete=athlete).first()
 
-    if not link or link.status in ("pending", "rejected_athlete"):
-        status = "accepted"
+    if not link or link.status in (CoachAthleteStatusEnum.PENDING, CoachAthleteStatusEnum.REJECTED_ATHLETE):
+        status = CoachAthleteStatusEnum.ACCEPTED
     else:
         return {"success": False, "status": link.status}
+
     if link:
         link.status = status
         await link.save()
     else:
         await CoachAthlete.create(coach=coach, athlete=athlete, status=status)
+
     return {"success": True, "status": status}
 
 
@@ -52,6 +54,8 @@ async def reject_coach(
     link = await CoachAthlete.filter(coach=coach, athlete=athlete).first()
     if not link:
         raise APIError(ErrorCode.ATHLETE_COACH_NOT_FOUND)
+    if link.status == CoachAthleteStatusEnum.REJECTED_COACH:
+        return
 
-    link.status = "rejected_athlete"
+    link.status = CoachAthleteStatusEnum.REJECTED_ATHLETE
     await link.save()
