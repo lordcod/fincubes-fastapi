@@ -73,7 +73,7 @@ jobs:
           BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
           DATABASE_URL: postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}
           REDIS_URL: redis://@localhost:${{ job.services.redis.ports[6379] }}
-          ECRET_KEY: your-256-bit-secret
+          SECRET_KEY: your-256-bit-secret
 
       - name: Deploy using ssh
         uses: appleboy/ssh-action@master
