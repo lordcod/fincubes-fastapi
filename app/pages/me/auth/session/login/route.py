@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 
 from app.core.errors import APIError, ErrorCode
 from app.core.security.hashing import verify_password
@@ -11,7 +11,7 @@ router = APIRouter()
 
 
 @router.post("/", response_model=TokenResponse)
-async def login_user(user_login: UserLogin):
+async def login_user(user_login: UserLogin, request: Request):
     ts = await check_verification(user_login.cf_token)
     if not ts.success:
         raise APIError(ErrorCode.CAPTCHA_FAILED)
@@ -23,8 +23,17 @@ async def login_user(user_login: UserLogin):
     if not verify_password(user_login.password, user.hashed_password):
         raise APIError(ErrorCode.INCORRECT_CURRENT_PASSWORD)
 
-    refresh_token = create_refresh_token(user.id)
-    access_token = create_access_token(user.id, fresh=True)
+    refresh_token = create_refresh_token(
+        user.id,
+        issuer=request.url.path,
+        audience="auth",
+    )
+    access_token = create_access_token(
+        user.id,
+        fresh=True,
+        issuer=request.url.path,
+        audience="auth",
+    )
 
     return {
         "refresh_token": refresh_token,

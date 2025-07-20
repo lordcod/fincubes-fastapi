@@ -5,8 +5,8 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from app.core.config import middleware_settings
 
 
-def add_middleware(app: FastAPI):
-    if middleware_settings.dev_mode:
+def add_middleware(app: FastAPI, mode: str):
+    if mode == 'dev':
         origins = middleware_settings.dev_origins
         allowed_hosts = middleware_settings.dev_hosts
         app.servers = [middleware_settings.local_server]

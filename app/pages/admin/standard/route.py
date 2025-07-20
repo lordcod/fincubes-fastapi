@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends
 
-from app.core.security.permissions import admin_required
+from app.core.security.deps.permissions import admin_required
 from app.models.misc.standard_category import StandardCategory
 from app.schemas.results.standards import StandardIn, StandardOut
 

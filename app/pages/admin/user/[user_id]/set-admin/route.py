@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from app.core.errors import APIError, ErrorCode
-from app.core.security.permissions import admin_required
+from app.core.security.deps.permissions import admin_required
 from app.models.user.user import User
 
 router = APIRouter()

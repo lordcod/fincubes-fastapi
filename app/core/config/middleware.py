@@ -1,13 +1,10 @@
-import sys
-from typing import List
+from typing import List, Optional
 
 from pydantic_settings import BaseSettings
 
 
 class MiddlewareSettings(BaseSettings):
-    dev_mode: bool = sys.platform == "win32"
-
-    dev_origins: List[str] = ["*"]
+    dev_origins: List[str] = ["http://localhost:3000"]
     prod_origins: List[str] = [
         "https://fincubes.ru",
         "https://dev.fincubes.ru",

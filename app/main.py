@@ -13,28 +13,30 @@ from app.core.startup.lifespan import lifespan
 from app.core.startup.middleware import add_middleware
 
 PAGES_DIR = Path(os.getcwd()) / 'app' / 'pages'
-
 _log = logging.getLogger(__name__)
 
-app = FastAPI(title="FinCubes API", lifespan=lifespan)
-app.include_router(FileRouter(PAGES_DIR).build())
 
-_log.debug("Registering database...")
-register_db(app)
+def create_app(env_mode: str = 'dev') -> FastAPI:
+    app = FastAPI(title="FinCubes API", lifespan=lifespan)
+    app.include_router(FileRouter(PAGES_DIR).build())
 
-_log.debug("Adding exception handlers...")
-add_exception_handler(app)
+    _log.debug("Registering database...")
+    register_db(app)
 
-_log.debug("Adding middleware...")
-add_middleware(app)
+    _log.debug("Adding exception handlers...")
+    add_exception_handler(app)
+
+    _log.debug("Adding middleware...")
+    add_middleware(app, env_mode)
+
+    return app
 
 
-def run():
-    # uvicorn main:app  --reload --host 0.0.0.0 --port 8000
+def start():
     setup_logging()
-    _log.debug("Start application")
+    _log.info("[PROD] Starting FinCubes API...")
     uvicorn.run(
-        app,
+        create_app(env_mode='prod'),
         host="0.0.0.0",
         port=8000,
         # ssl_keyfile="localhost-key.pem" if sys.platform == "win32" else None,
@@ -42,4 +44,17 @@ def run():
         log_level=None,
         access_log=None,
         log_config=None,
+    )
+
+
+def dev():
+    setup_logging()
+    _log.info("[DEV] Starting FinCubes API...")
+    uvicorn.run(
+        "app.main:create_app",
+        factory=True,
+        reload=True,
+        host="0.0.0.0",
+        port=8000,
+        log_config="app/core/config/log_config.json",
     )

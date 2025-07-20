@@ -7,6 +7,7 @@ import redis.asyncio as redis
 from app.repositories.get_top_results import get_top_results
 from app.schemas.results.top import parse_best_full_result
 from app.shared.cache.redis_compressed import RedisCachePickleCompressed
+from app.shared.utils.metadata import categories
 
 _log = logging.getLogger(__name__)
 
@@ -20,68 +21,6 @@ if exists == false then
 end
 return redis.call('ZRANK', zset_name, score)
 """
-categories = [
-    {
-        "name": "Малыши",
-        "id": "kids",
-        "min_age": 0,
-        "max_age": 9
-    },
-    {
-        "name": "Юные",
-        "id": "young",
-        "min_age": 10,
-        "max_age": 11
-    },
-    {
-        "name": "Юниоры",
-        "id": "junior",
-        "min_age": 12,
-        "max_age": 13
-    },
-    {
-        "name": "Кадеты",
-        "id": "cadet",
-        "min_age": 14,
-        "max_age": 15
-    },
-    {
-        "name": "Юниоры старшие",
-        "id": "junior_senior",
-        "min_age": 16,
-        "max_age": 17
-    },
-    {
-        "name": "Молодёжь",
-        "id": "youth",
-        "min_age": 18,
-        "max_age": 21
-    },
-    {
-        "name": "Взрослые",
-        "id": "adult",
-        "min_age": 22,
-        "max_age": 34
-    },
-    {
-        "name": "Мастера",
-        "id": "masters",
-        "min_age": 35,
-        "max_age": 44
-    },
-    {
-        "name": "Легенды",
-        "id": "legends",
-        "min_age": 45,
-        "max_age": 150
-    },
-    {
-        "name": "Общий зачёт",
-        "id": "absolute",
-        "min_age": None,
-        "max_age": None
-    }
-]
 
 
 def as_duration(result: time):

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from tortoise.exceptions import DoesNotExist
 
 from app.core.errors import APIError, ErrorCode
-from app.core.security.permissions import admin_required
+from app.core.security.deps.permissions import admin_required
 from app.models.athlete.athlete import Athlete
 from app.schemas.athlete.athlete import Athlete_Pydantic, AthleteIn_Pydantic
 

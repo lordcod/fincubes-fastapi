@@ -3,7 +3,7 @@ from tortoise.exceptions import DoesNotExist
 
 from app.core.deps.redis import get_redis
 from app.core.errors import APIError, ErrorCode
-from app.core.security.permissions import admin_required
+from app.core.security.deps.permissions import admin_required
 from app.models.athlete.athlete import Athlete
 from app.models.competition.competition import Competition
 from app.models.competition.result import Result

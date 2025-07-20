@@ -12,6 +12,29 @@ from app.shared.enums.enums import VerificationTokenEnum
 router = APIRouter()
 
 
+@router.get("/", status_code=204)
+async def verified_token_password(
+    user_id: int,
+    token: str,
+):
+    user = await User.get_or_none(id=user_id)
+    if not user:
+        raise APIError(ErrorCode.USER_NOT_FOUND)
+
+    today = datetime.now()
+    verification = await UserVerification.filter(
+        user_id=user_id,
+        token_type=VerificationTokenEnum.RESET_PASSWORD,
+        is_active=True
+    ).first()
+    if verification is None:
+        raise APIError(ErrorCode.VERIFICATION_NOT_FOUND)
+    if verification.token_expiry.timestamp() < today.timestamp():
+        raise APIError(ErrorCode.VERIFICATION_EXPIRED)
+    if verification.token != token:
+        raise APIError(ErrorCode.INVALID_VERIFICATION_CODE)
+
+
 @router.post("/", status_code=204)
 async def reset_password(
     user_id: int = Body(embed=True),

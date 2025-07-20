@@ -2,6 +2,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel
 
+from app.schemas.competition.competition import Competition_Pydantic
 from app.shared.utils.flexible_time import FlexibleTime
 
 
@@ -24,9 +25,7 @@ class UserPerformance(BaseModel):
 
 
 class UserCompetitionResult(BaseModel):
-    date: str
-    competition: str
-    id: int
+    competition: Competition_Pydantic
     performances: List[UserPerformance]
 
 

@@ -55,8 +55,8 @@ class FlexibleTime(datetime.time):
 
     def __str__(self) -> str:
         if self.hour:
-            return f"{self.hour}:{self.minute:02}:{self.second:02}.{int(self.microsecond / 10000):02}"
-        return f"{self.minute:02}:{self.second:02}.{int(self.microsecond / 10000):02}"
+            return f"{self.hour}:{self.minute:02}:{self.second:02},{int(self.microsecond / 10000):02}"
+        return f"{self.minute:02}:{self.second:02},{int(self.microsecond / 10000):02}"
 
     def __repr__(self) -> str:
         return f'"{self}"'
