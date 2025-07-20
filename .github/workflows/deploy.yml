@@ -42,29 +42,26 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: "3.12"
-      - name: Create env file
-        run: |
-          touch .env
-          echo SECRET_KEY=your-256-bit-secret >> .env
-          cat .env
-      - name: Install dependencies
-        run: |
-          python -m venv venv
-          source venv/bin/activate
-          pip install -r requirements.txt
 
-      - name: Run test
+      - name: Install Poetry
         run: |
-          source venv/bin/activate
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-root
+
+      - name: Build app
+        run: poetry build
 
       - name: Run app
         run: |
-          source venv/bin/activate
-          python tests/test.py
+          poetry run python tests/test.py
         env:
           TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
@@ -76,6 +73,7 @@ jobs:
           BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
           DATABASE_URL: postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}
           REDIS_URL: redis://@localhost:${{ job.services.redis.ports[6379] }}
+          ECRET_KEY: your-256-bit-secret
 
       - name: Deploy using ssh
         uses: appleboy/ssh-action@master

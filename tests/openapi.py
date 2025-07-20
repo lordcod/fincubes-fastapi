@@ -12,6 +12,7 @@ CACHE_DIR.mkdir(exist_ok=True)
 
 
 async def test():
+    # @Deprecated
     from app.main import app
 
     with TestClient(app) as client:
