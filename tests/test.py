@@ -1,6 +1,6 @@
 import asyncio
 from fastapi.testclient import TestClient
-from app.main import app
+from app.main import create_app
 
 test_data_competition = {
     "name": "Соревнование",
@@ -15,7 +15,7 @@ test_data_competition = {
 
 
 async def test():
-    with TestClient(app) as client:
+    with TestClient(create_app('prod')) as client:
         response = client.get("/")
         print(response.headers, response.request.headers)
         print(
