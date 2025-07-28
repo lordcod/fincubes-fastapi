@@ -10,6 +10,6 @@ router = APIRouter(tags=['Me/Me'])
 
 @router.get("/", response_model=UserResponse)
 async def protected_endpoint(
-    current_user: User = Depends(UserAuthSecurity(TokenType.access)),
+    current_user: User = Depends(UserAuthSecurity()),
 ):
     return current_user

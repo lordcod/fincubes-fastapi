@@ -37,7 +37,7 @@ async def issue_token(
     thumbprint = jwk_thumbprint(data.jwk)
 
     try:
-        user = await UserAuthSecurity(TokenType.access)(request)
+        user = await UserAuthSecurity()(request)
     except Exception:
         user = None
 

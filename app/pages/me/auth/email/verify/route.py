@@ -18,7 +18,7 @@ MIN_TIME_BETWEEN_CODES = 10 * 60
 @router.post("/", status_code=204)
 async def verify_email(
     code: str = Body(..., embed=True),
-    current_user: User = Depends(UserAuthSecurity(TokenType.access)),
+    current_user: User = Depends(UserAuthSecurity()),
 ):
     if current_user.verified:
         raise APIError(ErrorCode.ALREADY_VERIFIED)

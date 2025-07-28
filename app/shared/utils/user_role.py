@@ -32,7 +32,7 @@ async def get_profile(
 
 
 def get_role(expected_role: UserRoleEnum, required_verification: bool = True):
-    async def wrapped(user: User = Depends(UserAuthSecurity(TokenType.access))):
+    async def wrapped(user: User = Depends(UserAuthSecurity())):
         return await get_profile(user, expected_role, required_verification)
 
     return wrapped
