@@ -1,4 +1,5 @@
 from datetime import timedelta
+from urllib.parse import urlparse
 from fastapi import APIRouter, Request, Response
 from jwtifypy import JWTManager
 
@@ -28,8 +29,9 @@ async def login_user(user_login: UserLogin, request: Request, response: Response
     manager = JWTManager.with_issuer(request.url.path).with_audience("auth")
     refresh_token = manager.create_refresh_token(user.id)
     access_token = manager.create_access_token(
-        user.id, fresh=True, expires_delta=10)
+        user.id, fresh=True)
 
+    domain = urlparse(request.headers.get("origin")).hostname
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,
@@ -38,6 +40,7 @@ async def login_user(user_login: UserLogin, request: Request, response: Response
         samesite="none",
         path="/me/auth/session",
         max_age=7 * 24 * 3600,
+        domain=domain
     )
 
     return {
