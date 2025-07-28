@@ -1,6 +1,6 @@
 from typing import Any, Dict, Literal, Optional
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from tortoise.contrib.pydantic import pydantic_model_creator
 
 from app.models.user.user import User
@@ -29,9 +29,11 @@ class UserCreate(BaseModel):
 
 
 class TokenResponse(BaseModel):
-    access_token: str
-    refresh_token: Optional[str]
-    token_type: str
+    access_token: str = Field(..., description="JWT access token")
+    token_type: str = Field(
+        default="bearer", description="Тип токена (обычно 'bearer')")
+    expires_in: int = Field(...,
+                            description="Время жизни access токена в секундах")
 
     class Config:
         from_attributes = True

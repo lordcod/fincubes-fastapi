@@ -16,9 +16,6 @@ from app.core.startup.tokens import init_jwt
 PAGES_DIR = Path(os.getcwd()) / 'app' / 'pages'
 _log = logging.getLogger(__name__)
 
-_log.debug("Init jwt tokens...")
-init_jwt()
-
 
 def create_app(env_mode: str = 'dev') -> FastAPI:
     app = FastAPI(title="FinCubes API", lifespan=lifespan)
@@ -32,6 +29,9 @@ def create_app(env_mode: str = 'dev') -> FastAPI:
 
     _log.debug("Adding middleware...")
     add_middleware(app, env_mode)
+
+    _log.debug("Init jwt tokens...")
+    init_jwt()
 
     return app
 

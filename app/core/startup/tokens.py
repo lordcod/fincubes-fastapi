@@ -12,7 +12,7 @@ def init_jwt():
         "options": {
             "verify_sub": False,
             "strict_aud": False,
-            "verify_aud": True,
-            "verify_iss": True,
+            "verify_aud": False,
+            "verify_iss": False,
         }
     })

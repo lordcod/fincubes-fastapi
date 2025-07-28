@@ -4,22 +4,21 @@ from fastapi import Request
 from app.models.user.user import User
 from app.core.errors import APIError, ErrorCode
 from app.core.security.deps.base_auth import BaseAuthSecurity
-from app.core.security.schema import TokenType, ApiKeySecurityModel
+from app.core.security.schema import TokenType, RefreshSecurityModel
 from fastapi.security.base import SecurityBase
 
 _log = logging.getLogger(__name__)
 
 
-class UserAuthSecurity(SecurityBase, BaseAuthSecurity[User]):
+class RefreshTokenSecurity(SecurityBase, BaseAuthSecurity[User]):
     def __init__(self):
-        BaseAuthSecurity.__init__(self, TokenType.access, scheme_type='bearer')
-        self.model = ApiKeySecurityModel()
+        super().__init__(TokenType.refresh, scheme_type='bearer')
+        self.model = RefreshSecurityModel()
         self.scheme_name = self.__class__.__name__
 
     async def get_token(self, request: Request) -> str:
-        authorization = request.headers.get("Authorization")
-        scheme, token = self.parse_authorization_header(authorization)
-        if scheme != self.scheme_type or not token:
+        token = request.cookies.get("refresh_token")
+        if not token:
             raise APIError(ErrorCode.INVALID_TOKEN)
         return token
 
