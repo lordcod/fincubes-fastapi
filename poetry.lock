@@ -1061,6 +1061,25 @@ files = [
 ]
 
 [[package]]
+name = "jwtifypy"
+version = "0.2.0"
+description = "Lightweight and extensible Python library for generating and verifying JWT tokens with multiple algorithms (HS256, ES256, RS256, etc.). Built on PyJWT, it provides an intuitive interface, flexible configuration, and secure key storage."
+optional = false
+python-versions = "<4.0,>=3.11"
+files = [
+    {file = "jwtifypy-0.2.0-py3-none-any.whl", hash = "sha256:3dd8cd81d5f55bcdced1139b0d5f2e50ca38c372d7fdf28f4a2fc7fbcd8f8c8e"},
+    {file = "jwtifypy-0.2.0.tar.gz", hash = "sha256:6460ec0a429c5d432f0a02e8567b20e66216978a5845a464fdb034b590323960"},
+]
+
+[package.dependencies]
+pyjwt = ">=2.10.1,<3.0.0"
+
+[package.extras]
+crypto = ["cryptography (>=45.0.5,<46.0.0)"]
+env = ["python-dotenv (>=1.1.1,<2.0.0)"]
+full = ["cryptography (>=45.0.5,<46.0.0)", "python-dotenv (>=1.1.1,<2.0.0)"]
+
+[[package]]
 name = "markdown-it-py"
 version = "3.0.0"
 description = "Python port of markdown-it. Markdown parsing, done right!"
@@ -2489,4 +2508,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "d1e986a6be9d55082455f7f64969ab3249e0b21b0b38f0422f07e140e5ab5ab3"
+content-hash = "90b6f4dbd650d056e0cdac715cfe4a1047c4c24319291940f372ae404dd7d4f5"

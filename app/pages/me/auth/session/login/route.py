@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Request
+from jwtifypy import JWTManager
 
 from app.core.errors import APIError, ErrorCode
 from app.core.security.hashing import verify_password
-from app.core.security.token import create_access_token, create_refresh_token
 from app.integrations.cloudflare import check_verification
 from app.models.user.user import User
 from app.schemas.auth.auth import TokenResponse, UserLogin
@@ -23,17 +23,9 @@ async def login_user(user_login: UserLogin, request: Request):
     if not verify_password(user_login.password, user.hashed_password):
         raise APIError(ErrorCode.INCORRECT_CURRENT_PASSWORD)
 
-    refresh_token = create_refresh_token(
-        user.id,
-        issuer=request.url.path,
-        audience="auth",
-    )
-    access_token = create_access_token(
-        user.id,
-        fresh=True,
-        issuer=request.url.path,
-        audience="auth",
-    )
+    manager = JWTManager.with_issuer(request.url.path).with_audience("auth")
+    refresh_token = manager.create_refresh_token(user.id)
+    access_token = manager.create_access_token(user.id, fresh=True)
 
     return {
         "refresh_token": refresh_token,

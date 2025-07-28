@@ -41,6 +41,7 @@ python-multipart = "^0.0.20"
 bcrypt = "^4.3.0"
 fastfsx = "^1.0.5"
 python-jose = {extras = ["cryptography"], version = "^3.5.0"}
+jwtifypy = "^0.2.0"
 
 [tool.poetry.group.dev.dependencies]
 typer = {extras = ["all"], version = "^0.16.0"}

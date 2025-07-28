@@ -11,6 +11,7 @@ from app.core.startup.database import register_db
 from app.core.startup.exception_handler import add_exception_handler
 from app.core.startup.lifespan import lifespan
 from app.core.startup.middleware import add_middleware
+from app.core.startup.tokens import init_jwt
 
 PAGES_DIR = Path(os.getcwd()) / 'app' / 'pages'
 _log = logging.getLogger(__name__)
@@ -28,6 +29,9 @@ def create_app(env_mode: str = 'dev') -> FastAPI:
 
     _log.debug("Adding middleware...")
     add_middleware(app, env_mode)
+
+    _log.debug("Init jwt tokens...")
+    init_jwt()
 
     return app
 

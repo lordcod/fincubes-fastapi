@@ -1,6 +1,6 @@
 FROM python:3.12-slim
 
-ENV POETRY_VERSION=1.8.2 \
+ENV POETRY_VERSION=1.8.3 \
     POETRY_HOME=/opt/poetry \
     POETRY_VIRTUALENVS_CREATE=false \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -19,10 +19,13 @@ RUN python -m pip install --upgrade pip setuptools wheel && \
     python -m pip install "poetry==$POETRY_VERSION"
 
 WORKDIR /app
-COPY . .
 
-RUN poetry lock --no-update
-RUN poetry install --no-interaction --no-ansi
+COPY pyproject.toml poetry.lock ./
+RUN poetry lock --no-update && \
+    poetry install --no-root --no-interaction --no-ansi
+
+COPY . .
+RUN poetry install --only-root --no-interaction --no-ansi
 RUN poetry build -f wheel --no-interaction --no-ansi
 
 EXPOSE 8000

@@ -1,5 +1,5 @@
 import datetime
-from typing import TYPE_CHECKING, Type, TypeVar, cast
+from typing import TYPE_CHECKING, Type, TypeVar, Union, cast
 
 from pydantic import BaseModel
 from tortoise.contrib.pydantic import PydanticModel, pydantic_model_creator
@@ -7,7 +7,7 @@ from tortoise.contrib.pydantic import PydanticModel, pydantic_model_creator
 T = TypeVar("T")
 
 
-def _with_nested(base_model: T, **nested_fields) -> T:
+def _with_nested(base_model: Union[type[PydanticModel], type[BaseModel]], **nested_fields) -> type[PydanticModel]:
     annotations = {}
     namespace = {"__module__": base_model.__module__}
 

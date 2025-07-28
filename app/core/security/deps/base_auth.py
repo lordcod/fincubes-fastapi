@@ -1,14 +1,15 @@
 import logging
-from typing import Optional, Tuple, TypeVar, Generic, Union
+from typing import Optional, Tuple, TypeVar, Generic
 from abc import ABC, abstractmethod
 
-import jwt
 from fastapi import Request
 from fastapi.params import Security
 from fastapi.security.base import SecurityBase
+import jwt
 
 from app.core.config import settings
 from app.core.errors import APIError, ErrorCode
+from jwtifypy import JWTManager
 
 from ..schema import TokenType, AuthSecurityModel
 
@@ -49,17 +50,7 @@ class BaseAuthSecurity(SecurityBase, Security, Generic[T], ABC):
         if scheme != self.scheme_type:
             raise APIError(ErrorCode.INVALID_TOKEN)
         try:
-            payload = jwt.decode(
-                jwt=token,
-                key=settings.SECRET_KEY,
-                algorithms=[settings.ALGORITHM],
-                leeway=1.0,
-                options={
-                    "verify_sub": False,
-                    "verify_aud": False,
-                    "verify_iss": False,
-                },
-            )
+            payload = JWTManager.decode_token(token)
         except jwt.ExpiredSignatureError as exc:
             raise APIError(ErrorCode.EXPIRED_TOKEN) from exc
         except jwt.PyJWTError as exc:
