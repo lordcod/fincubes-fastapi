@@ -23,7 +23,7 @@ router = APIRouter()
     response_model=BulkCreateResultResponse,
 )
 async def bulk_create_results(
-    results: List[BulkCreateResult],
+    results_data: List[BulkCreateResult],
     ignore_exception: bool = True,
     redis=Depends(get_redis),
 ):
@@ -31,9 +31,9 @@ async def bulk_create_results(
     errors = []
     competitions = {}
 
-    print("Start parsing", len(results), "athletes")
-    count = len(results)
-    for index, bulk_request in enumerate(results):
+    print("Start parsing", len(results_data), "athletes")
+    count = len(results_data)
+    for index, bulk_request in enumerate(results_data):
         print(f"[{index}/{count}] Athlete start process")
         try:
             if bulk_request.competition_id not in competitions:
