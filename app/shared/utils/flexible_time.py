@@ -92,9 +92,6 @@ class FlexibleTime(datetime.time):
 
 
 class FlexibleTimeField(fields.Field[FlexibleTime], FlexibleTime):
-    def __init__(self, **kwargs: Any) -> None:
-        super().__init__(**kwargs)
-
     def to_python_value(self, value: Optional[datetime.time]) -> Optional[FlexibleTime]:
         if value is None:
             return None
@@ -137,3 +134,8 @@ class FlexibleTimeField(fields.Field[FlexibleTime], FlexibleTime):
 
     class _db_postgres:
         SQL_TYPE = "TIMETZ"
+
+
+class ReadOnlyFlexibleTimeField(FlexibleTimeField):
+    def to_db_value(self, value, instance):
+        raise RuntimeError("Field is read-only")

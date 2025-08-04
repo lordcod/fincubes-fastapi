@@ -43,6 +43,7 @@ class Result(BaseModel):
     id: int
     result: Optional[FlexibleTime]
     final: Optional[FlexibleTime]
+    resolved_time: Optional[FlexibleTime]
     competition_id: int
     athlete_id: int
     stroke: str
@@ -65,12 +66,16 @@ class TopResponse(BaseModel):
 
 
 def parse_best_full_result(row: dict) -> BestFullResult:
+    def parse_time(key: str) -> Optional[FlexibleTime]:
+        val = row.get(key)
+        return FlexibleTime.validate(val) if val else None
+
     return BestFullResult(
         result=Result(
             id=row["result_id"],
-            result=FlexibleTime.validate(row.get("result_result")),
-            final=row.get("result_final")
-            and FlexibleTime.validate(row.get("result_final")),
+            result=parse_time("result_result"),
+            final=parse_time("result_final"),
+            resolved_time=parse_time("result_resolved_time"),
             competition_id=row["competition_id"],
             athlete_id=row["athlete_id"],
             stroke=row["stroke"],
@@ -81,7 +86,7 @@ def parse_best_full_result(row: dict) -> BestFullResult:
             first_name=row["athlete_first_name"],
             last_name=row["athlete_last_name"],
             gender=row["athlete_gender"],
-            birth_year=row.get("athlete_birth_year"),
+            birth_year=row["athlete_birth_year"],
             club=row.get("athlete_club"),
             city=row.get("athlete_city"),
         ),
@@ -92,6 +97,6 @@ def parse_best_full_result(row: dict) -> BestFullResult:
             start_date=row["competition_start_date"],
             end_date=row["competition_end_date"],
         ),
-        best=FlexibleTime.validate(row["best"]),
+        best=parse_time("best"),
         row_num=row["row_num"],
     )

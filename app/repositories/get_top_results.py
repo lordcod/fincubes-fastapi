@@ -20,7 +20,7 @@ WITH results_with_effective AS (
     FROM results r
     JOIN athletes a ON a.id = r.athlete_id
     WHERE (r.result IS NOT NULL OR r.final IS NOT NULL)
-      {where1}
+    {where1}
 ),
 best_results AS (
     SELECT
@@ -39,6 +39,7 @@ best_full_results AS (
         r.distance,
         r.result AS result_result,
         r.final AS result_final,
+        r.resolved_time AS result_resolved_time,
 
         r.athlete_id,
         a.first_name AS athlete_first_name,

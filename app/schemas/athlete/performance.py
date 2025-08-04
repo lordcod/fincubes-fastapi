@@ -1,27 +1,17 @@
-from typing import List, Optional
+from typing import List, Optional, cast
 
 from pydantic import BaseModel
 
+from app.models.competition.result import Result
+from app.schemas import create_pydantic_model
 from app.schemas.competition.competition import Competition_Pydantic
-from app.shared.utils.flexible_time import FlexibleTime
+
+ResultDepth0_Pydantic = create_pydantic_model(Result)
 
 
-class UserPerformance(BaseModel):
-    stroke: str
-    distance: int
-    result: Optional[FlexibleTime] = None
-    final: Optional[FlexibleTime] = None
-    place: Optional[str | int] = None
-    final_rank: Optional[str] = None
-    points: Optional[str | int] = None
+class UserPerformance(ResultDepth0_Pydantic):
     top_rank: Optional[int] = None
-    record: Optional[str] = None
     best: bool = False
-    dsq: bool = False
-    dsq_final: bool = False
-
-    class Config:
-        json_encoders = {FlexibleTime: lambda v: str(v)}
 
 
 class UserCompetitionResult(BaseModel):
