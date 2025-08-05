@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Any, Dict, Optional
 
 
@@ -16,10 +16,10 @@ class ProtectionRequest(BaseModel):
     turnstile: Optional[str] = Field(...,
                                      description="Токен Cloudflare Turnstile")
 
-    class Config:
-        from_attributes = True
-        extra = "forbid"
-        json_schema_extra = {
+    model_config = ConfigDict(
+        from_attributes=True,
+        extra="forbid",
+        json_schema_extra={
             "example": {
                 "server_nonce": "bG9yZW0gaXBz...",
                 "nonce": "Z3VzdGF2aX...",
@@ -34,3 +34,4 @@ class ProtectionRequest(BaseModel):
                 "turnstile": "0x4AAAAAAA..."
             }
         }
+    )

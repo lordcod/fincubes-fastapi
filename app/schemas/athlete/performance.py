@@ -1,12 +1,8 @@
 from typing import List, Optional, cast
 
 from pydantic import BaseModel
-
-from app.models.competition.result import Result
-from app.schemas import create_pydantic_model
 from app.schemas.competition.competition import Competition_Pydantic
-
-ResultDepth0_Pydantic = create_pydantic_model(Result)
+from app.schemas.results.result import ResultDepth0_Pydantic
 
 
 class UserPerformance(ResultDepth0_Pydantic):

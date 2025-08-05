@@ -4,7 +4,7 @@ from app.models.base import TimestampedModel
 
 
 class Coach(TimestampedModel):
-    id = fields.IntField(pk=True)
+    id = fields.IntField(primary_key=True)
     last_name = fields.CharField(max_length=100)
     first_name = fields.CharField(max_length=100)
     middle_name = fields.CharField(max_length=100)

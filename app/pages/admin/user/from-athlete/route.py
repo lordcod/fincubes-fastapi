@@ -5,11 +5,12 @@ from tortoise.exceptions import DoesNotExist
 from app.core.errors import APIError, ErrorCode
 from app.core.security.deps.permissions import admin_required
 from app.models.user.user import User
+from app.schemas.auth.auth import UserResponse
 
 router = APIRouter()
 
 
-@router.post("/", dependencies=[Depends(admin_required)])
+@router.post("/", dependencies=[Depends(admin_required)], response_model=UserResponse)
 async def get_user_from_athlete_id(athlete_id: int = Body(embed=True)):
     try:
         user = (

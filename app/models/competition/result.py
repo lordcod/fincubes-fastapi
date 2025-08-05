@@ -7,7 +7,7 @@ from app.shared.utils.flexible_time import FlexibleTimeField, ReadOnlyFlexibleTi
 
 
 class Result(TimestampedModel):
-    id = fields.IntField(pk=True)
+    id = fields.IntField(primary_key=True)
     athlete: Athlete = fields.ForeignKeyField(
         "models.Athlete", related_name="results")
     competition: Competition = fields.ForeignKeyField(

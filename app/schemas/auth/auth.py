@@ -1,11 +1,14 @@
 from typing import Any, Dict, Literal, Optional
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from tortoise.contrib.pydantic import pydantic_model_creator
 
 from app.models.user.user import User
+from app.schemas import with_nested
+from app.schemas.athlete.athlete import Athlete_Pydantic
 
 UserResponse = pydantic_model_creator(User, exclude=("hashed_password",))
+UserResponseWithAthlete = with_nested(UserResponse, athlete=Athlete_Pydantic)
 
 
 class UserLogin(BaseModel):
@@ -13,8 +16,7 @@ class UserLogin(BaseModel):
     password: str
     cf_token: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserCreate(BaseModel):
@@ -24,8 +26,7 @@ class UserCreate(BaseModel):
     role: Optional[Literal["athlete", "coach", "parent"]] = None
     metadata: Dict[str, Any]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TokenResponse(BaseModel):
@@ -35,5 +36,4 @@ class TokenResponse(BaseModel):
     expires_in: int = Field(...,
                             description="Время жизни access токена в секундах")
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

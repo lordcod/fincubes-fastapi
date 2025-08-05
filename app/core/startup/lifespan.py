@@ -35,7 +35,7 @@ async def lifespan(app: FastAPI):
     _log.info("Shutting down application...")
 
     _log.debug("Closing Redis...")
-    await client.close()
+    await client.aclose()
 
     _log.debug("Closing aiohttp session...")
     await session.session.close()

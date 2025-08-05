@@ -5,7 +5,7 @@ from app.models.base import TimestampedModel
 
 
 class TopAthlete(TimestampedModel):
-    id = fields.IntField(pk=True)
+    id = fields.IntField(primary_key=True)
     athlete: Athlete = fields.ForeignKeyField(
         "models.Athlete", related_name="top_mentions")
 

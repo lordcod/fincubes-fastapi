@@ -29,11 +29,10 @@ async def assign_athlete(user_id: int, athlete_id: int = Body(embed=True)):
     await user.save()
 
 
-@router.delete("/", dependencies=[Depends(admin_required)])
+@router.delete("/", dependencies=[Depends(admin_required)], status_code=204)
 async def unassign_athlete(user_id: int):
     user = await User.get_or_none(id=user_id)
     if not user:
         raise APIError(ErrorCode.USER_NOT_FOUND)
     user.athlete = None
     await user.save()
-    return {"detail": "Athlete unassigned"}

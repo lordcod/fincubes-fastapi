@@ -6,7 +6,7 @@ from app.models.roles.coach import Coach
 
 
 class CoachAthlete(TimestampedModel):
-    id = fields.IntField(pk=True)
+    id = fields.IntField(primary_key=True)
     status = fields.CharField(max_length=50, default="active")
     coach: Coach = fields.ForeignKeyField(
         "models.Coach", related_name="coach_athletes")
