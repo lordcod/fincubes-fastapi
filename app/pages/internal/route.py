@@ -1,5 +1,4 @@
-from fastapi import APIRouter, Depends
-
+from fastapi import APIRouter
 from app.core.security.deps.scope_auth import ScopeAuthSecurity
 
 

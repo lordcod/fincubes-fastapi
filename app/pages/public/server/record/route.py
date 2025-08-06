@@ -5,11 +5,13 @@ from fastapi import APIRouter
 
 from app.models.athlete.record import Record
 from app.schemas.athlete.records import RecordOut
+from app.shared.clients.scopes.request import require_scope
 
 router = APIRouter(tags=['Public/Server/Record'])
 
 
 @router.get("/", response_model=List[RecordOut])
+@require_scope('record:read')
 async def list_records(
     stroke: Optional[str] = None,
     distance: Optional[int] = None,

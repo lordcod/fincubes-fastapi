@@ -74,6 +74,9 @@ class ErrorCode(Enum):
     PROTECTION_INVALID_POW = ErrorInfo(
         1011, "Ошибка защиты: неверное доказательство выполнения работы (PoW)", 400
     )
+    PROTECTION_INVALID = ErrorInfo(
+        1011, "Ошибка защиты", 400
+    )
     PROTECTION_NONCE_REUSED = ErrorInfo(
         1011, "Ошибка защиты: повторное использование nonce", 400
     )

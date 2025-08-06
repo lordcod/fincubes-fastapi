@@ -1,18 +1,18 @@
+from re import A
 from typing import List
-from fastapi import APIRouter, Depends
-
-from app.core.security.deps.permissions import admin_required
+from fastapi import APIRouter
 from app.models.user.user import User
-from app.schemas.auth.auth import UserResponseWithAthlete
+from app.schemas.auth.auth import UserResponse
+from app.shared.clients.scopes.request import require_scope
 
 router = APIRouter()
 
 
-@router.get("/", dependencies=[Depends(admin_required)], response_model=List[UserResponseWithAthlete])
+@router.get("/",  response_model=List[UserResponse])
+@require_scope('user:read')
 async def search_users(q: str):
     if q.isdigit():
         users = User.filter(id=int(q)).all()
     else:
         users = User.filter(email__icontains=q).all()
-    users = await users.prefetch_related("athlete")
-    return users
+    return await users

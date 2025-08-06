@@ -4,16 +4,16 @@ from typing import List
 from fastapi import APIRouter, Depends
 from tortoise.expressions import Q
 
-from app.core.protection.secure_request import SecureRequest
+
 from app.models.athlete.athlete import Athlete
 from app.schemas.athlete.athlete import Athlete_Pydantic
+from app.shared.clients.scopes.request import require_scope
 
 router = APIRouter(tags=['Public/Client/Athlete'])
 
 
-@router.get("/",
-            response_model=List[Athlete_Pydantic],
-            dependencies=[Depends(SecureRequest())])
+@router.get("/", response_model=List[Athlete_Pydantic])
+@require_scope('client.athlete:read')
 async def get_athletes(
     query: str,
     limit: int = 15,

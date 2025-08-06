@@ -2,16 +2,18 @@ from fastapi import APIRouter, Body, Depends
 from tortoise.exceptions import DoesNotExist
 
 from app.core.errors import APIError, ErrorCode
-from app.core.security.deps.permissions import admin_required
+
 from app.models.athlete.athlete import Athlete
 from app.models.user.user import User
+from app.shared.clients.scopes.request import require_scope
 
 router = APIRouter()
 
 
 @router.post(
-    "/", dependencies=[Depends(admin_required)]
+    "/"
 )
+@require_scope('user.athlete:write')
 async def assign_athlete(user_id: int, athlete_id: int = Body(embed=True)):
     try:
         user = await User.get(id=user_id)
@@ -29,7 +31,8 @@ async def assign_athlete(user_id: int, athlete_id: int = Body(embed=True)):
     await user.save()
 
 
-@router.delete("/", dependencies=[Depends(admin_required)], status_code=204)
+@router.delete("/", status_code=204)
+@require_scope('user.athlete:write')
 async def unassign_athlete(user_id: int):
     user = await User.get_or_none(id=user_id)
     if not user:

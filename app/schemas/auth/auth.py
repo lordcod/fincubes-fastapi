@@ -8,7 +8,6 @@ from app.schemas import with_nested
 from app.schemas.athlete.athlete import Athlete_Pydantic
 
 UserResponse = pydantic_model_creator(User, exclude=("hashed_password",))
-UserResponseWithAthlete = with_nested(UserResponse, athlete=Athlete_Pydantic)
 
 
 class UserLogin(BaseModel):

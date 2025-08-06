@@ -1,13 +1,15 @@
 from fastapi import APIRouter, Depends
 
-from app.core.security.deps.permissions import admin_required
+
 from app.models.athlete.record import Record
 from app.schemas.athlete.records import RecordIn, RecordOut
+from app.shared.clients.scopes.request import require_scope
 
 router = APIRouter(tags=['Admin/Record'])
 
 
-@router.post("/", dependencies=[Depends(admin_required)], response_model=RecordOut)
+@router.post("/", response_model=RecordOut)
+@require_scope('record:create')
 async def create_record(data: RecordIn):
     await Record.filter(
         stroke=data.stroke,

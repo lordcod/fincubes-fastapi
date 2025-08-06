@@ -2,19 +2,20 @@ from fastapi import APIRouter, Depends
 from tortoise.exceptions import DoesNotExist
 
 from app.core.errors import APIError, ErrorCode
-from app.core.security.deps.permissions import admin_required
+
 from app.models.competition.distance import Distance
 from app.schemas.competition.distance import (Distance_Pydantic,
                                               DistanceIn_Pydantic)
+from app.shared.clients.scopes.request import require_scope
 
 router = APIRouter()
 
 
 @router.put(
     "/",
-    dependencies=[Depends(admin_required)],
     response_model=Distance_Pydantic,
 )
+@require_scope('distance:write')
 async def update_distance(
     id: int,
     distance: DistanceIn_Pydantic
@@ -34,9 +35,9 @@ async def update_distance(
 
 @router.delete(
     "/",
-    dependencies=[Depends(admin_required)],
     status_code=205,
 )
+@require_scope('distance:delete')
 async def delete_distance(id: int):
     distance = await Distance.get(id=id)
     if distance:

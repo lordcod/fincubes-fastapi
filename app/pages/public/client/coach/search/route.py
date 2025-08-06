@@ -4,16 +4,16 @@ from typing import List
 from fastapi import APIRouter, Depends
 from tortoise.expressions import Q
 
-from app.core.protection.secure_request import SecureRequest
+
 from app.models.roles.coach import Coach
 from app.schemas.users.coach import CoachOut
+from app.shared.clients.scopes.request import require_scope
 
 router = APIRouter(tags=['Public/Client/Coach'])
 
 
-@router.get("/",
-            response_model=List[CoachOut],
-            dependencies=[Depends(SecureRequest())])
+@router.get("/", response_model=List[CoachOut])
+@require_scope('client.coach:read')
 async def search_coach(q: str):
     if not q.strip():
         return []

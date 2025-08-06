@@ -6,22 +6,23 @@ from tortoise.exceptions import DoesNotExist
 
 from app.core.deps.redis import get_redis
 from app.core.errors import APIError, ErrorCode
-from app.core.security.deps.permissions import admin_required
+
 from app.models.athlete.athlete import Athlete
 from app.models.competition.competition import Competition
 from app.models.competition.result import Result
 from app.repositories.ratings import get_rank
 from app.schemas.results.result import (BulkCreateResult,
                                         BulkCreateResultResponse)
+from app.shared.clients.scopes.request import require_scope
 
 router = APIRouter()
 
 
 @router.post(
     "/",
-    dependencies=[Depends(admin_required)],
     response_model=BulkCreateResultResponse,
 )
+@require_scope('result:create')
 async def bulk_create_results(
     results: List[BulkCreateResult],
     ignore_exception: bool = True,

@@ -1,17 +1,13 @@
-
-
-from typing import List, Optional
-
-from fastapi import APIRouter, Depends
-
-from app.core.security.deps.permissions import admin_required
+from fastapi import APIRouter
 from app.models.misc.standard_category import StandardCategory
 from app.schemas.results.standards import StandardIn, StandardOut
+from app.shared.clients.scopes.request import require_scope
 
 router = APIRouter(tags=['Admin/Standard'])
 
 
-@router.post("/", dependencies=[Depends(admin_required)], response_model=StandardOut)
+@router.post("/", response_model=StandardOut)
+@require_scope('standard:create')
 async def create_standard(data: StandardIn):
     await StandardCategory.filter(
         code=data.code,

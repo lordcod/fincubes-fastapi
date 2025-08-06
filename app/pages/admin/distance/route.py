@@ -2,18 +2,21 @@ from fastapi import APIRouter, Body, Depends
 from tortoise.exceptions import DoesNotExist
 
 from app.core.errors import APIError, ErrorCode
-from app.core.security.deps.permissions import admin_required
+
 from app.models.competition.competition import Competition
 from app.models.competition.distance import Distance
 from app.schemas.competition.distance import (Distance_Pydantic,
                                               DistanceIn_Pydantic)
+from app.shared.clients.scopes.request import require_scope
 
 router = APIRouter(tags=['Admin/Distance'])
 
 
 @router.post(
-    "/", dependencies=[Depends(admin_required)], response_model=Distance_Pydantic
+    "/",
+    response_model=Distance_Pydantic
 )
+@require_scope('distance:create')
 async def create_distance(
     distance: DistanceIn_Pydantic,
     competition_id: int = Body(embed=True),

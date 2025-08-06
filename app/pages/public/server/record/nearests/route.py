@@ -7,11 +7,13 @@ from fastapi import APIRouter
 
 from app.models.competition.result import Result
 from app.schemas.results.result import Result_Pydantic
+from app.shared.clients.scopes.request import require_scope
 
 router = APIRouter()
 
 
 @router.get("/", response_model=List[Result_Pydantic])
+@require_scope('record.nearest:read')
 async def get_records_nearests():
     current_date = date.today()
     current_year = current_date.year

@@ -15,11 +15,13 @@ from app.schemas.athlete.performance import (ResultDepth0_Pydantic, UserAthleteR
                                              UserCompetitionResult, UserPerformance)
 from app.schemas.results.result import Result_Pydantic
 from app.shared.cache.redis_compressed import RedisCachePickleCompressed
+from app.shared.clients.scopes.request import require_scope
 
 router = APIRouter()
 
 
 @router.get("/", response_model=UserAthleteResults)
+@require_scope('athlete.results:read')
 async def get_athlete_results(id: int, redis=Depends(get_redis)):
     cache_key = f"performances:{id}"
     cache = RedisCachePickleCompressed(redis)

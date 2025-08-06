@@ -9,6 +9,7 @@ class TokenType(StrEnum):
     access = "access"
     refresh = "refresh"
     service = "service"
+    protection = "protection"
 
 
 class ApiKeySecurityModel(SecurityBase):

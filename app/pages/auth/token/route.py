@@ -35,23 +35,17 @@ async def issue_token(
     )
 
     thumbprint = jwk_thumbprint(data.jwk)
+    subject = 'anon'
 
-    try:
-        user = await UserAuthSecurity()(request)
-    except Exception:
-        user = None
-
-    subject = user.id if user else 'anon'
     token = (
         JWTManager
         .with_issuer(request.url.path)
         .with_audience("public-system-verification")
         .create_token(
             subject=subject,
-            token_type=TokenType.service,
+            token_type=TokenType.protection,
             expires_delta=timedelta(minutes=2),
             cnf={"jkt": thumbprint, "jwk": data.jwk},
-            fp=data.fingerprint,
-            scopes=["*"],
+            fp=data.fingerprint
         ))
     return {"token": token}
