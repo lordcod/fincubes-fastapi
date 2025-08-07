@@ -1,40 +1,65 @@
 import logging
-from typing import Optional, Tuple, TypeVar, Generic, Union
+from typing import Optional, Protocol, Tuple, TypeVar, Generic
 from abc import ABC, abstractmethod
 
-import jwt
 from fastapi import Request
-from fastapi.params import Security
-from fastapi.security.base import SecurityBase
-
-from app.core.config import settings
+from fastapi.params import Depends
+import jwt
 from app.core.errors import APIError, ErrorCode
+from jwtifypy import JWTManager
 
-from ..schema import TokenType, AuthSecurityModel
-
-_log = logging.getLogger(__name__)
+from ..schema import TokenType
 T = TypeVar("T")
 
 
-class BaseAuthSecurity(SecurityBase, Security, Generic[T], ABC):
+class BaseGetToken(ABC):
+    @abstractmethod
+    async def get_token(self, request: Request) -> str:
+        ...
+
+
+class BaseCheckPayload(ABC):
+    @abstractmethod
+    def check_payload(self, payload: dict) -> None: ...
+
+
+class BaseDecodeToken:
+    def decode_token(self, token: str) -> dict:
+        try:
+            payload = JWTManager.decode_token(token)
+        except jwt.ExpiredSignatureError as exc:
+            raise APIError(ErrorCode.EXPIRED_TOKEN) from exc
+        except jwt.PyJWTError as exc:
+            raise APIError(ErrorCode.INVALID_TOKEN) from exc
+        return payload
+
+
+class CheckTokenType(BaseCheckPayload):
     def __init__(
         self,
         required_token_type: TokenType,
-        scope: str,
-        scheme_type: str
     ):
-        super().__init__(self, scopes=[scope])
         self.required_token_type = required_token_type
-        self.scheme_type = scheme_type
-        self.model = AuthSecurityModel()
-        self.scheme_name = self.__class__.__name__
 
-    async def __call__(self, request: Request) -> T:
+    def check_payload(self, payload: dict):
+        token_type = payload.get("type")
+        if token_type != self.required_token_type:
+            raise APIError(ErrorCode.INVALID_TYPE_TOKEN)
+
+
+class HTTPGetToken(BaseGetToken):
+    async def get_token(self, request: Request) -> str:
+        schema, token = self.extract_token(request)
+        self.check_token(schema, token)
+        return token
+
+    def extract_token(self, request: Request) -> Tuple[str, str]:
         authorization = request.headers.get("Authorization")
-        scheme, token = self.parse_authorization_header(authorization)
-        payload = self.decode_token(scheme, token)
-        self.check_token(payload)
-        return await self.resolve_entity(payload)
+        return self.parse_authorization_header(authorization)
+
+    def check_token(self, schema: str, token: str):
+        if not token:
+            raise APIError(ErrorCode.INVALID_TOKEN)
 
     def parse_authorization_header(
         self,
@@ -45,31 +70,24 @@ class BaseAuthSecurity(SecurityBase, Security, Generic[T], ABC):
         scheme, _, param = authorization_header_value.partition(" ")
         return scheme.lower(), param
 
-    def decode_token(self, scheme: str, token: str) -> dict:
-        if scheme != self.scheme_type:
-            raise APIError(ErrorCode.INVALID_TOKEN)
-        try:
-            payload = jwt.decode(
-                jwt=token,
-                key=settings.SECRET_KEY,
-                algorithms=[settings.ALGORITHM],
-                leeway=1.0,
-                options={
-                    "verify_sub": False,
-                    "verify_aud": False,
-                    "verify_iss": False,
-                },
-            )
-        except jwt.ExpiredSignatureError as exc:
-            raise APIError(ErrorCode.EXPIRED_TOKEN) from exc
-        except jwt.PyJWTError as exc:
-            raise APIError(ErrorCode.INVALID_TOKEN) from exc
-        return payload
 
-    def check_token(self, payload: dict):
-        token_type = payload.get("type")
-        if token_type != self.required_token_type:
-            raise APIError(ErrorCode.INVALID_TYPE_TOKEN)
+class BaseAuthSecurity(Generic[T],
+                       Depends,
+                       BaseDecodeToken,
+                       BaseGetToken,
+                       CheckTokenType):
+    def __init__(
+        self,
+        required_token_type: TokenType,
+    ):
+        Depends.__init__(self, self)
+        CheckTokenType.__init__(self, required_token_type)
+
+    async def __call__(self, request: Request) -> T:
+        token = await self.get_token(request)
+        payload = self.decode_token(token)
+        self.check_payload(payload)
+        return await self.resolve_entity(payload)
 
     @abstractmethod
     async def resolve_entity(self, payload: dict) -> T:

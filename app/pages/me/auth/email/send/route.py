@@ -20,7 +20,7 @@ VERIFICATION_DELTA = timedelta(hours=1)
 
 @router.post("/", status_code=204)
 async def send_verify_code(
-    current_user: User = Depends(UserAuthSecurity(TokenType.access)),
+    current_user: User = Depends(UserAuthSecurity()),
     send_limit=Depends(create_ratelimit(
         "verify_code", MIN_TIME_BETWEEN_CODES)),
 ):

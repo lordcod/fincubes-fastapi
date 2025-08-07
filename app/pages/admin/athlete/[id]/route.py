@@ -2,18 +2,19 @@ from fastapi import APIRouter, Depends
 from tortoise.exceptions import DoesNotExist
 
 from app.core.errors import APIError, ErrorCode
-from app.core.security.deps.permissions import admin_required
+
 from app.models.athlete.athlete import Athlete
 from app.schemas.athlete.athlete import Athlete_Pydantic, AthleteIn_Pydantic
+from app.shared.clients.scopes.request import require_scope
 
 router = APIRouter()
 
 
 @router.put(
     "/",
-    dependencies=[Depends(admin_required)],
     response_model=Athlete_Pydantic,
 )
+@require_scope('athlete:write')
 async def update_athlete(id: int, athlete: AthleteIn_Pydantic):
     db_athlete = await Athlete.get_or_none(id=id)
     if not db_athlete:
@@ -33,9 +34,9 @@ async def update_athlete(id: int, athlete: AthleteIn_Pydantic):
 
 @router.delete(
     "/",
-    dependencies=[Depends(admin_required)],
     status_code=204
 )
+@require_scope('athlete:delete')
 async def delete_athlete(id: int):
     db_athlete = await Athlete.get_or_none(id=id)
     if not db_athlete:

@@ -3,16 +3,16 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends
 
-from app.core.protection.secure_request import SecureRequest
+
 from app.models.competition.result import Result
 from app.schemas.results.result import Result_Pydantic
+from app.shared.clients.scopes.request import require_scope
 
 router = APIRouter(tags=['Public/Client/Results'])
 
 
-@router.get("/",
-            response_model=List[Result_Pydantic],
-            dependencies=[Depends(SecureRequest())])
+@router.get("/", response_model=List[Result_Pydantic])
+@require_scope('client.result:read')
 async def get_results(
     competition_id: int,
     stroke: str,

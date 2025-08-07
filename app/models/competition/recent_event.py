@@ -6,7 +6,7 @@ from app.models.competition.competition import Competition
 
 
 class RecentEvent(TimestampedModel):
-    id = fields.IntField(pk=True)
+    id = fields.IntField(primary_key=True)
     competition: Competition = fields.ForeignKeyField(
         "models.Competition", related_name="recent_mentions"
     )

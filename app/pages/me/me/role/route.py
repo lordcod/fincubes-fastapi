@@ -14,7 +14,7 @@ router = APIRouter()
 
 @router.get("/", response_model=Optional[UserRoleOut])
 async def protected_role_endpoint(
-    current_user: User = Depends(UserAuthSecurity(TokenType.access)),
+    current_user: User = Depends(UserAuthSecurity()),
 ):
     role = await UserRole.filter(user=current_user).first()
     if not role:

@@ -1,19 +1,20 @@
 
 from fastapi import APIRouter, Depends
 
-from app.core.security.deps.permissions import admin_required
+
 from app.models.athlete.athlete import Athlete
 from app.models.athlete.top_athlete import TopAthlete
 from app.schemas.athlete.top_athlete import TopAthleteOut
+from app.shared.clients.scopes.request import require_scope
 
 router = APIRouter()
 
 
 @router.post(
     "/",
-    dependencies=[Depends(admin_required)],
     response_model=TopAthleteOut,
 )
+@require_scope('athlete.top:create')
 async def add_top_athlete(id: int):
     athlete = await Athlete.get(id=id)
     top = await TopAthlete.create(athlete=athlete)
@@ -22,9 +23,9 @@ async def add_top_athlete(id: int):
 
 @router.delete(
     "/",
-    dependencies=[Depends(admin_required)],
     status_code=204,
 )
+@require_scope('athlete.top:delete')
 async def delete_top_athlete(id: int):
     top_athlete = await TopAthlete.get(id=id)
     await top_athlete.delete()

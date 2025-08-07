@@ -13,7 +13,7 @@ router = APIRouter()
 async def change_password(
     current_password: str = Body(embed=True),
     new_password: str = Body(embed=True),
-    current_user: User = Depends(UserAuthSecurity(TokenType.access)),
+    current_user: User = Depends(UserAuthSecurity()),
 ):
     if not verify_password(current_password, current_user.hashed_password):
         raise APIError(ErrorCode.INCORRECT_CURRENT_PASSWORD)

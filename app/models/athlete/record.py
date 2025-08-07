@@ -4,7 +4,7 @@ from app.models.base import TimestampedModel
 
 
 class Record(TimestampedModel):
-    id = fields.IntField(pk=True)
+    id = fields.IntField(primary_key=True)
     stroke = fields.CharField(max_length=50)
     distance = fields.IntField()
     time = fields.CharField(max_length=20)

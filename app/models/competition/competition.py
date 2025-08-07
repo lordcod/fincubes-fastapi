@@ -4,7 +4,7 @@ from app.models.base import TimestampedModel
 
 
 class Competition(TimestampedModel):
-    id = fields.IntField(pk=True)
+    id = fields.IntField(primary_key=True)
     name = fields.CharField(max_length=255)
     date = fields.CharField(max_length=50)
     location = fields.CharField(max_length=255)

@@ -6,7 +6,7 @@ from app.shared.enums.enums import UserRoleEnum
 
 
 class UserRole(TimestampedModel):
-    id = fields.IntField(pk=True)
+    id = fields.IntField(primary_key=True)
     role_type = fields.CharEnumField(enum_type=UserRoleEnum)
     profile_id = fields.IntField()
     user: User = fields.ForeignKeyField("models.User", related_name="roles")

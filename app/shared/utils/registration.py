@@ -14,16 +14,18 @@ from app.shared.enums.enums import UserRoleEnum
 
 
 class UserRegistration:
+    user: Optional[User]
+
     def __init__(self, data: UserCreate):
         self.data = data
-        self.user: Optional[User] = None
+        self.user = None
 
-    async def register_user(self):
+    async def register_user(self) -> User:
         async with in_transaction() as connection:
             await self._validate()
             await self._create_user(connection)
             await self._assign_role(connection)
-        return self.user
+        return self.user  # type: ignore
 
     async def _validate(self):
         existing_user = await User.filter(email=self.data.email).first()

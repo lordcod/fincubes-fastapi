@@ -3,17 +3,16 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends
 
-from app.core.protection.secure_request import SecureRequest
+
 from app.repositories.get_top_results import get_top_results
 from app.schemas.results.top import TopResponse, parse_best_full_result
+from app.shared.clients.scopes.request import require_scope
 
 router = APIRouter()
 
 
-@router.get("/",
-            response_model=TopResponse,
-            dependencies=[Depends(SecureRequest())]
-            )
+@router.get("/", response_model=TopResponse)
+@require_scope('client.result.top:read')
 async def get_top(
     distance: int,
     stroke: str,

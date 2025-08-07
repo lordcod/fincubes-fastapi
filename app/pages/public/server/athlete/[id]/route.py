@@ -5,11 +5,13 @@ from app.core.errors import APIError, ErrorCode
 from app.models.athlete.athlete import Athlete
 from app.models.competition.result import Result
 from app.schemas.athlete.athlete import Athlete_Pydantic, AthleteDetailed_Pydantic
+from app.shared.clients.scopes.request import require_scope
 
 router = APIRouter()
 
 
 @router.get("/", response_model=AthleteDetailed_Pydantic)
+@require_scope('athlete:read')
 async def get_athlete(id: int):
     try:
         athlete = await Athlete.get(id=id)

@@ -8,7 +8,7 @@ from app.models.base import TimestampedModel
 
 
 class Parent(TimestampedModel):
-    id = fields.IntField(pk=True)
+    id = fields.IntField(primary_key=True)
     athletes: List[Athlete] = fields.ManyToManyField(
         "models.Athlete", related_name="parents")
 

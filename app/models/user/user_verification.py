@@ -6,7 +6,7 @@ from app.shared.enums.enums import VerificationTokenEnum
 
 
 class UserVerification(TimestampedModel):
-    id = fields.IntField(pk=True)
+    id = fields.IntField(primary_key=True)
     user: User = fields.ForeignKeyField(
         "models.User", related_name="verifications")
     attempt = fields.IntField(default=0)

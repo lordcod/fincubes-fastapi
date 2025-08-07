@@ -1,5 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
-from app.core.security.deps.bot_auth import BotAuthSecurity
+from app.core.security.deps.scope_auth import ScopeAuthSecurity
 
-router = APIRouter(dependencies=[BotAuthSecurity()])
+
+router = APIRouter(dependencies=[ScopeAuthSecurity()])

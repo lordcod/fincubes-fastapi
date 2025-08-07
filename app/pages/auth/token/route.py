@@ -3,12 +3,10 @@ from fastapi import APIRouter, Request
 from app.core.errors import APIError, ErrorCode
 from app.core.security.deps.user_auth import UserAuthSecurity
 from app.core.security.schema import TokenType
-from app.core.security.token import _create_token as create_jwt_token
 from app.schemas.auth.protection import ProtectionRequest
 from app.shared.clients.redis import client
 from app.core.protection.utils import verify_pow, verify_dpop, jwk_thumbprint
-import time
-from jose import jwt
+from jwtifypy import JWTManager
 
 router = APIRouter()
 
@@ -37,21 +35,17 @@ async def issue_token(
     )
 
     thumbprint = jwk_thumbprint(data.jwk)
+    subject = 'anon'
 
-    try:
-        user = await UserAuthSecurity(TokenType.access)(request)
-    except Exception:
-        user = None
-
-    subject = user.id if user else 'anon'
-    token = create_jwt_token(
-        subject=subject,
-        type_token=TokenType.service,
-        issuer=request.url.path,
-        audience="public-system-verification",
-        expires_delta=timedelta(minutes=2),
-        cnf={"jkt": thumbprint, "jwk": data.jwk},
-        fp=data.fingerprint,
-        scopes=["*"],
-    )
+    token = (
+        JWTManager
+        .with_issuer(request.url.path)
+        .with_audience("public-system-verification")
+        .create_token(
+            subject=subject,
+            token_type=TokenType.protection,
+            expires_delta=timedelta(minutes=2),
+            cnf={"jkt": thumbprint, "jwk": data.jwk},
+            fp=data.fingerprint
+        ))
     return {"token": token}

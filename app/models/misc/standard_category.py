@@ -5,7 +5,7 @@ from app.shared.utils.flexible_time import FlexibleTimeField
 
 
 class StandardCategory(TimestampedModel):
-    id = fields.IntField(pk=True)
+    id = fields.IntField(primary_key=True)
     code = fields.CharField(max_length=10)
     stroke = fields.CharField(max_length=10)
     distance = fields.IntField()

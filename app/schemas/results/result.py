@@ -9,6 +9,7 @@ from app.schemas.athlete.athlete import Athlete_Pydantic
 from app.schemas.competition.competition import Competition_Pydantic
 from app.shared.utils.flexible_time import FlexibleTime
 
+ResultDepth0_Pydantic = create_pydantic_model(Result)
 ResultIn_Pydantic = with_nested(
     create_pydantic_model(Result, exclude_readonly=True))
 Result_Pydantic = with_nested(

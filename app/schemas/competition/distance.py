@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from tortoise.contrib.pydantic import pydantic_model_creator
 
 from app.models.competition.distance import Distance
@@ -15,5 +15,4 @@ class DistanceOrderUpdate_Pydantic(BaseModel):
     id: int
     order: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
