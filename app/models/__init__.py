@@ -1,3 +1,4 @@
+from app.models.user.group import Group, GroupCollection
 from .athlete.athlete import Athlete
 from .athlete.record import Record
 from .athlete.top_athlete import TopAthlete

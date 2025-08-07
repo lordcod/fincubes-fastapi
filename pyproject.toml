@@ -57,6 +57,6 @@ test = "tests.test:run"
 manage = "tests.manage:app"
 
 [tool.aerich]
-tortoise_orm = "app.services.config.TORTOISE_ORM"
+tortoise_orm = "tests.tortoise_config.TORTOISE_ORM"
 location = "./migrations"
 src_folder = "./."
