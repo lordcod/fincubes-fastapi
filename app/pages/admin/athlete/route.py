@@ -15,8 +15,8 @@ router = APIRouter(tags=['Admin/Athlete'])
 @router.get(
     "/",
     response_model=List[Athlete_Pydantic],
-    dependencies=[Depends(admin_required)],
 )
+@require_scope('athlete:read')
 async def get_athletes_admin(
     query: str = None,
     last_name: str = None,
