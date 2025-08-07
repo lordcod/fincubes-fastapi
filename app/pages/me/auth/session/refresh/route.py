@@ -1,5 +1,6 @@
 from datetime import timedelta
-from fastapi import APIRouter, Depends, Request
+from urllib.parse import urlparse
+from fastapi import APIRouter, Body, Depends, Request, Response
 from jwtifypy import JWTManager
 
 from app.core.security.deps.refresh_auth import RefreshTokenSecurity
@@ -24,3 +25,24 @@ async def refresh(
         "token_type": "Bearer",
         "expires_in": EXPIRES_IN
     }
+
+# TODO: DELETE 1 SEPTEMBER
+
+
+@router.put("/", status_code=204)
+async def add_refresh(
+    request: Request,
+    response: Response,
+    refresh_token: str = Body(embed=True)
+):
+    domain = urlparse(request.headers.get("origin")).hostname
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        path="/me/auth/session",
+        max_age=7 * 24 * 3600,
+        domain=domain
+    )
