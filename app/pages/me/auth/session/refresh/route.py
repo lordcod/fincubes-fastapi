@@ -4,7 +4,6 @@ from fastapi import APIRouter, Body, Depends, Request, Response
 from jwtifypy import JWTManager
 
 from app.core.security.deps.refresh_auth import RefreshTokenSecurity
-from app.core.security.schema import TokenType
 from app.models.user.user import User
 from app.schemas.auth.auth import TokenResponse
 
