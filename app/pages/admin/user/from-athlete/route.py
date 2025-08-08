@@ -6,7 +6,7 @@ from app.core.errors import APIError, ErrorCode
 
 from app.models.user.user import User
 from app.schemas.auth.auth import UserResponse
-from app.shared.clients.scopes.request import require_scope
+from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter()
 

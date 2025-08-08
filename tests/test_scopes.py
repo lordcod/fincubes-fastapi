@@ -1,5 +1,5 @@
 import pytest
-from app.shared.clients.scopes.combine import combine_all_scopes, flatten_scopes
+from app.shared.utils.scopes.combine import combine_all_scopes, flatten_scopes
 
 
 def test_full_scope_merge():

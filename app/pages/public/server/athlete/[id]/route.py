@@ -5,7 +5,7 @@ from app.core.errors import APIError, ErrorCode
 from app.models.athlete.athlete import Athlete
 from app.models.competition.result import Result
 from app.schemas.athlete.athlete import Athlete_Pydantic, AthleteDetailed_Pydantic
-from app.shared.clients.scopes.request import require_scope
+from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter()
 

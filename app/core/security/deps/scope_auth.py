@@ -3,7 +3,7 @@ from fastapi.params import Depends
 from app.core.errors import APIError, ErrorCode
 from app.core.security.deps.base_auth import BaseDecodeToken
 from app.core.security.deps.base_interfaces import HTTPGetToken
-from app.shared.clients.scopes.check import has_scope
+from app.shared.utils.scopes.check import has_scope
 from fastapi.security.base import SecurityBase
 from app.core.security.schema import ApiKeySecurityModel
 

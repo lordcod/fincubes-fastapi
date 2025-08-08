@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from app.core.errors import APIError, ErrorCode
 from app.models.misc.standard_category import StandardCategory
 from app.schemas.results.standards import StandardOut
-from app.shared.clients.scopes.request import require_scope
+from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter(tags=['Internal/Standard'])
 

@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from app.core.errors import APIError, ErrorCode
 from app.models.misc.region import Region
 from app.schemas.region.region import RegionOut
-from app.shared.clients.scopes.request import require_scope
+from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter()
 

@@ -13,7 +13,7 @@ from app.models.competition.result import Result
 from app.repositories.ratings import get_rank
 from app.schemas.results.result import (BulkCreateResult,
                                         BulkCreateResultResponse)
-from app.shared.clients.scopes.request import require_scope
+from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter()
 

@@ -30,9 +30,10 @@ class SecureRequest:
         if None in {x_page_token, dpop, x_fp}:
             raise APIError(ErrorCode.PROTECTION_INVALID)
 
-        await manager.run(handle, request, dict(
+        await manager.run(handle, dict(
             x_page_token=x_page_token,
             dpop=dpop,
             x_fp=x_fp,
-            redis=redis
+            redis=redis,
+            request=request
         ))

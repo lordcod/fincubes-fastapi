@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends
 
 from app.models.misc.standard_category import StandardCategory
 from app.schemas.results.standards import StandardIn, StandardOut
-from app.shared.clients.scopes.request import require_scope
+from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter(tags=['Public/Server/Standards'])
 

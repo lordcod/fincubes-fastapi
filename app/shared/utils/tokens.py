@@ -6,7 +6,7 @@ from tortoise import BaseDBAsyncClient
 from tortoise.transactions import in_transaction
 from jwtifypy import JWTManager
 from app.models import RefreshToken, Session, User
-from app.shared.clients.scopes.combine import combine_all_scopes, flatten_scopes
+from app.shared.utils.scopes.combine import combine_all_scopes, flatten_scopes
 
 REFRESH_EXPIRES_IN = datetime.timedelta(days=7)
 ACCESS_EXPIRES_IN = datetime.timedelta(minutes=15)

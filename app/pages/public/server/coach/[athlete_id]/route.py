@@ -6,7 +6,7 @@ from fastapi import APIRouter
 from app.models.athlete.athlete import Athlete
 from app.models.roles.coach_athlete import CoachAthlete
 from app.schemas.users.coach import CoachOut
-from app.shared.clients.scopes.request import require_scope
+from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter()
 

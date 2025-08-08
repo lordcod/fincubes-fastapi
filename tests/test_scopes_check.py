@@ -1,5 +1,5 @@
 
-from app.shared.clients.scopes.check import has_scope
+from app.shared.utils.scopes.check import has_scope
 
 
 def test_has_scope():

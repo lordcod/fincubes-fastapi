@@ -7,7 +7,7 @@ from tortoise.expressions import Q
 
 from app.models.athlete.athlete import Athlete
 from app.schemas.athlete.athlete import Athlete_Pydantic
-from app.shared.clients.scopes.request import require_scope
+from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter(tags=['Public/Client/Athlete'])
 

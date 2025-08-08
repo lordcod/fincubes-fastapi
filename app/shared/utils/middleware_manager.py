@@ -1,12 +1,11 @@
-import asyncio
 import inspect
-from typing import Callable, Awaitable, Any, Dict, Generic, List, TypeVar
+from typing import Callable, Awaitable, Any, Dict, List, Optional, ParamSpec, TypeVar
 
 TEvent = TypeVar("TEvent")
-
+P = ParamSpec("P")
 MiddlewareCallable = Callable[
-    [Callable[[TEvent, Dict[str, Any]], Awaitable[Any]], TEvent, Dict[str, Any]],
-    Awaitable[Any]
+    P,
+    Awaitable[Optional[Dict[str, Any]]]
 ]
 
 
@@ -17,25 +16,6 @@ class MiddlewareManager:
     def register(self, middleware: MiddlewareCallable):
         self.middlewares.append(middleware)
 
-    async def _call_with_chain(
-        self,
-        index: int,
-        handler: Callable[[TEvent, Dict[str, Any]], Awaitable[Any]],
-        event: TEvent,
-        data: Dict[str, Any]
-    ) -> Any:
-        if index < len(self.middlewares):
-            mw = self.middlewares[index]
-
-            async def next_handler(evt: TEvent, d: Dict[str, Any]):
-                return await self._call_with_chain(index + 1, handler, evt, d)
-
-            kwargs = self.extract_kwargs(mw, data)
-            return await mw(next_handler, event, data, **kwargs)
-        else:
-            kwargs = self.extract_kwargs(handler, data)
-            return await handler(event, **kwargs)
-
     def extract_kwargs(self, handler, data):
         sig = inspect.signature(handler)
         kwargs = {
@@ -45,9 +25,16 @@ class MiddlewareManager:
 
     async def run(
         self,
-        handler: Callable[[TEvent, Any], Awaitable[Any]],
-        event: TEvent,
-        initial_data: Dict[str, Any] = None
+        handler: Optional[Callable[..., Awaitable[Any]]] = None,
+        initial_data: Optional[Dict[str, Any]] = None
     ):
-        data = dict(initial_data or {})
-        return await self._call_with_chain(0, handler, event, data)
+        data = initial_data.copy() if initial_data is not None else {}
+        handlers = self.middlewares.copy()
+        if handler:
+            handlers.append(handler)
+
+        for mh in handlers:
+            kwargs = self.extract_kwargs(mh, data)
+            payload = await mh(**kwargs)
+            if payload is not None:
+                data.update(payload)
