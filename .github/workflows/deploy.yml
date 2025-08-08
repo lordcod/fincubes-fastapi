@@ -61,7 +61,7 @@ jobs:
 
       - name: Run app
         run: |
-          poetry run python tests/test.py
+          poetry run pytest tests
         env:
           TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}

@@ -6,7 +6,7 @@ from app.models.tokens.sessions import Session
 
 
 class RefreshToken(Model):
-    id = fields.UUIDField(pk=True, default=uuid.uuid4)
+    id = fields.UUIDField(primary_key=True, default=uuid.uuid4)
     session: fields.ForeignKeyRelation[Session] = fields.ForeignKeyField(
         "models.Session",
         related_name="refresh_tokens",
