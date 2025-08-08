@@ -3,7 +3,7 @@ from fastapi.params import Depends
 from app.core.errors import APIError, ErrorCode
 from app.core.security.deps.base_auth import BaseDecodeToken
 from app.core.security.deps.base_interfaces import HTTPGetToken
-from app.shared.clients.scopes.check import has_scope
+from app.shared.utils.scopes.check import has_scope
 from fastapi.security.base import SecurityBase
 from app.core.security.schema import ApiKeySecurityModel
 
@@ -22,6 +22,7 @@ class ScopeAuthSecurity(Depends, SecurityBase, BaseDecodeToken, HTTPGetToken):
         scope = self.get_scope(request)
         if scope is None:
             return True
+
         try:
             token = await self.get_token(request)
             payload = self.decode_token(token)

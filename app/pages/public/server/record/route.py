@@ -5,7 +5,7 @@ from fastapi import APIRouter
 
 from app.models.athlete.record import Record
 from app.schemas.athlete.records import RecordOut
-from app.shared.clients.scopes.request import require_scope
+from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter(tags=['Public/Server/Record'])
 

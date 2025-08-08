@@ -4,7 +4,7 @@ from typing import Optional
 from fastapi import APIRouter
 from app.repositories.get_top_results import get_top_results
 from app.schemas.results.top import TopResponse, parse_best_full_result
-from app.shared.clients.scopes.request import require_scope
+from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter(tags=['Public/Server/Result'])
 

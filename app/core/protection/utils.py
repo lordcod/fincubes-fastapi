@@ -75,5 +75,4 @@ def verify_dpop(method: str, url: str, dpop_jwt: str, jwk_pub: dict):
 
         return True
     except (JWTError, KeyError, TypeError, ValueError) as exc:
-        print(type(exc), exc)
         raise APIError(ErrorCode.PROTECTION_BAD_DPOP) from exc

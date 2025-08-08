@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from app.core.deps.redis import get_redis
 from app.repositories.ratings import get_ratings
 from app.schemas.results.top import AthleteTopResponse
-from app.shared.clients.scopes.request import require_scope
+from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter()
 

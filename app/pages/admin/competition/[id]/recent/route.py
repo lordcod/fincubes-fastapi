@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from app.models.competition.competition import Competition
 from app.models.competition.recent_event import RecentEvent
 from app.schemas.competition.recent_event import RecentEventOut
-from app.shared.clients.scopes.request import require_scope
+from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter()
 

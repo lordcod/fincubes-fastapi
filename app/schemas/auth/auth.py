@@ -1,4 +1,5 @@
 from typing import Any, Dict, Literal, Optional
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from tortoise.contrib.pydantic import pydantic_model_creator
@@ -18,10 +19,7 @@ class UserLogin(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class UserCreate(BaseModel):
-    email: EmailStr
-    password: str
-    cf_token: str
+class UserCreate(UserLogin):
     role: Optional[Literal["athlete", "coach", "parent"]] = None
     metadata: Dict[str, Any]
 

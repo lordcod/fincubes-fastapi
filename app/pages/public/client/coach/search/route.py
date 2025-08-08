@@ -7,7 +7,7 @@ from tortoise.expressions import Q
 
 from app.models.roles.coach import Coach
 from app.schemas.users.coach import CoachOut
-from app.shared.clients.scopes.request import require_scope
+from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter(tags=['Public/Client/Coach'])
 

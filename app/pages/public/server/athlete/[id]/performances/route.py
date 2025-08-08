@@ -15,7 +15,7 @@ from app.schemas.athlete.performance import (ResultDepth0_Pydantic, UserAthleteR
                                              UserCompetitionResult, UserPerformance)
 from app.schemas.results.result import Result_Pydantic
 from app.shared.cache.redis_compressed import RedisCachePickleCompressed
-from app.shared.clients.scopes.request import require_scope
+from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter()
 

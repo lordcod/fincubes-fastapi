@@ -17,12 +17,8 @@ class BotAuthSecurity(BaseHTTPAuthSecurity, BaseAuthSecurity[Bot]):
         if id is None:
             raise APIError(ErrorCode.INVALID_TOKEN)
 
-        if isinstance(id, int):
-            bot = await Bot.get_or_none(id=id)
-        else:
-            bot = None
-
-        if not bot:
+        bot = await Bot.get_or_none(id=id) if isinstance(id, int) else None
+        if bot is None:
             raise APIError(ErrorCode.BOT_NOT_FOUND)
         if not bot.is_active:
             raise APIError(ErrorCode.BOT_DISABLED)

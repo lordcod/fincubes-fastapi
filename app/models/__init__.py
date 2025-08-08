@@ -1,3 +1,5 @@
+from app.models.tokens.sessions import Session
+from app.models.tokens.refresh_tokens import RefreshToken
 from .athlete.athlete import Athlete
 from .athlete.record import Record
 from .athlete.top_athlete import TopAthlete

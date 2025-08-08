@@ -6,7 +6,7 @@ from fastapi import APIRouter
 
 from app.models.competition.result import Result
 from app.schemas.results.top import RandomTop
-from app.shared.clients.scopes.request import require_scope
+from app.shared.utils.scopes.request import require_scope
 from app.shared.utils.metadata import COMBINATIONS
 
 logger = logging.getLogger(__name__)

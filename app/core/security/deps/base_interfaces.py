@@ -6,12 +6,8 @@ from fastapi.security.base import SecurityBase
 
 from app.core.errors import APIError, ErrorCode
 from app.core.security.schema import TokenType, ApiKeySecurityModel
-from app.core.security.deps.base_auth import BaseAuthSecurity, HTTPGetToken
+from app.core.security.deps.base_auth import BaseAuthSecurity, BaseGetToken, BaseResolveEntity, HTTPGetToken
 from app.models.user.user import User
-
-_log = logging.getLogger(__name__)
-
-T = TypeVar("T")  # Тип сущности: User, Bot и т.д.
 
 
 class BaseHTTPAuthSecurity(SecurityBase, BaseAuthSecurity, HTTPGetToken):
@@ -27,7 +23,15 @@ class BaseHTTPAuthSecurity(SecurityBase, BaseAuthSecurity, HTTPGetToken):
             raise APIError(ErrorCode.INVALID_TOKEN)
 
 
-class BaseUserAuthSecurity(BaseAuthSecurity[User]):
+class CookieRefreshGetToken(BaseGetToken):
+    async def get_token(self, request: Request) -> str:
+        token = request.cookies.get("refresh_token")
+        if not token:
+            raise APIError(ErrorCode.INVALID_TOKEN)
+        return token
+
+
+class UserResolveEntity(BaseResolveEntity[User]):
     async def resolve_entity(self, payload: dict) -> User:
         id = payload.get("sub")
         if id is None:

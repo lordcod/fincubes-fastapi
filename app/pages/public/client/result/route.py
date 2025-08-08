@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 
 from app.models.competition.result import Result
 from app.schemas.results.result import Result_Pydantic
-from app.shared.clients.scopes.request import require_scope
+from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter(tags=['Public/Client/Results'])
 

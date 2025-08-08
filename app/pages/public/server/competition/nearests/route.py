@@ -5,7 +5,7 @@ from fastapi import APIRouter
 
 from app.models.competition.competition import Competition
 from app.schemas.competition.competition import Competition_Pydantic
-from app.shared.clients.scopes.request import require_scope
+from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter()
 

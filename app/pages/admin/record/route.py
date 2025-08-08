@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 
 from app.models.athlete.record import Record
 from app.schemas.athlete.records import RecordIn, RecordOut
-from app.shared.clients.scopes.request import require_scope
+from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter(tags=['Admin/Record'])
 

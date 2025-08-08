@@ -4,7 +4,7 @@ from typing import List
 from fastapi import APIRouter
 from app.models.misc.region import Region
 from app.schemas.region.region import RegionIn, RegionOut
-from app.shared.clients.scopes.request import require_scope
+from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter(tags=['Admin/Region'])
 
