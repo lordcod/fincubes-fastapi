@@ -4,11 +4,7 @@ from app.core.security.deps.scope_auth import ScopeAuthSecurity
 
 from typing import Optional
 from fastapi import Depends, Header, Request
-from .handlers import manager
-
-
-async def handle(_):
-    pass
+from app.core.protection.handlers import manager
 
 
 class SecureRequest:
@@ -30,7 +26,7 @@ class SecureRequest:
         if None in {x_page_token, dpop, x_fp}:
             raise APIError(ErrorCode.PROTECTION_INVALID)
 
-        await manager.run(handle, dict(
+        await manager.run(initial_data=dict(
             x_page_token=x_page_token,
             dpop=dpop,
             x_fp=x_fp,
