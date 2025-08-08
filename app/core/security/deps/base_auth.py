@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from fastapi import Request
 from fastapi.params import Depends
 import jwt
+from pydantic import conset
 from app.core.errors import APIError, ErrorCode
 from jwtifypy import JWTManager
 
@@ -21,6 +22,11 @@ class BaseGetToken(ABC):
 class BaseCheckPayload(ABC):
     @abstractmethod
     def check_payload(self, payload: dict) -> None: ...
+
+
+class BaseResolveEntity(ABC, Generic[T]):
+    @abstractmethod
+    async def resolve_entity(self, payload: dict) -> T: ...
 
 
 class BaseDecodeToken:
@@ -75,7 +81,8 @@ class BaseAuthSecurity(Generic[T],
                        Depends,
                        BaseDecodeToken,
                        BaseGetToken,
-                       CheckTokenType):
+                       CheckTokenType,
+                       BaseResolveEntity[T]):
     def __init__(
         self,
         required_token_type: TokenType,
@@ -88,7 +95,3 @@ class BaseAuthSecurity(Generic[T],
         payload = self.decode_token(token)
         self.check_payload(payload)
         return await self.resolve_entity(payload)
-
-    @abstractmethod
-    async def resolve_entity(self, payload: dict) -> T:
-        ...

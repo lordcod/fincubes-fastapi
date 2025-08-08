@@ -1,54 +1,43 @@
 from datetime import timedelta
 from urllib.parse import urlparse
 from fastapi import APIRouter, Body, Depends, Request, Response
-import jwt
-from jwtifypy import JWTManager
-
-from app.core.errors import APIError, ErrorCode
-from app.core.security.deps.refresh_auth import RefreshTokenSecurity
+from app.core.security.deps.refresh_auth import RefreshTokenSecurity, UserRefreshTokenSecurity
+from app.models.tokens.refresh_tokens import RefreshToken
 from app.models.user.user import User
 from app.schemas.auth.auth import TokenResponse
+from app.shared.utils.auth import BaseAuthRepository, SetRefreshToken
+from app.shared.utils.tokens import RefreshTokenManager, TokenManager
 
 router = APIRouter()
-EXPIRES_IN = int(timedelta(minutes=15).total_seconds())
-
-# ? UTILS FROM AUTH SECIRUTY
-
-
-async def get_token(request: Request) -> str:
-    token = request.cookies.get("refresh_token")
-    if not token:
-        raise APIError(ErrorCode.INVALID_TOKEN)
-    return token
+REFRESH_EXPIRES_IN = timedelta(days=31)
+ACCESS_EXPIRES_IN = timedelta(minutes=15)
+REFRESH_EXPIRES_IN_TOTAL = int(REFRESH_EXPIRES_IN.total_seconds())
+ACCESS_EXPIRES_IN_TOTAL = int(ACCESS_EXPIRES_IN.total_seconds())
 
 
-def decode_token(token: str) -> dict:
-    try:
-        payload = JWTManager.decode_token(token)
-    except jwt.ExpiredSignatureError as exc:
-        raise APIError(ErrorCode.EXPIRED_TOKEN) from exc
-    except jwt.PyJWTError as exc:
-        raise APIError(ErrorCode.INVALID_TOKEN) from exc
-    return payload
+class RefreshAuthRepository(BaseAuthRepository):
+    def __init__(self, request: Request, response: Response, token_manager: TokenManager, user: User) -> None:
+        super().__init__(request, response, token_manager)
+        self.user = user
+
+    async def get_user(self) -> User:
+        return self.user
 
 
 @router.post("/", response_model=TokenResponse)
-async def refresh(
+async def post_refresh(
     request: Request,
-    current_user: User = Depends(RefreshTokenSecurity()),
+    response: Response,
+    refresh: RefreshToken = Depends(RefreshTokenSecurity()),
+    user: User = Depends(UserRefreshTokenSecurity())
 ):
-    token = request.cookies.get("refresh_token")
-    if not token:
-        raise APIError(ErrorCode.INVALID_TOKEN)
-
-    manager = JWTManager.with_issuer(request.url.path).with_audience("auth")
-    access_token = manager.create_access_token(current_user.id, fresh=False)
-
-    return {
-        "access_token": access_token,
-        "token_type": "Bearer",
-        "expires_in": EXPIRES_IN
-    }
+    token_manager = RefreshTokenManager(request, refresh)
+    return await RefreshAuthRepository(
+        request,
+        response,
+        token_manager,
+        user
+    ).run()
 
 # TODO: DELETE 1 SEPTEMBER
 

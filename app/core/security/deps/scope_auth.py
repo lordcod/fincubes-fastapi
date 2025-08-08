@@ -22,6 +22,7 @@ class ScopeAuthSecurity(Depends, SecurityBase, BaseDecodeToken, HTTPGetToken):
         scope = self.get_scope(request)
         if scope is None:
             return True
+
         try:
             token = await self.get_token(request)
             payload = self.decode_token(token)

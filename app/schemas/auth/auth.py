@@ -32,7 +32,5 @@ class TokenResponse(BaseModel):
         default="bearer", description="Тип токена (обычно 'bearer')")
     expires_in: int = Field(...,
                             description="Время жизни access токена в секундах")
-    session_id: UUID = Field(...,
-                             description="UUID сессии")
 
     model_config = ConfigDict(from_attributes=True)
