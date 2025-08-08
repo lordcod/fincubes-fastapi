@@ -6,6 +6,7 @@ from tortoise import BaseDBAsyncClient
 from tortoise.transactions import in_transaction
 from jwtifypy import JWTManager
 from app.models import RefreshToken, Session, User
+from app.shared.clients.scopes.combine import combine_all_scopes, flatten_scopes
 
 REFRESH_EXPIRES_IN = datetime.timedelta(days=7)
 ACCESS_EXPIRES_IN = datetime.timedelta(minutes=15)
@@ -30,9 +31,9 @@ class TokenManager:
             session = await self.get_session(user, ctx)
             await self.create_refresh(refresh_id, access_id, session, ctx)
 
-        refresh_token = self.create_refresh_token(user.id, refresh_id)
+        refresh_token = self.create_refresh_token(user, refresh_id)
         access_token = self.create_access_token(
-            user.id, access_id)
+            user, access_id)
         return refresh_token, access_token
 
     async def create_refresh(
@@ -54,25 +55,28 @@ class TokenManager:
 
     def create_refresh_token(
         self,
-        user_id: int,
+        user: User,
         jti: str
     ) -> str:
         return self.manager.create_refresh_token(
-            user_id,
+            user.id,
             expires_delta=REFRESH_EXPIRES_IN,
             jti=jti
         )
 
     def create_access_token(
         self,
-        user_id: int,
+        user: User,
         jti: str
     ) -> str:
+        result = combine_all_scopes({}, [], user.scopes)
+        flattened = flatten_scopes(result)
         return self.manager.create_access_token(
-            user_id,
+            user.id,
             expires_delta=ACCESS_EXPIRES_IN,
             fresh=self.fresh,
-            jti=jti
+            jti=jti,
+            scopes=flattened
         )
 
 
