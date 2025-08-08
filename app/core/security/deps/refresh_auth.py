@@ -1,11 +1,12 @@
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Generic, TypeVar
+from fastapi.security.base import SecurityBase
+
 from app.core.security.deps.base_auth import BaseAuthSecurity
 from app.core.errors import APIError, ErrorCode
 from app.core.security.deps.base_interfaces import CookieRefreshGetToken, UserResolveEntity
 from app.core.security.schema import TokenType, RefreshSecurityModel
-from fastapi.security.base import SecurityBase
 from app.models.tokens.refresh_tokens import RefreshToken
 from app.models.tokens.sessions import Session
 from app.models.user.user import User
@@ -22,7 +23,18 @@ class RefreshAuthSecurity(Generic[T], SecurityBase, CookieRefreshGetToken, BaseA
 
 class RefreshTokenSecurity(RefreshAuthSecurity[RefreshToken]):
     async def resolve_entity(self, payload: dict):
-        refresh = await RefreshToken.get(id=payload['jti']).prefetch_related('session')
+        refresh = await RefreshToken.get_or_none(id=payload['jti']).prefetch_related('session')
+
+        # TODO DELETE 1 SEP
+        if refresh is None:
+            session = await Session.create(user_id=payload['sub'])
+            refresh = await RefreshToken.create(
+                id=payload['jti'],
+                issued_at=payload['iat'],
+                expires_at=payload['exp'],
+                session=session,
+            )
+            return refresh
 
         if refresh.session.revoked_at:
             raise APIError(ErrorCode.INVALID_TOKEN)
