@@ -1,14 +1,10 @@
-import json
-from typing import Any, Optional, Union, get_args
+from typing import Any, Optional
 from sqlalchemy import (
-    CTE, Table, Column, Integer, String, Date, Float, select, case, and_, or_, func, literal_column, cast, text, MetaData
+    CTE, Table, Integer, select, and_, func, cast, text, MetaData
 )
-from sqlalchemy.sql import alias
 from sqlalchemy.sql.functions import dense_rank
-from sqlalchemy.sql.expression import over
-from sqlalchemy.ext.asyncio import AsyncEngine
 from datetime import date
-from sqlalchemy.dialects import sqlite, mysql, postgresql
+from sqlalchemy.dialects import postgresql
 
 from app.models.athlete.athlete import Athlete
 from app.models.competition.competition import Competition
@@ -142,7 +138,7 @@ def build_top_results_query(
 
     query = query.order_by(text("row_num"))
     if offset:
-        query = query.where(text("row_num > :offset")).params(offset=offset)
+        query = query.offset(offset)
     if limit:
         query = query.limit(limit)
 
