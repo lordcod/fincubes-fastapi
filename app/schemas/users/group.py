@@ -24,17 +24,17 @@ class UserCommandPayload(BaseModel):
 
 
 class UserCommand(BaseCommand):
-    model: Literal["users"]
+    model: Literal["user"]
     payload: UserCommandPayload
 
 
 class GroupCommand(BaseCommand):
-    model: Literal["groups"]
+    model: Literal["group"]
     payload: Dict[str, Any]
 
 
 class TrackCommand(BaseCommand):
-    model: Literal["tracks"]
+    model: Literal["track"]
     payload: Dict[str, Any]
 
 
