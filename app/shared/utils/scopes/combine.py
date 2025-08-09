@@ -1,27 +1,30 @@
 from collections import defaultdict
 import itertools
+import time
 from typing import Iterable, List, Dict, Set, Tuple
 import math
 
 
-def split_roles_and_permissions(scopes: Iterable[str]) -> Tuple[List[str], List[str]]:
+def split_roles_and_permissions(
+    scopes: Iterable[Dict]
+) -> Tuple[List[Dict], List[Dict]]:
     """
-    Делит список scopes на роли (начинаются с '@') и обычные права.
-
-    Args:
-        scopes: список строк
-
-    Returns:
-        Tuple из:
-            - roles: список строк без '@'
-            - permissions: список остальных строк
+    Делит список dict на роли (node начинается с '@') и права.
     """
-    roles = [s[1:] for s in scopes if s.startswith('@')]
-    permissions = [s for s in scopes if not s.startswith('@')]
+    roles = []
+    permissions = []
+    now = time.time()
+    for entry in scopes:
+        if entry.get("inherited") is not None and entry["inherited"] <= now:
+            continue
+        if entry["node"].startswith("@"):
+            roles.append(entry)
+        else:
+            permissions.append(entry)
     return roles, permissions
 
 
-def group_scopes(scopes: Iterable[str]) -> Dict[str, Set[str]]:
+def group_scopes(scopes: Iterable[Dict]) -> Dict[str, Set[str]]:
     """
     Разбивает список scopes на категории и права.
 
@@ -40,12 +43,10 @@ def group_scopes(scopes: Iterable[str]) -> Dict[str, Set[str]]:
     result: Dict[str, Set[str]] = defaultdict(set)
 
     for scope in scopes:
-        negated = scope.startswith('-')
-        clean_scope = scope[1:] if negated else scope
-        category, right = (clean_scope.split(':', 1) + [None])[:2]
+        category, right = (scope['node'].split(':', 1) + [None])[:2]
         if right is None:
             right = '*'
-        right = f"-{right}" if negated else right
+        right = f"-{right}" if not scope['value'] else right
         result[category].add(right)
 
     return dict(result)
@@ -137,7 +138,7 @@ def combine_roles_scopes(roles: Dict[str, Dict]) -> Dict[str, Dict[str, Set[str]
     for name, role in roles.items():
         scopes = role['scopes']
         role_roles, role_scopes = split_roles_and_permissions(scopes)
-        roles_to_roles[name] = set(role_roles)
+        roles_to_roles[name] = set(role['node'][1:] for role in role_roles)
         roles_to_scopes[name] = group_scopes(role_scopes)
 
     for parent, children in roles_to_roles.items():
@@ -201,7 +202,7 @@ def merge_scopes_with_priority(
 
 
 def combine_all_scopes(
-    roles: Dict[str, Dict],
+    roles: Dict[str, Dict] | List[Dict],
     default_scopes: List[str],
     user_scopes: List[str]
 ) -> Dict[str, Set[str]]:
@@ -213,13 +214,19 @@ def combine_all_scopes(
 
     Права объединяются по рангу, от меньшего к большему.
     """
+    if isinstance(roles, list):
+        roles = {
+            role['name']: role
+            for role in roles
+        }
+
     user_roles, user_scopes = split_roles_and_permissions(user_scopes)
     default_roles, default_scopes = split_roles_and_permissions(default_scopes)
 
     final_all_roles_scopes = combine_roles_scopes(roles)
     final_default_scopes = merge_rights_by_category(
         group_scopes(default_scopes),
-        *(final_all_roles_scopes[name] for name in default_roles)
+        *(final_all_roles_scopes[role['node'][1:]] for role in default_roles)
     )
     final_user_scopes = group_scopes(user_scopes)
 
@@ -228,7 +235,8 @@ def combine_all_scopes(
         math.inf: final_user_scopes
     }
 
-    for role_name in user_roles:
+    for role in user_roles:
+        role_name = role['node'][1:]
         if role_name not in roles:
             continue
         rank = roles[role_name]["rank"]
