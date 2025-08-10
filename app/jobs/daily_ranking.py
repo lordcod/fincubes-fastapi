@@ -1,9 +1,8 @@
-from apscheduler.schedulers.background import BackgroundScheduler
-
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from app.repositories.ratings import update_ratings
 from app.shared.clients.redis import client
 
-scheduler = BackgroundScheduler()
+scheduler = AsyncIOScheduler()
 
 
 async def daily_task():
@@ -11,7 +10,7 @@ async def daily_task():
 
 
 def start_scheduler():
-    scheduler.add_job(daily_task, "cron", hour=16, minute=50, id="daily_task")
+    scheduler.add_job(daily_task, "cron", hour=0, minute=0, id="daily_task")
     scheduler.start()
 
 

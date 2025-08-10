@@ -42,21 +42,24 @@ async def get_rank(
 
 
 async def update_ratings(client: redis.Redis):
-    _log.debug("Start updating athlete rankings")
+    _log.info("Starting athlete rankings update")
 
     athlete_results = defaultdict(lambda: defaultdict(list))
 
     for season in [True, False]:
+        season_str = 'current_season' if season else 'global'
         for category in categories:
-            _log.debug('Parse category: %s (season:%s)',
-                       category['name'], season)
+            _log.debug("Processing category '%s' for season '%s'",
+                       category['name'], season_str)
+
             results = await get_top_results(min_age=category['min_age'],
                                             max_age=category['max_age'],
                                             current_season=season)
             results = [parse_best_full_result(res) for res in results]
             for top in results:
-                athlete_results[top.athlete.id][('season' if season else 'global') + ':' + category['id']
+                athlete_results[top.athlete.id][season_str + ':' + category['id']
                                                 ].append(top.model_dump())
+    _log.info("Collected results for %d athletes", len(athlete_results))
 
     pipe = client.pipeline()
     cache = RedisCachePickleCompressed(pipe)
@@ -64,6 +67,7 @@ async def update_ratings(client: redis.Redis):
         cache_key = f"athlete:ranking:{athlete_id}"
         await cache.set(cache_key, dict(results))
     await pipe.execute()
+    _log.info("Saved ranking results for athletes")
 
 
 async def get_ratings(client: redis.Redis, id: int):
