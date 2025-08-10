@@ -59,13 +59,20 @@ def build_top_results_query(
     season_start = date(season, 9, 1) if season else None
     season_end = date(season + 1, 8, 31) if season else None
 
-    filters = [results.c.resolved_time != None]
+    base_filters = [results.c.resolved_time.isnot(None)]
     if stroke:
-        filters.append(results.c.stroke == stroke)
+        base_filters.append(results.c.stroke == stroke)
     if distance:
-        filters.append(results.c.distance == distance)
+        base_filters.append(results.c.distance == distance)
     if gender:
-        filters.append(athletes.c.gender == gender)
+        base_filters.append(athletes.c.gender == gender)
+
+    best_results_filters = list(base_filters)
+    if season_start and season_end:
+        best_results_filters.extend([
+            competitions.c.start_date >= season_start,
+            competitions.c.end_date <= season_end
+        ])
 
     best_results_subq = (
         select(
@@ -75,9 +82,11 @@ def build_top_results_query(
             func.min(results.c.resolved_time).label("resolved_time")
         )
         .select_from(
-            results.join(athletes, athletes.c.id == results.c.athlete_id)
+            results
+            .join(athletes, athletes.c.id == results.c.athlete_id)
+            .join(competitions, competitions.c.id == results.c.competition_id)
         )
-        .where(and_(*filters))
+        .where(and_(*best_results_filters))
         .group_by(
             results.c.athlete_id,
             results.c.stroke,
@@ -111,30 +120,24 @@ def build_top_results_query(
                 results.c.resolved_time == best_results_subq.c.resolved_time,
             ))
         )
-        .where(and_(*filters))
+        .where(and_(*base_filters))
     )
 
-    filters2 = []
     if min_age is not None or max_age is not None:
         birth_min = current_year - max_age if max_age else None
         birth_max = current_year - min_age if min_age else None
 
         if min_age and max_age:
-            filters2.append(cast(athletes.c.birth_year,
-                            Integer).between(birth_min, birth_max))
+            query = query.where(
+                cast(athletes.c.birth_year, Integer).between(
+                    birth_min, birth_max)
+            )
         elif min_age:
-            filters2.append(cast(athletes.c.birth_year, Integer) <= birth_max)
+            query = query.where(
+                cast(athletes.c.birth_year, Integer) <= birth_max)
         elif max_age:
-            filters2.append(cast(athletes.c.birth_year, Integer) >= birth_min)
-
-    if season_start and season_end:
-        filters2.extend([
-            competitions.c.start_date >= season_start,
-            competitions.c.end_date <= season_end
-        ])
-
-    if filters2:
-        query = query.where(and_(*filters2))
+            query = query.where(
+                cast(athletes.c.birth_year, Integer) >= birth_min)
 
     query = query.order_by(text("row_num"))
     if offset:
