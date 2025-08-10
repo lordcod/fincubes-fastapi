@@ -20,7 +20,7 @@ class BaseCommand(BaseModel):
 
 class UserCommandPayload(BaseModel):
     id: int
-    scopes: List
+    permissions: List
 
 
 class UserCommand(BaseCommand):

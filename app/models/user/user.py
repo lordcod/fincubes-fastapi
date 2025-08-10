@@ -8,4 +8,4 @@ class User(TimestampedModel):
     email = fields.CharField(max_length=255, unique=True)
     hashed_password = fields.CharField(max_length=255)
     verified = fields.BooleanField(default=False)
-    scopes = fields.JSONField(default=[])
+    permissions = fields.JSONField(default=[])

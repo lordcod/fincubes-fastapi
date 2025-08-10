@@ -6,7 +6,7 @@ from app.models.tokens.refresh_tokens import RefreshToken
 from app.models.user.user import User
 from app.schemas.auth.auth import TokenResponse
 from app.shared.utils.auth import BaseAuthRepository, SetRefreshToken
-from app.shared.utils.tokens import RefreshTokenManager, TokenManager
+from app.shared.utils.token_manager import RefreshTokenManager, TokenManager
 
 router = APIRouter()
 REFRESH_EXPIRES_IN = timedelta(days=31)

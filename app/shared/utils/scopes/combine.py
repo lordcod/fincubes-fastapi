@@ -136,19 +136,19 @@ def combine_roles_scopes(roles: Dict[str, Dict]) -> Dict[str, Dict[str, Set[str]
     roles_to_scopes: Dict[str, Dict[str, Set[str]]] = {}
 
     for name, role in roles.items():
-        scopes = role['scopes']
+        scopes = role['permissions']
         role_roles, role_scopes = split_roles_and_permissions(scopes)
         roles_to_roles[name] = set(role['node'][1:] for role in role_roles)
         roles_to_scopes[name] = group_scopes(role_scopes)
 
     for parent, children in roles_to_roles.items():
-        parent_rank = roles[parent]['rank']
+        parent_weight = roles[parent]['weight']
         for child in children:
-            if roles[child]['rank'] > parent_rank:
+            if roles[child]['weight'] > parent_weight:
                 raise ValueError(
-                    f'Child role "{child}" has higher rank than parent "{parent}"')
+                    f'Child role "{child}" has higher weight than parent "{parent}"')
 
-    for name in sorted(roles, key=lambda x: roles[x]['rank']):
+    for name in sorted(roles, key=lambda x: roles[x]['weight']):
         combined_scopes = roles_to_scopes[name]
         for inherited in roles_to_roles[name]:
             if inherited not in result:
@@ -239,8 +239,8 @@ def combine_all_scopes(
         role_name = role['node'][1:]
         if role_name not in roles:
             continue
-        rank = roles[role_name]["rank"]
-        priority_map[rank] = final_all_roles_scopes[role_name]
+        weight = roles[role_name]["weight"]
+        priority_map[weight] = final_all_roles_scopes[role_name]
 
     result: Dict[str, Set[str]] = {}
     for _, scopes in sorted(priority_map.items(), key=lambda x: x[0]):

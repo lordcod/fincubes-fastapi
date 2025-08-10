@@ -6,6 +6,8 @@ from tortoise import BaseDBAsyncClient
 from tortoise.transactions import in_transaction
 from jwtifypy import JWTManager
 from app.models import RefreshToken, Session, User
+from app.models.user.group import Group
+from app.schemas.users.group import Group_Pydantic
 from app.shared.utils.scopes.combine import combine_all_scopes, flatten_scopes
 
 REFRESH_EXPIRES_IN = datetime.timedelta(days=7)
@@ -31,9 +33,10 @@ class TokenManager:
             session = await self.get_session(user, ctx)
             await self.create_refresh(refresh_id, access_id, session, ctx)
 
+        scopes = await self.get_scopes(user)
         refresh_token = self.create_refresh_token(user, refresh_id)
         access_token = self.create_access_token(
-            user, access_id)
+            user, access_id, scopes=scopes)
         return refresh_token, access_token
 
     async def create_refresh(
@@ -53,30 +56,43 @@ class TokenManager:
             using_db=using_db
         )
 
+    async def get_groups(self):
+        groups = await Group_Pydantic.from_queryset(Group.all())
+        default_permission = [
+            {'node': '@default', 'value': True}] if any(group.name == 'default' for group in groups) else []
+        return [group.model_dump() for group in groups], default_permission
+
+    async def get_scopes(self, user: User):
+        groups, default = await self.get_groups()
+        result = combine_all_scopes(groups, default, user.permissions)
+        flattened = flatten_scopes(result)
+        return flattened
+
     def create_refresh_token(
         self,
         user: User,
-        jti: str
+        jti: str,
+        **kwargs
     ) -> str:
         return self.manager.create_refresh_token(
             user.id,
             expires_delta=REFRESH_EXPIRES_IN,
-            jti=jti
+            jti=jti,
+            **kwargs
         )
 
     def create_access_token(
         self,
         user: User,
-        jti: str
+        jti: str,
+        **kwargs
     ) -> str:
-        result = combine_all_scopes({}, [], user.scopes)
-        flattened = flatten_scopes(result)
         return self.manager.create_access_token(
             user.id,
             expires_delta=ACCESS_EXPIRES_IN,
             fresh=self.fresh,
             jti=jti,
-            scopes=flattened
+            **kwargs
         )
 
 

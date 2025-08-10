@@ -1,10 +1,8 @@
-from collections import Counter
 from typing import List
-from fastapi import APIRouter, Body
-
+from fastapi import APIRouter
 from app.models.user.group import Group, GroupCollection
 from app.models.user.user import User
-from app.schemas.users.group import Group_Pydantic, GroupCollection_Pydantic, LuckPermCommand
+from app.schemas.users.group import LuckPermCommand
 from app.shared.utils.scopes.request import extract_scopes, require_scope
 
 router = APIRouter(tags=['Admin/Permission'])
@@ -25,7 +23,7 @@ async def get_luck_perms_config():
     )
 
 
-@router.put("/", status_code=204)
+@router.put("/")
 @require_scope("superuser:write")
 async def update_luck_perms(data: List[LuckPermCommand]):
     models = {
@@ -41,8 +39,11 @@ async def update_luck_perms(data: List[LuckPermCommand]):
             await model.create(**payload)
             return
 
-        instance = await model.get(id=payload['id'])
+        instance = await model.get(id=payload.pop('id'))
         if cmd.type == 'update':
             await instance.update_from_dict(payload)
+            await instance.save()
         if cmd.type == 'delete':
             await instance.delete()
+
+    return await get_luck_perms_config()

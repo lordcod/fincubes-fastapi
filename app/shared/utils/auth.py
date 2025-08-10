@@ -8,7 +8,7 @@ from app.models.user.user import User
 from app.schemas.auth.auth import TokenResponse, UserLogin
 from typing import Generic, TypeVar
 
-from app.shared.utils.tokens import LoginTokenManager, TokenManager
+from app.shared.utils.token_manager import LoginTokenManager, TokenManager
 
 T = TypeVar('T', bound='UserLogin')
 
