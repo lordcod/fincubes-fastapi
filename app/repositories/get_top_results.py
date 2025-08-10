@@ -35,6 +35,7 @@ async def get_top_results(
         min_age=min_age,
         max_age=max_age,
         season=season,
+        current_season=current_season,
         offset=offset,
         limit=limit,
     )
