@@ -7,6 +7,8 @@ from fastapi.security.base import SecurityBase
 from app.core.errors import APIError, ErrorCode
 from app.core.security.schema import TokenType, ApiKeySecurityModel
 from app.core.security.deps.base_auth import BaseAuthSecurity, BaseGetToken, BaseResolveEntity, HTTPGetToken
+from app.models.tokens.refresh_tokens import RefreshToken
+from app.models.tokens.sessions import Session
 from app.models.user.user import User
 
 
@@ -31,6 +33,12 @@ class CookieRefreshGetToken(BaseGetToken):
         return token
 
 
+class SessionResolveEntity(BaseResolveEntity[Session]):
+    async def resolve_entity(self, payload: dict) -> Session:
+        refresh = await RefreshToken.filter(access_id=payload['jti']).prefetch_related('session').first()
+        return refresh.session
+
+
 class UserResolveEntity(BaseResolveEntity[User]):
     async def resolve_entity(self, payload: dict) -> User:
         id = payload.get("sub")
@@ -41,3 +49,8 @@ class UserResolveEntity(BaseResolveEntity[User]):
         if not user:
             raise APIError(ErrorCode.USER_NOT_FOUND)
         return user
+
+
+class PayloadResolveEntity(BaseResolveEntity[dict]):
+    async def resolve_entity(self, payload: dict) -> dict:
+        return payload
