@@ -16,6 +16,7 @@ class RefreshToken(Model):
     expires_at = fields.DatetimeField()
     revoked_at = fields.DatetimeField(null=True)
     grace_until = fields.DatetimeField(null=True)
+    request_info = fields.JSONField(null=True)
 
     class Meta:
         table = "refresh_tokens"

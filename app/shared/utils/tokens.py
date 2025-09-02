@@ -7,6 +7,7 @@ from tortoise.transactions import in_transaction
 from jwtifypy import JWTManager
 from app.models import RefreshToken, Session, User
 from app.shared.utils.scopes.combine import combine_all_scopes, flatten_scopes
+from app.shared.utils.session import get_session_info
 
 REFRESH_EXPIRES_IN = datetime.timedelta(days=7)
 ACCESS_EXPIRES_IN = datetime.timedelta(minutes=15)
@@ -18,6 +19,7 @@ class TokenManager:
         self.manager = JWTManager.with_issuer(
             request.url.path).with_audience("auth")
         self.fresh = fresh
+        self.session_info = get_session_info(request)
 
     @abstractmethod
     async def get_session(self, user: User, using_db: BaseDBAsyncClient) -> Session:
@@ -50,7 +52,8 @@ class TokenManager:
             session=session,
             issued_at=now,
             expires_at=now + REFRESH_EXPIRES_IN,
-            using_db=using_db
+            using_db=using_db,
+            request_info=self.session_info
         )
 
     def create_refresh_token(
