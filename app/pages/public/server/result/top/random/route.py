@@ -1,7 +1,7 @@
 import random
 import logging
 from datetime import date, datetime
-
+from typing import Optional
 from fastapi import APIRouter
 
 from app.models.competition.result import Result
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.get("/", response_model=RandomTop)
+@router.get("/", response_model=Optional[RandomTop])
 @require_scope('top.random:read')
 async def get_random_top():
     current_year = datetime.now().year
@@ -43,9 +43,8 @@ async def get_random_top():
         filters["competition__start_date__lte"] = date(season_year + 1, 8, 31)
         filters["athlete__gender"] = gender
 
-        results = await Result.filter(**filters)
-
-        if len(results) >= 3:
+        results = await Result.filter(**filters).count()
+        if results >= 3:
             logger.info(
                 "Results found for combination: style=%s, gender=%s, category=%s",
                 style, gender, category
