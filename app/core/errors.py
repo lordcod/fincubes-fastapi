@@ -114,6 +114,10 @@ class ErrorCode(Enum):
         3013, "Связь с тренером не найдена", 404)
     ALREADY_ADDED_ATHLETE = ErrorInfo(3014, "Атлет уже добавлен", 400)
     INVALID_ROLE = ErrorInfo(3015, "Неверная роль", 403)
+    SESSION_SELF_REVOKE = ErrorInfo(3016, "Нельзя отозвать текущую сессию")
+    SESSION_NOT_FOUND = ErrorInfo(3005, "Сессия не найдена", 404)
+    SESSION_REVOKE_COOLDOWN = ErrorInfo(
+        1002, "Сессию пока нельзя отзывать — подождите немного.")
 
     # 4xxx — Внутренние ошибки / внешние сервисы
     SEND_EMAIL_EXCEPTION = ErrorInfo(
