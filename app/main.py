@@ -1,3 +1,4 @@
+from enum import StrEnum
 import logging
 import os
 from pathlib import Path
@@ -17,7 +18,12 @@ PAGES_DIR = Path(os.getcwd()) / 'app' / 'pages'
 _log = logging.getLogger(__name__)
 
 
-def create_app(env_mode: str = 'dev') -> FastAPI:
+class EnvMode(StrEnum):
+    DEV = 'dev'
+    PROD = 'prod'
+
+
+def create_app(env_mode: str = EnvMode.DEV) -> FastAPI:
     app = FastAPI(title="FinCubes API", lifespan=lifespan)
     app.include_router(FileRouter(PAGES_DIR).build())
 
@@ -40,7 +46,7 @@ def start():
     setup_logging()
     _log.info("[PROD] Starting FinCubes API...")
     uvicorn.run(
-        create_app(env_mode='prod'),
+        create_app(env_mode=EnvMode.PROD),
         host="0.0.0.0",
         port=8000,
         # ssl_keyfile="localhost-key.pem" if sys.platform == "win32" else None,
