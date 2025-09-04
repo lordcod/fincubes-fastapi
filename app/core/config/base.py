@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     AWS_KEY_ID: str
     AWS_SECRET_KEY: str
     BUCKET_NAME: str
-    TURNSTILE_SECRET_KEY: str
+    HCAPTCHA_SECRET_KEY: str
     SENTRY_DNS: Optional[str] = None
     ALGORITHM: str = "HS256"
     POW_BITS: int = 8

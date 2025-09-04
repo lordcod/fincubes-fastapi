@@ -7,7 +7,8 @@ ROOT_PATH = Path('app/')
 SQL_PATH_FOLDER = ROOT_PATH / 'sql'
 TEMPLATES_PATH_FOLDER = ROOT_PATH / 'templates'
 env = Environment(loader=FileSystemLoader(TEMPLATES_PATH_FOLDER),
-                  autoescape=select_autoescape())
+                  autoescape=select_autoescape(),
+                  enable_async=True)
 
 
 async def get_template(name: str, context: Optional[dict] = None, **kwargs):

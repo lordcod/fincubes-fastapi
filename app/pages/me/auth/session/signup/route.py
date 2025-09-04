@@ -1,10 +1,5 @@
 from datetime import timedelta
-from urllib.parse import urlparse
 from fastapi import APIRouter, Request, Response
-from jwtifypy import JWTManager
-
-from app.core.errors import APIError, ErrorCode
-from app.integrations.cloudflare import check_verification
 from app.models.user.user import User
 from app.schemas.auth.auth import TokenResponse, UserCreate
 from app.shared.utils.auth import AuthRepository
