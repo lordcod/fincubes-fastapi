@@ -3,7 +3,7 @@ from datetime import timedelta
 from urllib.parse import urlparse
 from fastapi import APIRouter, Request, Response
 from app.core.errors import APIError, ErrorCode
-from app.integrations.cloudflare import check_verification
+from app.integrations.captcha import check_verification
 from app.models.user.user import User
 from app.schemas.auth.auth import TokenResponse, UserLogin
 from typing import Generic, TypeVar
