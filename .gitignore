@@ -188,3 +188,4 @@ migrations/
 localhost-key.pem
 localhost.pem
 .vscode
+yandex-secret-key.json
