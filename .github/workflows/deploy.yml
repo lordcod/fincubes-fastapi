@@ -72,6 +72,7 @@ jobs:
           AWS_KEY_ID: ${{ secrets.AWS_KEY_ID }}
           AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
           BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
+          YANDEX_CDN_RESOURCE_ID: ${{ secrets.YANDEX_CDN_RESOURCE_ID }}
           DATABASE_URL: postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}
           REDIS_URL: redis://@localhost:${{ job.services.redis.ports[6379] }}
           SECRET_KEY: your-256-bit-secret
