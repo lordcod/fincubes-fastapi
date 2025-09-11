@@ -59,6 +59,6 @@ class YandexIAM:
 
     async def get_token(self) -> str:
         """Возвращает актуальный IAM-токен. Обновляет при необходимости."""
-        if not self._iam_token or datetime.now() >= self._expires_at:
+        if not self._iam_token or datetime.now(timezone.utc) >= self._expires_at:
             await self._update_token()
         return self._iam_token
