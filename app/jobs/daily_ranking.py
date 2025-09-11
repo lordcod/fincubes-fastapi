@@ -1,12 +1,12 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from app.repositories.ratings import update_ratings
-from app.shared.clients.redis import client
+from app.shared.clients.mongodb import db
 
 scheduler = AsyncIOScheduler()
 
 
 async def daily_task():
-    await update_ratings(client)
+    await update_ratings(db['ranking'])
 
 
 def start_scheduler():
