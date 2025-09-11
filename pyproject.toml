@@ -43,6 +43,7 @@ python-jose = {extras = ["cryptography"], version = "^3.5.0"}
 jwtifypy = "^0.2.0"
 sqlalchemy = "^2.0.42"
 user-agents = "^2.2.0"
+motor = "^3.7.1"
 
 [tool.poetry.group.dev.dependencies]
 typer = {extras = ["all"], version = "^0.16.0"}
