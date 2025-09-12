@@ -1,13 +1,13 @@
 import logging
 from collections import defaultdict
 from datetime import time
-
-import redis.asyncio as redis
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection
 
 from app.repositories.get_top_results import get_top_results
 from app.schemas.results.top import parse_best_full_result
 from app.shared.cache.redis_compressed import RedisCachePickleCompressed
 from app.shared.utils.metadata import categories
+from pymongo import UpdateOne
 
 _log = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ def as_duration(result: time):
 
 
 async def get_rank(
-    client: redis.Redis, gender: str, stroke: str, distance: int, result_time: time
+    client: AsyncIOMotorCollection, gender: str, stroke: str, distance: int, result_time: time
 ):
     result = as_duration(result_time)
 
@@ -41,7 +41,7 @@ async def get_rank(
     return rank + 1
 
 
-async def update_ratings(client: redis.Redis):
+async def update_ratings(collection: AsyncIOMotorCollection):
     _log.info("Starting athlete rankings update")
 
     athlete_results = defaultdict(lambda: defaultdict(list))
@@ -57,20 +57,25 @@ async def update_ratings(client: redis.Redis):
                                             current_season=season)
             results = [parse_best_full_result(res) for res in results]
             for top in results:
-                athlete_results[top.athlete.id][season_str + ':' + category['id']
-                                                ].append(top.model_dump())
+                athlete_results[top.athlete.id][
+                    season_str + ':' + category['id']].append(
+                    top.model_dump(mode='json')
+                )
     _log.info("Collected results for %d athletes", len(athlete_results))
 
-    pipe = client.pipeline()
-    cache = RedisCachePickleCompressed(pipe)
-    for athlete_id, results in athlete_results.items():
-        cache_key = f"athlete:ranking:{athlete_id}"
-        await cache.set(cache_key, dict(results))
-    await pipe.execute()
+    operations = [
+        UpdateOne(
+            {"_id": athlete_id},
+            {"$set": {"rankings": dict(rankings)}},
+            upsert=True
+        )
+        for athlete_id, rankings in athlete_results.items()
+    ]
+
+    await collection.bulk_write(operations)
     _log.info("Saved ranking results for athletes")
 
 
-async def get_ratings(client: redis.Redis, id: int):
-    cache = RedisCachePickleCompressed(client)
-    cache_key = f"athlete:ranking:{id}"
-    return await cache.get(cache_key)
+async def get_ratings(collection: AsyncIOMotorCollection, id: int):
+    doc = await collection.find_one({"_id": id})
+    return doc["rankings"] if doc else {}

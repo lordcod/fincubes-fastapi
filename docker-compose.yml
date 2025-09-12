@@ -12,17 +12,17 @@ services:
       - PYTHONUNBUFFERED=1
       - REDIS_URL=redis://redis:6379/0
       - DATABASE_URL=asyncpg://postgres:postgres@postgres:5432/postgres
+      - MONGODB_URL=mongodb://mongo:27017/fincubes_db
     depends_on:
       - redis
       - postgres
+      - mongo
     command: poetry run start
-
   redis:
     image: redis:8-alpine
     restart: unless-stopped
     ports:
-      - "16379:6379" 
-
+      - "6379:6379" 
   postgres:
     image: postgres:17-alpine
     restart: unless-stopped
@@ -33,7 +33,15 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
-      - "15432:5432"
+      - "5432:5432"
+  mongo:
+    image: mongo:7.0
+    restart: unless-stopped
+    volumes:
+      - mongodata:/data/db
+    ports:
+      - "27017:27017"
 
 volumes:
   pgdata:
+  mongodata:

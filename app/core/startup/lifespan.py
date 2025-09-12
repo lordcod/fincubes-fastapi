@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from app.jobs.daily_ranking import shutdown_scheduler, start_scheduler
 from app.jobs.fix_resolved_time_column import fix_resolved_time_column
 from app.shared.clients import session
-from app.shared.clients.redis import client, settings
+from app.shared.clients import redis, mongodb
 
 _log = logging.getLogger(__name__)
 
@@ -19,13 +19,17 @@ async def lifespan(app: FastAPI):
     _log.info('Create db column...')
     await fix_resolved_time_column()
 
-    _log.debug("Pinging Redis %s...", settings.REDIS_URL)
-    await client.ping()
-    app.state.redis = client
+    await redis.client.ping()
+    app.state.redis = redis.client
     _log.info("Connected to Redis.")
 
     _log.debug("Creating aiohttp session...")
     session.session = aiohttp.ClientSession()
+
+    await mongodb.client.admin.command('ping')
+    app.state.mongodb_client = mongodb.client
+    app.state.mongodb_db = mongodb.db
+    _log.info("Connected to MongoDB.")
 
     _log.debug("Starting scheduler...")
     start_scheduler()
@@ -35,7 +39,10 @@ async def lifespan(app: FastAPI):
     _log.info("Shutting down application...")
 
     _log.debug("Closing Redis...")
-    await client.aclose()
+    await redis.client.aclose()
+
+    _log.debug("Closing MongoDB...")
+    mongodb.client.close()
 
     _log.debug("Closing aiohttp session...")
     await session.session.close()

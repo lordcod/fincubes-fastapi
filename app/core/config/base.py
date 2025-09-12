@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     BUCKET_NAME: str
     HCAPTCHA_SECRET_KEY: str
     YANDEX_CDN_RESOURCE_ID: str
+    MONGO_URL: str
+    MONGO_DB_NAME: str
     SENTRY_DNS: Optional[str] = None
     ALGORITHM: str = "HS256"
     POW_BITS: int = 8
