@@ -5,6 +5,7 @@ on:
     branches: ["main"]
   pull_request:
     branches: ["main"]
+
 env:
   registry: my_registry_name
   DB_HOST: localhost
@@ -29,6 +30,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+
       redis:
         image: redis
         ports:
@@ -39,6 +41,16 @@ jobs:
           --health-timeout 5s
           --health-retries 5
           --entrypoint redis-server
+
+      mongo:
+        image: mongo:7.0
+        ports:
+          - 27017/tcp
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - uses: actions/checkout@v2
@@ -59,7 +71,7 @@ jobs:
       - name: Build app
         run: poetry build
 
-      - name: Run app
+      - name: Run tests
         run: |
           poetry run pytest tests
         env:
@@ -75,13 +87,15 @@ jobs:
           YANDEX_CDN_RESOURCE_ID: ${{ secrets.YANDEX_CDN_RESOURCE_ID }}
           DATABASE_URL: postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}
           REDIS_URL: redis://@localhost:${{ job.services.redis.ports[6379] }}
+          MONGO_URL: mongodb://localhost:${{ job.services.mongo.ports[27017] }}
+          MONGO_DB_NAME: fincubes_db
           SECRET_KEY: your-256-bit-secret
 
       - name: Deploy using ssh
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.SERVER_HOST  }}
-          username: ${{ secrets.SERVER_USER  }}
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 22
           script: |
