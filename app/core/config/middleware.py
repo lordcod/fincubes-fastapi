@@ -4,7 +4,8 @@ from pydantic_settings import BaseSettings
 
 
 class MiddlewareSettings(BaseSettings):
-    dev_origins: List[str] = ["http://localhost:3000"]
+    dev_origins: List[str] = ["http://localhost:3000",
+                              "http://localhost:3001",]
     prod_origins: List[str] = [
         "https://fincubes.ru",
         "https://dev.fincubes.ru",
@@ -14,6 +15,7 @@ class MiddlewareSettings(BaseSettings):
         "http://localhost:5173",
         "http://localhost:4173",
         "http://localhost:3000",
+        "http://localhost:3001",
     ]
 
     dev_hosts: List[str] = ["*"]

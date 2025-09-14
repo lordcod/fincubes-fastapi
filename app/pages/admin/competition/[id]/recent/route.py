@@ -26,5 +26,8 @@ async def add_recent_event(id: int):
 )
 @require_scope('competition.recent:delete')
 async def delete_recent_event(id: int):
-    recent_event = await RecentEvent.get(id=id)
+    competition = await Competition.get(id=id)
+    recent_event = await RecentEvent.filter(competition=competition).first()
+    if recent_event is None:
+        return
     await recent_event.delete()

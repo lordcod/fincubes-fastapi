@@ -11,7 +11,9 @@ from app.shared.utils.flexible_time import FlexibleTime
 
 ResultDepth0_Pydantic = create_pydantic_model(Result)
 ResultIn_Pydantic = with_nested(
-    create_pydantic_model(Result, exclude_readonly=True))
+    create_pydantic_model(Result, exclude_readonly=True,
+                          exclude=('resolved_time', ))
+)
 Result_Pydantic = with_nested(
     create_pydantic_model(Result),
     athlete=Athlete_Pydantic,

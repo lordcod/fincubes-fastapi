@@ -4,7 +4,8 @@ from typing import Optional
 
 from tortoise import Tortoise
 
-from app.repositories.temp import build_top_results_query, compile_query_with_dollar_params
+from app.repositories.sa.top_results import build_top_results_query
+from app.repositories.sa.utils import compile_query_with_dollar_params
 from app.shared.cache.redis_compressed import RedisCachePickleCompressed
 from app.shared.clients.redis import client
 

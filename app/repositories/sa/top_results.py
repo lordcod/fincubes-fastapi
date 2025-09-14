@@ -1,42 +1,12 @@
 from typing import Any, Optional
 from sqlalchemy import (
-    CTE, Table, Integer, select, and_, func, cast, text, MetaData
+    CTE, Table, Integer, select, and_, func, cast, text
 )
 from sqlalchemy.sql.functions import dense_rank
 from datetime import date
 from sqlalchemy.dialects import postgresql
-
-from app.models.athlete.athlete import Athlete
-from app.models.competition.competition import Competition
-from app.models.competition.result import Result
-from app.sql.utils import tortoise_model_to_sqlalchemy_table
-
-
-metadata = MetaData()
-results = tortoise_model_to_sqlalchemy_table(Result)
-athletes = tortoise_model_to_sqlalchemy_table(Athlete)
-competitions = tortoise_model_to_sqlalchemy_table(Competition)
-
-
-def label_columns(table_or_cte: Table | CTE, prefix: str, include: Optional[set[str]] = None, exclude: Optional[set[str]] = None):
-    columns = []
-    for col in table_or_cte.c:
-        if include and col.name not in include:
-            continue
-        if exclude and col.name in exclude:
-            continue
-        columns.append(col.label(f"{prefix}_{col.name}"))
-    return columns
-
-
-def prepare_columns(base_model, fields: dict[str, Any], prefix: str):
-    filtered = {}
-    prefix_with_underscore = f'{prefix}_'
-    for name, value in fields.items():
-        if name.startswith(prefix_with_underscore):
-            trimmed = name[len(prefix_with_underscore):]
-            filtered[trimmed] = value
-    return base_model(**filtered)
+from app.repositories.sa.models import athletes, results, competitions
+from app.repositories.sa.utils import prepare_columns, label_columns
 
 
 def build_top_results_query(
@@ -44,6 +14,7 @@ def build_top_results_query(
     stroke: Optional[str] = None,
     gender: Optional[str] = None,
     limit: Optional[int] = None,
+
     offset: Optional[int] = None,
     min_age: Optional[int] = None,
     max_age: Optional[int] = None,
@@ -146,17 +117,3 @@ def build_top_results_query(
         query = query.limit(limit)
 
     return query
-
-
-def compile_query_with_dollar_params(query):
-    compiled = query.compile(dialect=postgresql.dialect(), compile_kwargs={
-                             "literal_binds": False})
-    sql = str(compiled)
-    params = compiled.params
-    param_map = {name: f"${i+1}" for i, name in enumerate(params.keys())}
-
-    for name, dollar in param_map.items():
-        sql = sql.replace(f"%({name})s", dollar)
-
-    param_values = params.values()
-    return sql, list(param_values)

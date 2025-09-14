@@ -1,5 +1,5 @@
 
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends
 
@@ -14,5 +14,11 @@ router = APIRouter(tags=['Public/Server/Event'])
 
 @router.get("/", response_model=List[Competition_Pydantic])
 @require_scope('competition:read')
-async def get_competitions():
-    return await Competition.all().order_by("-start_date")
+async def get_competitions(limit: Optional[int] = None, offset: Optional[int] = None):
+    query = Competition.all().order_by("-start_date")
+
+    if limit is not None:
+        query = query.limit(limit)
+    if offset is not None:
+        query = query.offset(offset)
+    return await query
