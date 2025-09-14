@@ -9,4 +9,4 @@ class UserRole(TimestampedModel):
     id = fields.IntField(primary_key=True)
     role_type = fields.CharEnumField(enum_type=UserRoleEnum)
     profile_id = fields.IntField()
-    user: User = fields.ForeignKeyField("models.User", related_name="roles")
+    user: User = fields.OneToOneField("models.User", related_name="roles")
