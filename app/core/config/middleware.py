@@ -6,6 +6,7 @@ from pydantic_settings import BaseSettings
 class MiddlewareSettings(BaseSettings):
     dev_origins: List[str] = ["http://localhost:3000",
                               "http://localhost:3001",]
+    prod_origin_regex: str = r"^(https?:\/\/(.+\.)?fincubes\.ru|https?:\/\/(.+\.)?vercel\.app|http:\/\/localhost(:[0-9]{1,5})?)$"
     prod_origins: List[str] = [
         "https://fincubes.ru",
         "https://dev.fincubes.ru",
@@ -25,6 +26,8 @@ class MiddlewareSettings(BaseSettings):
         "127.0.0.1",
         "fincubes.ru",
         "*.fincubes.ru",
+        "vercel.com",
+        "*.vercel.com"
     ]
 
     local_server: dict = {
