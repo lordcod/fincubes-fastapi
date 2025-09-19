@@ -10,7 +10,7 @@ async def daily_task():
 
 
 def start_scheduler():
-    scheduler.add_job(daily_task, "cron", hour=0, minute=0, id="daily_task")
+    scheduler.add_job(daily_task, "cron", hour=15, minute=53, id="daily_task")
     scheduler.start()
 
 

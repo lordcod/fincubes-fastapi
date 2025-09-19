@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from app.models.athlete.athlete import Athlete
 from app.models.competition.competition import Competition
 from app.models.competition.result import Result
-from app.repositories.temp import prepare_columns
+from app.repositories.sa.top_results import prepare_columns
 from app.schemas.athlete.athlete import Athlete_Pydantic
 from app.schemas.competition.competition import Competition_Pydantic
 from app.schemas.results.result import ResultDepth0_Pydantic

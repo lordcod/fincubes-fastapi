@@ -4,6 +4,17 @@ from app.models.athlete.athlete import Athlete
 from app.models.base import TimestampedModel
 from app.models.competition.competition import Competition
 from app.shared.utils.flexible_time import FlexibleTimeField, ReadOnlyFlexibleTimeField
+from enum import StrEnum
+
+
+class Status(StrEnum):
+    EXH = "EXH"
+    DSQ = "DSQ"
+    DSQ_FINAL = "DSQ_FINAL"
+    QUALIFIED = "QUALIFIED"
+    COMPLETED = "COMPLETED"
+    WDR = "WDR"
+    DNF = "DNF"
 
 
 class Result(TimestampedModel):
@@ -22,8 +33,9 @@ class Result(TimestampedModel):
     final_rank = fields.CharField(max_length=50, null=True)
     points = fields.CharField(max_length=50, null=True)
     record = fields.CharField(max_length=255, null=True)
-    dsq_final = fields.BooleanField(default=False)
-    dsq = fields.BooleanField(default=False)
+    # dsq_final = fields.BooleanField(default=False)
+    # dsq = fields.BooleanField(default=False)
+    status = fields.CharField(max_length=20, default='COMPLETED')
 
     class Meta:
         table = "results"

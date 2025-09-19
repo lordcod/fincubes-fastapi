@@ -22,13 +22,13 @@ async def update_result(
     id: int,
     result: ResultIn_Pydantic
 ):
-    db_result = (
-        await Result.get(id=id)
-        .prefetch_related("competition", "athlete")
-    )
+    db_result = await Result.get(id=id)
     if not db_result:
         raise APIError(ErrorCode.RESULT_NOT_FOUND)
-    db_result = await db_result.update_from_dict(result.model_dump())
+
+    data = result.model_dump()
+    db_result.update_from_dict(data)
+    await db_result.save(update_fields=list(data.keys()))
 
     return await Result_Pydantic.from_tortoise_orm(db_result)
 

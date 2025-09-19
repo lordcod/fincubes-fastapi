@@ -26,8 +26,8 @@ async def get_athlete_results(id: int, redis=Depends(get_redis)):
     cache_key = f"performances:{id}"
     cache = RedisCachePickleCompressed(redis)
     cached = await cache.get(cache_key)
-    if cached:
-        return cached
+    # if cached: # TODO DELETE
+    #     return cached
 
     try:
         athlete = await Athlete.get(id=id)

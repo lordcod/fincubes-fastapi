@@ -106,4 +106,14 @@ def test_has_scope():
     assert has_scope([], None) is True
     assert has_scope([], "user:read") is False
 
+    # 21. Требование максимальных прав
+    assert has_scope([], "*") is False
+    assert has_scope(["user:*"], "*") is False
+    assert has_scope(["*"], "*") is True
+
+    # 22. Требование максимальных прав категории
+    assert has_scope([], "user") is False
+    assert has_scope(["user:read"], "user") is False
+    assert has_scope(["user:*"], "user") is True
+
     print("Все объединённые тесты пройдены!")

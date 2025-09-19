@@ -20,13 +20,7 @@ async def update_athlete(id: int, athlete: AthleteIn_Pydantic):
     if not db_athlete:
         raise APIError(ErrorCode.ATHLETE_NOT_FOUND)
 
-    db_athlete.last_name = athlete.last_name
-    db_athlete.first_name = athlete.first_name
-    db_athlete.birth_year = athlete.birth_year
-    db_athlete.club = athlete.club
-    db_athlete.city = athlete.city
-    db_athlete.license = athlete.license
-    db_athlete.gender = athlete.gender
+    db_athlete.update_from_dict(athlete.model_dump())
     await db_athlete.save()
 
     return db_athlete

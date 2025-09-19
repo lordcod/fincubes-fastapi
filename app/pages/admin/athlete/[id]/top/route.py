@@ -27,5 +27,8 @@ async def add_top_athlete(id: int):
 )
 @require_scope('athlete.top:delete')
 async def delete_top_athlete(id: int):
-    top_athlete = await TopAthlete.get(id=id)
+    athlete = await Athlete.get(id=id)
+    top_athlete = await TopAthlete.filter(athlete=athlete).first()
+    if top_athlete is None:
+        return
     await top_athlete.delete()
