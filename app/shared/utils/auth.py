@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-import base64
 from datetime import timedelta
+from hashlib import md5
 from urllib.parse import urlparse
 from fastapi import APIRouter, Request, Response
 from app.core.errors import APIError, ErrorCode
@@ -41,7 +41,7 @@ class SetRefreshToken():
         domain = urlparse(self.request.headers.get("origin")).hostname
         if isinstance(domain, bytes):
             domain = domain.decode()
-        domain_b64 = base64.urlsafe_b64encode(domain.encode()).decode()
+        domain_b64 = md5(domain.encode())
 
         self.response.set_cookie(
             key=f"refresh_token_{domain_b64}",

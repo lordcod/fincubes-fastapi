@@ -1,6 +1,5 @@
-
-import base64
 from datetime import datetime
+from hashlib import md5
 from typing import Generic, TypeVar
 from urllib.parse import urlparse
 from fastapi import Request
@@ -8,7 +7,7 @@ from fastapi.security.base import SecurityBase
 from app.core.security.deps.base_auth import BaseAuthSecurity, BaseGetToken
 from app.core.errors import APIError, ErrorCode
 from app.core.security.deps.base_interfaces import UserResolveEntity
-from app.core.security.schema import TokenType, RefreshSecurityModel
+from app.core.security.schema import TokenType
 from app.models.tokens.refresh_tokens import RefreshToken
 from app.models.tokens.sessions import Session
 from app.models.user.user import User
@@ -21,7 +20,7 @@ class CookieRefreshGetToken(BaseGetToken):
         domain = urlparse(request.headers.get("origin")).hostname
         if isinstance(domain, bytes):
             domain = domain.decode()
-        domain_b64 = base64.urlsafe_b64encode(domain.encode()).decode()
+        domain_b64 = md5(domain.encode())
 
         token = (
             request.cookies.get(f"refresh_token_{domain_b64}")
