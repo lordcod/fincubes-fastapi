@@ -25,14 +25,6 @@ class BaseHTTPAuthSecurity(SecurityBase, BaseAuthSecurity, HTTPGetToken):
             raise APIError(ErrorCode.INVALID_TOKEN, "недопустимая схема")
 
 
-class CookieRefreshGetToken(BaseGetToken):
-    async def get_token(self, request: Request) -> str:
-        token = request.cookies.get("refresh_token")
-        if not token:
-            raise APIError(ErrorCode.INVALID_TOKEN, "отсутствует")
-        return token
-
-
 class SessionResolveEntity(BaseResolveEntity[Session]):
     async def resolve_entity(self, payload: dict) -> Session:
         refresh = await RefreshToken.filter(access_id=payload['jti']).prefetch_related('session').first()
