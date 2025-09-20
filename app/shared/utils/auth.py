@@ -50,8 +50,7 @@ class SetRefreshToken():
             secure=True,
             samesite="none",
             path="/",
-            max_age=7 * 24 * 3600,
-            domain=domain
+            max_age=7 * 24 * 3600
         )
 
 
