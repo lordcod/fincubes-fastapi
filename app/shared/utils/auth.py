@@ -41,7 +41,7 @@ class SetRefreshToken():
         domain = urlparse(self.request.headers.get("origin")).hostname
         if isinstance(domain, bytes):
             domain = domain.decode()
-        domain_b64 = md5(domain.encode())
+        domain_b64 = md5(domain.encode()).hexdigest()
 
         self.response.set_cookie(
             key=f"refresh_token_{domain_b64}",
