@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from urllib.parse import urlparse
 import uuid
 import datetime
 from fastapi import Request
@@ -15,9 +16,12 @@ ACCESS_EXPIRES_IN = datetime.timedelta(minutes=15)
 
 class TokenManager:
     def __init__(self, request: Request, fresh: bool):
+        domain = urlparse(request.headers.get("origin")).hostname
+        if isinstance(domain, bytes):
+            domain = domain.decode()
+
         self.request = request
-        self.manager = JWTManager.with_issuer(
-            request.url.path).with_audience("auth")
+        self.manager = JWTManager.with_issuer(domain).with_audience("auth")
         self.fresh = fresh
         self.session_info = get_session_info(request)
 
