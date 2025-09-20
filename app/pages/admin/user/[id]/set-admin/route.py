@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Body, Depends
 
 from app.core.errors import APIError, ErrorCode
 
@@ -10,7 +10,7 @@ router = APIRouter()
 
 @router.post("/", status_code=204)
 @require_scope('*')
-async def set_admin_status(id: int, value: bool):
+async def set_admin_status(id: int, value: bool = Body(embed=True)):
     user = await User.get_or_none(id=id)
     if not user:
         raise APIError(ErrorCode.USER_NOT_FOUND)
