@@ -23,7 +23,10 @@ class CookieRefreshGetToken(BaseGetToken):
             domain = domain.decode()
         domain_b64 = base64.urlsafe_b64encode(domain.encode()).decode()
 
-        token = request.cookies.get(f"refresh_token_{domain_b64}")
+        token = (
+            request.cookies.get(f"refresh_token_{domain_b64}")
+            or request.cookies.get("refresh_token")
+        )
         if not token:
             raise APIError(ErrorCode.INVALID_TOKEN, "отсутствует")
         return token
