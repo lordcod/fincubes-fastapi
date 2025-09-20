@@ -49,7 +49,7 @@ class SetRefreshToken():
             httponly=True,
             secure=True,
             samesite="none",
-            path="/me/auth/session",
+            path="/",
             max_age=7 * 24 * 3600,
             domain=domain
         )
