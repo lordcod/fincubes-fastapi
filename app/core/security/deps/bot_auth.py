@@ -15,7 +15,7 @@ class BotAuthSecurity(BaseHTTPAuthSecurity, BaseAuthSecurity[Bot]):
     async def resolve_entity(self, payload: dict) -> Bot:
         id = payload.get("sub")
         if id is None:
-            raise APIError(ErrorCode.INVALID_TOKEN)
+            raise APIError(ErrorCode.INVALID_TOKEN, "sub is none")
 
         bot = await Bot.get_or_none(id=id) if isinstance(id, int) else None
         if bot is None:

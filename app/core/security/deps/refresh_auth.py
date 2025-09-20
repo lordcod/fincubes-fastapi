@@ -37,11 +37,11 @@ class RefreshTokenSecurity(RefreshAuthSecurity[RefreshToken]):
             return refresh
 
         if refresh.session.revoked_at:
-            raise APIError(ErrorCode.INVALID_TOKEN)
+            raise APIError(ErrorCode.INVALID_TOKEN, "session revoked")
 
         if refresh.revoked_at:
             await self.revoke_session(refresh.session)
-            raise APIError(ErrorCode.INVALID_TOKEN)
+            raise APIError(ErrorCode.INVALID_TOKEN, "refresh token revoked")
 
         return refresh
 

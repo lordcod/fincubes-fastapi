@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
+from typing import Any, Optional
 
 from fastapi import Request
 from fastapi.exceptions import RequestValidationError
@@ -33,7 +33,7 @@ class ErrorCode(Enum):
         1003, "Попытки истекли, запросите код заново", 400
     )
     ALREADY_VERIFIED = ErrorInfo(1004, "Пользователь уже верифицирован", 400)
-    INVALID_TOKEN = ErrorInfo(1005, "Неверный токен", 403)
+    INVALID_TOKEN = ErrorInfo(1005, "Неверный токен: %s", 403)
     INVALID_TYPE_TOKEN = ErrorInfo(1006, "Неверный тип токена", 403)
     VERIFICATION_FAILED = ErrorInfo(
         1007, "Верификация не пройдена, пройдите её чтобы продолжить", 400
@@ -167,13 +167,13 @@ class ErrorCode(Enum):
 
 
 class APIError(Exception):
-    def __init__(self, error_code: ErrorCode, status_code: Optional[int] = None):
+    def __init__(self, error_code: ErrorCode, *args: Any, status_code: Optional[int] = None):
         self.status_code = (
             error_code.http_status if status_code is None else status_code
         )
         self.error_code = error_code.code
         self.error_name = error_code.name
-        self.message = error_code.message
+        self.message = error_code.message % args
 
 
 error_map = {

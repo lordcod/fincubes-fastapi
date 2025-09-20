@@ -22,14 +22,14 @@ class BaseHTTPAuthSecurity(SecurityBase, BaseAuthSecurity, HTTPGetToken):
     def check_token(self, schema: str, token: str):
         super().check_token(schema, token)
         if schema != self.scheme_type or not token:
-            raise APIError(ErrorCode.INVALID_TOKEN)
+            raise APIError(ErrorCode.INVALID_TOKEN, "недопустимая схема")
 
 
 class CookieRefreshGetToken(BaseGetToken):
     async def get_token(self, request: Request) -> str:
         token = request.cookies.get("refresh_token")
         if not token:
-            raise APIError(ErrorCode.INVALID_TOKEN)
+            raise APIError(ErrorCode.INVALID_TOKEN, "отсутствует")
         return token
 
 
@@ -43,7 +43,7 @@ class UserResolveEntity(BaseResolveEntity[User]):
     async def resolve_entity(self, payload: dict) -> User:
         id = payload.get("sub")
         if id is None:
-            raise APIError(ErrorCode.INVALID_TOKEN)
+            raise APIError(ErrorCode.INVALID_TOKEN, "sub is none")
 
         user = await User.get_or_none(id=id)
         if not user:

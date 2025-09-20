@@ -36,7 +36,8 @@ class BaseDecodeToken:
         except jwt.ExpiredSignatureError as exc:
             raise APIError(ErrorCode.EXPIRED_TOKEN) from exc
         except jwt.PyJWTError as exc:
-            raise APIError(ErrorCode.INVALID_TOKEN) from exc
+            raise APIError(ErrorCode.INVALID_TOKEN,
+                           f"{type(exc).__name__}: {exc}") from exc
         return payload
 
 
@@ -65,7 +66,7 @@ class HTTPGetToken(BaseGetToken):
 
     def check_token(self, schema: str, token: str):
         if not token:
-            raise APIError(ErrorCode.INVALID_TOKEN)
+            raise APIError(ErrorCode.INVALID_TOKEN, "отсутствует")
 
     def parse_authorization_header(
         self,
