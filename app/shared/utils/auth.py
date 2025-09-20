@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import base64
 from datetime import timedelta
 from urllib.parse import urlparse
 from fastapi import APIRouter, Request, Response
@@ -40,9 +41,10 @@ class SetRefreshToken():
         domain = urlparse(self.request.headers.get("origin")).hostname
         if isinstance(domain, bytes):
             domain = domain.decode()
+        domain_b64 = base64.urlsafe_b64encode(domain.encode()).decode()
 
         self.response.set_cookie(
-            key="refresh_token",
+            key=f"refresh_token_{domain_b64}",
             value=refresh_token,
             httponly=True,
             secure=True,
