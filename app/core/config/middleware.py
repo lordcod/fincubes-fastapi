@@ -4,20 +4,9 @@ from pydantic_settings import BaseSettings
 
 
 class MiddlewareSettings(BaseSettings):
-    dev_origins: List[str] = ["http://localhost:3000",
-                              "http://localhost:3001",]
+    dev_origins: List[str] = []
+    prod_origins: List[str] = []
     prod_origin_regex: str = r"^(https?:\/\/(.+\.)?(fincubes\.ru|vercel\.app|localhost(:\d{1,5})?))$"
-    prod_origins: List[str] = [
-        "https://fincubes.ru",
-        "https://dev.fincubes.ru",
-        "https://next.fincubes.ru",
-        "https://fincubes.online",
-        "https://fincubes-nextjs.vercel.app",
-        "http://localhost:5173",
-        "http://localhost:4173",
-        "http://localhost:3000",
-        "http://localhost:3001",
-    ]
 
     dev_hosts: List[str] = ["*"]
     prod_hosts: List[str] = [
@@ -27,7 +16,9 @@ class MiddlewareSettings(BaseSettings):
         "fincubes.ru",
         "*.fincubes.ru",
         "vercel.com",
-        "*.vercel.com"
+        "*.vercel.com",
+        "vercel.app",
+        "*.vercel.app",
     ]
 
     local_server: dict = {
