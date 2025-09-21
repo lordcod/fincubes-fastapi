@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     AWS_KEY_ID: str
     AWS_SECRET_KEY: str
     BUCKET_NAME: str
-    HCAPTCHA_SECRET_KEY: str
+    CAPTCHA_SECRET_KEY: str
     YANDEX_CDN_RESOURCE_ID: str
     MONGO_URL: str
     MONGO_DB_NAME: str

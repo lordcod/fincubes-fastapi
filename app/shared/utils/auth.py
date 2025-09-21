@@ -90,6 +90,6 @@ class AuthRepository(Generic[T], BaseAuthRepository):
         return await super().run()
 
     async def check_verification(self):
-        ts = await check_verification(self.user_login.cf_token)
-        if not ts.success:
+        ts = await check_verification(self.request.client.host, self.user_login.cf_token)
+        if ts.status != "ok":
             raise APIError(ErrorCode.CAPTCHA_FAILED)
