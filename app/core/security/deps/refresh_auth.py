@@ -7,7 +7,7 @@ from fastapi.security.base import SecurityBase
 from app.core.security.deps.base_auth import BaseAuthSecurity, BaseGetToken
 from app.core.errors import APIError, ErrorCode
 from app.core.security.deps.base_interfaces import UserResolveEntity
-from app.core.security.schema import TokenType
+from app.core.security.schema import RefreshSecurityModel, TokenType
 from app.models.tokens.refresh_tokens import RefreshToken
 from app.models.tokens.sessions import Session
 from app.models.user.user import User
@@ -34,6 +34,8 @@ class CookieRefreshGetToken(BaseGetToken):
 class RefreshAuthSecurity(Generic[T], SecurityBase, CookieRefreshGetToken, BaseAuthSecurity[T]):
     def __init__(self):
         super().__init__(TokenType.refresh)
+        self.model = RefreshSecurityModel()
+        self.scheme_name = self.__class__.__name__
 
 
 class RefreshTokenSecurity(RefreshAuthSecurity[RefreshToken]):
