@@ -1,26 +1,26 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional
+from pydantic import BaseModel
+from typing import Optional
 
 from app.core.config import settings
 from app.shared.clients import session
 
 
-class HCaptchaResponse(BaseModel):
-    success: bool
-    challenge_ts: Optional[str] = None
-    hostname: Optional[str] = None
-    error_codes: Optional[List[str]] = Field(default=None, alias="error-codes")
+class CaptchaResponse(BaseModel):
+    status: str
+    message: Optional[str] = None
+    host: Optional[str] = None
 
 
-async def check_verification(hcaptcha_token: str) -> HCaptchaResponse:
-    url = "https://hcaptcha.com/siteverify"
+async def check_verification(ip: str, token: str) -> CaptchaResponse:
+    url = "https://smartcaptcha.yandexcloud.net/validate"
     data = {
-        "secret": settings.HCAPTCHA_SECRET_KEY,
-        "response": hcaptcha_token,
+        "secret": settings.CAPTCHA_SECRET_KEY,
+        "token": token,
+        "ip": ip
     }
 
-    async with session.session.post(url, data=data) as response:
+    async with session.session.get(url, params=data) as response:
         result = await response.json()
-        hcaptcha_result = HCaptchaResponse(**result)
+        hcaptcha_result = CaptchaResponse(**result)
 
     return hcaptcha_result
