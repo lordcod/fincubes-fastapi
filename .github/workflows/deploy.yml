@@ -75,6 +75,7 @@ jobs:
         run: |
           poetry run pytest tests
         env:
+          CAPTCHA_SECRET_KEY: ${{ secrets.CAPTCHA_SECRET_KEY }}
           HCAPTCHA_SECRET_KEY: ${{ secrets.HCAPTCHA_SECRET_KEY }}
           TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
