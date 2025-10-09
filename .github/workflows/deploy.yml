@@ -108,11 +108,10 @@ jobs:
             git checkout main
             git reset --hard origin/main
 
-            poetry install
-
             docker build -t fincubes-fastapi .
-
-            poetry run aerich upgrade
+            
+            source ~/fincubes_venv/bin/activate
+            aerich upgrade
 
             sudo systemctl restart fincubes.service
 
