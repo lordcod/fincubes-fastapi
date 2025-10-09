@@ -15,5 +15,7 @@ class Competition(TimestampedModel):
     start_date = fields.DateField()
     end_date = fields.DateField()
 
+    last_processed_at = fields.DatetimeField(null=True)
+
     class Meta:
         table = "competitions"

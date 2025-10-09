@@ -12,7 +12,9 @@ class Athlete(TimestampedModel):
     city = fields.CharField(max_length=255, null=True)
     license = fields.CharField(max_length=50, null=True)
     gender = fields.CharField(max_length=1)
+
     avatar_url = fields.CharField(max_length=250, null=True)
+    is_top = fields.BooleanField(default=False)
 
     class Meta:
         table = "athletes"
