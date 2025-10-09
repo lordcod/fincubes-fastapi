@@ -48,6 +48,7 @@ motor = "^3.7.1"
 [tool.poetry.group.dev.dependencies]
 typer = {extras = ["all"], version = "^0.16.0"}
 pytest = "^8.2.0"
+aerich = "^0.9.1"
 
 [build-system]
 requires = ["poetry-core"]
@@ -59,6 +60,6 @@ dev = "app.main:dev"
 manage = "tests.manage:app"
 
 [tool.aerich]
-tortoise_orm = "app.services.config.TORTOISE_ORM"
-location = "./migrations"
+tortoise_orm = "app.core.config.tortoise_orm.TORTOISE_ORM"
+location = "./app/migrations"
 src_folder = "./."

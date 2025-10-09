@@ -181,8 +181,6 @@ test_redis.py
 test_record.py
 test_upload_image.py
 test_distribute.py
-migrations/
-
 
 # Keys
 localhost-key.pem
