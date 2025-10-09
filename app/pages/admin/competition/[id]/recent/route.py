@@ -1,9 +1,9 @@
+from datetime import datetime
 from fastapi import APIRouter, Depends
 
 
 from app.models.competition.competition import Competition
-from app.models.competition.recent_event import RecentEvent
-from app.schemas.competition.recent_event import RecentEventOut
+from app.schemas.competition.competition import Competition_Pydantic
 from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter()
@@ -11,13 +11,14 @@ router = APIRouter()
 
 @router.post(
     "/",
-    response_model=RecentEventOut,
+    response_model=Competition_Pydantic,
 )
 @require_scope('competition.recent:create')
 async def add_recent_event(id: int):
     competition = await Competition.get(id=id)
-    event = await RecentEvent.create(competition=competition)
-    return await RecentEventOut.from_tortoise_orm(event)
+    competition.last_processed_at = datetime.now()
+    await competition.save()
+    return await Competition_Pydantic.from_tortoise_orm(competition)
 
 
 @router.delete(
@@ -27,7 +28,5 @@ async def add_recent_event(id: int):
 @require_scope('competition.recent:delete')
 async def delete_recent_event(id: int):
     competition = await Competition.get(id=id)
-    recent_event = await RecentEvent.filter(competition=competition).first()
-    if recent_event is None:
-        return
-    await recent_event.delete()
+    competition.last_processed_at = None
+    await competition.save()

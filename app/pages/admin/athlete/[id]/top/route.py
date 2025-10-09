@@ -3,8 +3,7 @@ from fastapi import APIRouter, Depends
 
 
 from app.models.athlete.athlete import Athlete
-from app.models.athlete.top_athlete import TopAthlete
-from app.schemas.athlete.top_athlete import TopAthleteOut
+from app.schemas.athlete.athlete import Athlete_Pydantic
 from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter()
@@ -12,13 +11,14 @@ router = APIRouter()
 
 @router.post(
     "/",
-    response_model=TopAthleteOut,
+    response_model=Athlete_Pydantic,
 )
 @require_scope('athlete.top:create')
 async def add_top_athlete(id: int):
     athlete = await Athlete.get(id=id)
-    top = await TopAthlete.create(athlete=athlete)
-    return await TopAthleteOut.from_tortoise_orm(top)
+    athlete.is_top = True
+    await athlete.save()
+    return await Athlete_Pydantic.from_tortoise_orm(athlete)
 
 
 @router.delete(
@@ -28,7 +28,5 @@ async def add_top_athlete(id: int):
 @require_scope('athlete.top:delete')
 async def delete_top_athlete(id: int):
     athlete = await Athlete.get(id=id)
-    top_athlete = await TopAthlete.filter(athlete=athlete).first()
-    if top_athlete is None:
-        return
-    await top_athlete.delete()
+    athlete.is_top = False
+    await athlete.save()

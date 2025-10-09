@@ -1,19 +1,21 @@
 
 from typing import List
 
-from fastapi import APIRouter, Body, Depends
+from fastapi import APIRouter
 
 
 from app.models.competition.competition import Competition
-from app.models.competition.recent_event import RecentEvent
-from app.schemas.competition.recent_event import RecentEventOut
+from app.schemas.competition.competition import Competition_Pydantic
 from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter()
 
 
-@router.get("/", response_model=List[RecentEventOut])
+@router.get("/", response_model=List[Competition_Pydantic])
 @require_scope('competition.recent:read')
-async def get_recent_events():
-    query = RecentEvent.all().order_by("-created_at").select_related("competition")
-    return await RecentEventOut.from_queryset(query)
+async def get_recent_events(limit: int = 3):
+    competitions = (
+        Competition.filter(last_processed_at__isnull=False).order_by(
+            "last_processed_at").limit(limit)
+    )
+    return await Competition_Pydantic.from_queryset(competitions)

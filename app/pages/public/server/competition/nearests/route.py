@@ -12,9 +12,10 @@ router = APIRouter()
 
 @router.get("/", response_model=List[Competition_Pydantic])
 @require_scope('competition.nearest:read')
-async def get_competitions_nearests():
+async def get_competitions_nearests(limit: int = 3):
     now = datetime.now()
     competitions = (
-        await Competition.filter(start_date__gte=now).order_by("start_date").limit(3)
+        Competition.filter(start_date__gte=now).order_by(
+            "start_date").limit(limit)
     )
-    return competitions
+    return await Competition_Pydantic.from_queryset(competitions)

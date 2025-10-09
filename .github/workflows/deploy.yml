@@ -101,10 +101,19 @@ jobs:
           port: 22
           script: |
             set -e
+
             cd ~/fincubes
+
             git fetch origin main
             git checkout main
             git reset --hard origin/main
+
+            poetry install
+
             docker build -t fincubes-fastapi .
+
+            poetry run aerich upgrade
+
             sudo systemctl restart fincubes.service
+
             echo "Deployment completed successfully"
