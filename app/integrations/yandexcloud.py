@@ -91,3 +91,85 @@ async def delete_file(*, url: Optional[str] = None, object_path: Optional[str] =
 
     await cloud_request("DELETE", object_path)
     return True
+
+
+async def copy_file(
+    source_path: Optional[str] = None,
+    target_path: Optional[str] = None,
+    source_url: Optional[str] = None,
+    target_url: Optional[str] = None,
+) -> str:
+    """
+    Скопировать объект внутри S3-хранилища.
+    Можно передавать пути или URL.
+    Возвращает CDN-URL нового (целевого) объекта.
+    """
+    if source_path is not None and source_url is not None:
+        raise ValueError("Provide only one of source_path or source_url")
+    if target_path is not None and target_url is not None:
+        raise ValueError("Provide only one of target_path or target_url")
+
+    if source_path is None:
+        if source_url is None:
+            raise ValueError(
+                "Either source_path or source_url must be provided")
+        source_path = extract_object_path(source_url)
+        if source_path is None:
+            raise CloudError(
+                f"Cannot extract object path from source_url: {source_url}")
+
+    if target_path is None:
+        if target_url is None:
+            raise ValueError(
+                "Either target_path or target_url must be provided")
+        target_path = extract_object_path(target_url)
+        if target_path is None:
+            raise CloudError(
+                f"Cannot extract object path from target_url: {target_url}")
+
+    url = make_cloud_url(target_path)
+
+    request = AWSRequest(
+        method="PUT",
+        url=url,
+        headers={"x-amz-copy-source": f"/{settings.BUCKET_NAME}/{source_path}"}
+    )
+
+    SigV4Auth(credentials, "s3", "ru-central1").add_auth(request)
+
+    async with session.session.put(url, headers=dict(request.headers)) as response:
+        if response.status >= 400:
+            text = await response.text()
+            raise CloudError(f"Copy failed: {response.status} {text}")
+
+    return make_cdn_url(target_path)
+
+
+async def rename_file(
+    source_path: Optional[str] = None,
+    target_path: Optional[str] = None,
+    source_url: Optional[str] = None,
+    target_url: Optional[str] = None,
+) -> str:
+    """
+    Переименовать объект (копирование + удаление исходного).
+    Можно передавать пути или URL.
+    Возвращает CDN-URL нового объекта.
+    """
+    new_url = await copy_file(
+        source_path=source_path,
+        target_path=target_path,
+        source_url=source_url,
+        target_url=target_url,
+    )
+
+    if source_path is None:
+        if source_url is None:
+            raise ValueError(
+                "Either source_path or source_url must be provided")
+        source_path = extract_object_path(source_url)
+        if source_path is None:
+            raise CloudError(
+                f"Cannot extract object path from source_url: {source_url}")
+    await delete_file(object_path=source_path)
+    return new_url

@@ -16,6 +16,6 @@ router = APIRouter()
 async def get_recent_events(limit: int = 3):
     competitions = (
         Competition.filter(last_processed_at__isnull=False).order_by(
-            "last_processed_at").limit(limit)
+            "-last_processed_at").limit(limit)
     )
     return await Competition_Pydantic.from_queryset(competitions)
