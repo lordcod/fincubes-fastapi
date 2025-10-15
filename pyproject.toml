@@ -44,6 +44,7 @@ jwtifypy = "^0.2.0"
 sqlalchemy = "^2.0.42"
 user-agents = "^2.2.0"
 motor = "^3.7.1"
+psycopg2-binary = "^2.9.11"
 
 [tool.poetry.group.dev.dependencies]
 typer = {extras = ["all"], version = "^0.16.0"}

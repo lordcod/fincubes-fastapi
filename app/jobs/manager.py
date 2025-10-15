@@ -16,8 +16,14 @@ scheduler = AsyncIOScheduler(jobstores=jobstores, timezone="Europe/Moscow")
 
 def start_scheduler():
     """Start scheduler and add static jobs."""
-    scheduler.add_job(daily_task, "cron", hour=0,
-                      minute=0, id="daily_task")
+    scheduler.add_job(
+        daily_task,
+        trigger="cron",
+        hour=0,
+        minute=0,
+        id="daily_task",
+        replace_existing=True,
+    )
     scheduler.start()
     _log.info("Scheduler started")
 
@@ -27,7 +33,7 @@ def shutdown_scheduler():
     _log.info("Scheduler stopped")
 
 
-def schedule_user_deletion(user_id: int, hours_delay: int = 8):
+def schedule_user_deletion(user_id: int, hours_delay: int | float = 8):
     """Schedule deletion of unverified user."""
     run_date = datetime.now() + timedelta(hours=hours_delay)
     scheduler.add_job(

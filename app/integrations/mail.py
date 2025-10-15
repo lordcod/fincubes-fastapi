@@ -53,3 +53,29 @@ async def send_reset_password(email: str, user_id: int, token: str):
         body_text=text,
         body_html=html,
     )
+
+
+async def send_warn_unverified(email: str, hours_delay: int):
+    """
+    Send warning email to user that their account will be deleted
+    if not verified within `hours_delay` hours.
+    """
+    html = await get_template(
+        "mail_warn_confirm.html",
+        hours_delay=hours_delay
+    )
+
+    text = (
+        f"Аккаунт будет удалён через {hours_delay} часов.\n\n"
+        f"Внимание! Ваш аккаунт FinCubes ещё не подтверждён.\n\n"
+        f"Чтобы подтвердить email, перейдите по ссылке:\n"
+        f"https://fincubes.ru/confirm\n\n"
+        f"Если вы уже подтвердили почту или хотите удалить аккаунт, просто проигнорируйте это письмо."
+    )
+
+    await send_email(
+        to_email=email,
+        subject="⚠️ Подтвердите почту — FinCubes",
+        body_text=text,
+        body_html=html,
+    )
