@@ -49,6 +49,7 @@ motor = "^3.7.1"
 typer = {extras = ["all"], version = "^0.16.0"}
 pytest = "^8.2.0"
 aerich = "^0.9.1"
+transliterate = "^1.10.2"
 
 [build-system]
 requires = ["poetry-core"]

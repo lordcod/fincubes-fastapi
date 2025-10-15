@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 import aiohttp
 from fastapi import FastAPI
 
-from app.jobs.daily_ranking import shutdown_scheduler, start_scheduler
+from app.jobs.manager import shutdown_scheduler, start_scheduler
 from app.jobs.fix_resolved_time_column import fix_resolved_time_column
 from app.shared.clients import session
 from app.shared.clients import redis, mongodb

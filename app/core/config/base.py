@@ -9,6 +9,7 @@ load_dotenv(override=True)
 class Settings(BaseSettings):
     REDIS_URL: str
     DATABASE_URL: str
+    DATABASE_URL_JOBS: str
     SECRET_KEY: str
     SMTP_HOST: str
     SMTP_PORT: int
