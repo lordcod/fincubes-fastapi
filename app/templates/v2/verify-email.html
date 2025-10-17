@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      .container {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      .header {
+        background-color: #0094f0;
+        padding: 24px 32px;
+        color: white;
+      }
+
+      .header-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .logo-wrapper {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .logo {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .title {
+        font-size: 24px;
+        font-weight: bold;
+        margin: 0;
+      }
+
+      .subtitle {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 14px;
+        margin: 0;
+      }
+
+      .email-content {
+        padding: 40px 32px;
+      }
+
+      .email-title {
+        font-size: 30px;
+        font-weight: bold;
+        color: #1a202c;
+        margin-bottom: 16px;
+        text-wrap: balance;
+      }
+
+      .email-text {
+        font-size: 18px;
+        color: #4a5568;
+        line-height: 1.625;
+        margin-bottom: 24px;
+      }
+
+      .verification-card {
+        background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);
+        border-radius: 12px;
+        padding: 32px;
+        margin-bottom: 24px;
+        border-left: 4px solid #fdd953;
+        text-align: center;
+      }
+
+      .verification-label {
+        color: #4a5568;
+        margin-bottom: 12px;
+        font-weight: 600;
+      }
+
+      .code-container {
+        background-color: white;
+        border-radius: 8px;
+        padding: 16px 24px;
+        display: inline-block;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      }
+
+      .verification-code {
+        font-size: 36px;
+        font-weight: bold;
+        color: #0094f0;
+        letter-spacing: 0.1em;
+        font-family: monospace;
+      }
+
+      .code-expiry {
+        font-size: 14px;
+        color: #6b7280;
+        margin-top: 12px;
+      }
+
+      .button-section {
+        text-align: center;
+        margin-bottom: 24px;
+      }
+
+      .button-description {
+        color: #4a5568;
+        margin-bottom: 16px;
+      }
+
+      .verify-button {
+        display: inline-block;
+        background-color: #0094f0;
+        color: white;
+        font-weight: bold;
+        padding: 16px 32px;
+        border-radius: 12px;
+        text-decoration: none;
+        transition: background-color 0.2s, box-shadow 0.2s;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      }
+
+      .verify-button:hover {
+        background-color: #0077c2;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      }
+
+      .important-note {
+        background-color: #eff6ff;
+        border-radius: 8px;
+        padding: 16px;
+        border: 1px solid #bfdbfe;
+      }
+
+      .note-text {
+        font-size: 14px;
+        color: #4a5568;
+        margin: 0;
+      }
+
+      .footer-text {
+        color: #718096;
+        font-size: 14px;
+        text-align: center;
+      }
+
+      .footer {
+        background-color: #1a202c;
+        padding: 32px;
+        color: white;
+      }
+
+      .footer-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 24px;
+      }
+
+      .footer-logo-wrapper {
+        width: 40px;
+        height: 40px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .footer-logo {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .footer-title {
+        font-weight: bold;
+      }
+
+      .footer-subtitle {
+        font-size: 14px;
+        color: #a0aec0;
+      }
+
+      .footer-content {
+        border-top: 1px solid #4a5568;
+        padding-top: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .contact-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+      }
+
+      .contact-icon {
+        width: 16px;
+        height: 16px;
+        color: #fdd953;
+      }
+
+      .contact-link {
+        color: #d1d5db;
+        text-decoration: none;
+      }
+
+      .contact-link:hover {
+        color: white;
+      }
+
+      .copyright {
+        font-size: 12px;
+        color: #6b7280;
+        padding-top: 16px;
+      }
+
+      .copyright-note {
+        margin-top: 4px;
+      }
+    </style>
+  </head>
+  <body class="container">
+    <div class="header">
+      <div class="header-content">
+        <div class="logo-wrapper">
+          <svg
+            width="1024"
+            height="1024"
+            viewBox="0 0 1024 1024"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle cx="512" cy="512" r="512" fill="#0094F0" />
+            <rect
+              width="194.18"
+              height="194.18"
+              transform="matrix(0.866025 -0.5 0.866025 0.5 512 309.09)"
+              fill="#FDD953"
+            />
+            <rect
+              width="194.18"
+              height="194.18"
+              transform="matrix(0.866025 -0.5 2.20305e-08 1 697 431.09)"
+              fill="#FDD953"
+            />
+            <rect
+              width="194.18"
+              height="194.18"
+              transform="matrix(-0.866025 -0.5 -2.20305e-08 1 665.165 431.09)"
+              fill="#FDD953"
+            />
+            <path
+              d="M244.261 169.694C262.997 166.153 282.551 172.371 300.528 183.613C319.015 195.174 337.725 213.159 355.543 236.434C389.609 280.933 421.941 346.76 443.91 431.033C445.644 431.494 447.319 432.016 448.911 432.564C456.012 435.009 463.814 438.785 471.998 443.574C488.408 453.178 507.765 467.692 528.239 486.676C569.151 524.61 615.623 581.413 652.846 655.449C663.134 673.363 669.019 694.519 667.445 714.595C665.816 735.368 655.967 755.561 634.674 767.272L633.213 768.076L631.629 768.598C611.076 775.363 595.765 779.613 582.679 783.237C569.564 786.87 559.101 789.766 547.451 793.943C524.369 802.22 495.755 815.856 435.619 850.73C420.969 860.71 397.193 870.735 372.602 873.279C347.534 875.872 317.646 870.861 298.1 844.8L297.744 844.325L297.419 843.827C233.624 745.922 226.314 670.916 223.573 592.126C220.873 514.523 222.462 434.145 179.634 319.289L178.975 317.522L178.697 315.657C176.458 300.657 170.02 270.737 174.749 242.581C177.205 227.953 182.739 212.825 193.85 199.652C205.031 186.397 220.883 176.284 242.024 170.202L242.691 170.01L243.37 169.87L244.261 169.694Z"
+              fill="white"
+              stroke="#0094F0"
+              stroke-width="36"
+            />
+            <path
+              d="M326 267C301 229 283.5 210 255.5 215C228.5 223 208.5 256 240.5 314C260.5 341.5 301.5 375.5 340 346.5C358.5 327.5 355.2 319.4 326 267Z"
+              fill="#0094F0"
+            />
+            <path
+              d="M295.5 419.5C331.9 417.9 359.333 398.833 370 390"
+              stroke="#0094F0"
+              stroke-width="24"
+              stroke-linecap="round"
+            />
+            <path
+              d="M309 471C345.5 470 377 450 387.5 440"
+              stroke="#0094F0"
+              stroke-width="22"
+              stroke-linecap="round"
+            />
+            <path
+              d="M329.5 519.5C365 518 388.5 503 399.5 491.5"
+              stroke="#0094F0"
+              stroke-width="20"
+              stroke-linecap="round"
+            />
+            <path
+              d="M342 556C304.5 552.5 286.041 540.029 267.5 504C266.223 513.15 266.757 522.032 266.5 546.5C331.593 609.382 459.561 573.96 452.5 452L441 445H429C438.783 520.953 379.5 559.5 342 556Z"
+              fill="#0094F0"
+            />
+            <path
+              d="M333.5 825C313 799 253 646 267.5 503.5L296 565.5C286.5 645.5 297.294 717.806 333.5 825Z"
+              fill="#0094F0"
+            />
+            <path
+              d="M471 775.5C409 663.5 386 572.5 353 576L398 563C389.5 572.5 437 633.5 471 775.5Z"
+              fill="#0094F0"
+            />
+            <path
+              d="M586 685C545 602 517.394 559.59 445.5 501.5L452.5 466.5C524.5 543.5 562.189 597.638 586 685Z"
+              fill="#0094F0"
+            />
+          </svg>
+        </div>
+        <div>
+          <h1 class="title">FinCubes</h1>
+          <p class="subtitle">Статистика подводного спорта</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="email-content">
+      <h2 class="email-title">Подтвердите ваш email</h2>
+      <p class="email-text">
+        Спасибо за регистрацию! Для завершения создания аккаунта, пожалуйста,
+        подтвердите ваш адрес электронной почты.
+      </p>
+
+      <div class="verification-card">
+        <p class="verification-label">Ваш код подтверждения:</p>
+        <div class="code-container">
+          <span class="verification-code">{verificationCode}</span>
+        </div>
+        <p class="code-expiry">Код действителен в течение 24 часов</p>
+      </div>
+
+      <div class="button-section">
+        <p class="button-description">
+          Или нажмите на кнопку ниже для автоматического подтверждения:
+        </p>
+        <a href="{verificationLink}" class="verify-button">
+          Подтвердить email
+        </a>
+      </div>
+
+      <div class="important-note">
+        <p class="note-text">
+          <strong>Важно:</strong> Если вы не регистрировались на FinCubes,
+          просто проигнорируйте это письмо.
+        </p>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="footer-header">
+        <div class="footer-logo-wrapper">
+          <svg
+            width="1024"
+            height="1024"
+            viewBox="0 0 1024 1024"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle cx="512" cy="512" r="512" fill="#0094F0" />
+            <rect
+              width="194.18"
+              height="194.18"
+              transform="matrix(0.866025 -0.5 0.866025 0.5 512 309.09)"
+              fill="#FDD953"
+            />
+            <rect
+              width="194.18"
+              height="194.18"
+              transform="matrix(0.866025 -0.5 2.20305e-08 1 697 431.09)"
+              fill="#FDD953"
+            />
+            <rect
+              width="194.18"
+              height="194.18"
+              transform="matrix(-0.866025 -0.5 -2.20305e-08 1 665.165 431.09)"
+              fill="#FDD953"
+            />
+            <path
+              d="M244.261 169.694C262.997 166.153 282.551 172.371 300.528 183.613C319.015 195.174 337.725 213.159 355.543 236.434C389.609 280.933 421.941 346.76 443.91 431.033C445.644 431.494 447.319 432.016 448.911 432.564C456.012 435.009 463.814 438.785 471.998 443.574C488.408 453.178 507.765 467.692 528.239 486.676C569.151 524.61 615.623 581.413 652.846 655.449C663.134 673.363 669.019 694.519 667.445 714.595C665.816 735.368 655.967 755.561 634.674 767.272L633.213 768.076L631.629 768.598C611.076 775.363 595.765 779.613 582.679 783.237C569.564 786.87 559.101 789.766 547.451 793.943C524.369 802.22 495.755 815.856 435.619 850.73C420.969 860.71 397.193 870.735 372.602 873.279C347.534 875.872 317.646 870.861 298.1 844.8L297.744 844.325L297.419 843.827C233.624 745.922 226.314 670.916 223.573 592.126C220.873 514.523 222.462 434.145 179.634 319.289L178.975 317.522L178.697 315.657C176.458 300.657 170.02 270.737 174.749 242.581C177.205 227.953 182.739 212.825 193.85 199.652C205.031 186.397 220.883 176.284 242.024 170.202L242.691 170.01L243.37 169.87L244.261 169.694Z"
+              fill="white"
+              stroke="#0094F0"
+              stroke-width="36"
+            />
+            <path
+              d="M326 267C301 229 283.5 210 255.5 215C228.5 223 208.5 256 240.5 314C260.5 341.5 301.5 375.5 340 346.5C358.5 327.5 355.2 319.4 326 267Z"
+              fill="#0094F0"
+            />
+            <path
+              d="M295.5 419.5C331.9 417.9 359.333 398.833 370 390"
+              stroke="#0094F0"
+              stroke-width="24"
+              stroke-linecap="round"
+            />
+            <path
+              d="M309 471C345.5 470 377 450 387.5 440"
+              stroke="#0094F0"
+              stroke-width="22"
+              stroke-linecap="round"
+            />
+            <path
+              d="M329.5 519.5C365 518 388.5 503 399.5 491.5"
+              stroke="#0094F0"
+              stroke-width="20"
+              stroke-linecap="round"
+            />
+            <path
+              d="M342 556C304.5 552.5 286.041 540.029 267.5 504C266.223 513.15 266.757 522.032 266.5 546.5C331.593 609.382 459.561 573.96 452.5 452L441 445H429C438.783 520.953 379.5 559.5 342 556Z"
+              fill="#0094F0"
+            />
+            <path
+              d="M333.5 825C313 799 253 646 267.5 503.5L296 565.5C286.5 645.5 297.294 717.806 333.5 825Z"
+              fill="#0094F0"
+            />
+            <path
+              d="M471 775.5C409 663.5 386 572.5 353 576L398 563C389.5 572.5 437 633.5 471 775.5Z"
+              fill="#0094F0"
+            />
+            <path
+              d="M586 685C545 602 517.394 559.59 445.5 501.5L452.5 466.5C524.5 543.5 562.189 597.638 586 685Z"
+              fill="#0094F0"
+            />
+          </svg>
+        </div>
+        <div>
+          <div class="footer-title">FinCubes</div>
+          <div class="footer-subtitle">Статистика подводного спорта</div>
+        </div>
+      </div>
+
+      <div class="footer-content">
+        <div class="contact-item">
+          <svg class="contact-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path
+              d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"
+            />
+            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+          </svg>
+          <a href="mailto:support@fincubes.ru" class="contact-link">
+            support@fincubes.ru
+          </a>
+        </div>
+        <div class="contact-item">
+          <svg
+            class="contact-icon"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M14.982 19.61c.454-.7.909-1.6 1.236-2.755.755.29 1.273.636 1.591.909a8.182 8.182 0 0 1-2.864 1.845h.037v.001zm-8.8-1.855c.336-.273.845-.61 1.6-.91.336 1.164.773 2.064 1.236 2.764A8.2 8.2 0 0 1 6.2 17.755h-.018zm10.636-6.664c-.028-.81-.11-1.619-.245-2.418 1-.364 1.727-.8 2.236-1.2a8.136 8.136 0 0 1 1.282 3.618h-3.273zm-8.973-4.2a5.936 5.936 0 0 1-1.481-.8 8.2 8.2 0 0 1 2.654-1.7c-.427.636-.845 1.454-1.182 2.5h.01-.001zm7.137-2.5a8.145 8.145 0 0 1 2.654 1.7 6.01 6.01 0 0 1-1.481.8 9.58 9.58 0 0 0-1.182-2.5h.009zM14.8 9.118c.09.6.182 1.246.2 1.973H9c.027-.727.09-1.382.182-1.973 1.855.334 3.754.334 5.609 0h.009zM12 7.545c-.91 0-1.71-.072-2.39-.181.726-2.237 1.854-3.137 2.39-3.455.518.318 1.655 1.227 2.382 3.455A15.04 15.04 0 0 1 12 7.545zm-6.818-.072a8.03 8.03 0 0 0 2.245 1.2 18.368 18.368 0 0 0-.245 2.418h-3.31a8.13 8.13 0 0 1 1.319-3.618h-.01.001zm-1.3 5.436h3.3c.036.782.09 1.5.2 2.155a7.682 7.682 0 0 0-2.31 1.272 8.11 8.11 0 0 1-1.2-3.427h.01zM12 14.364c-1.09 0-2.027.09-2.845.236A16.91 16.91 0 0 1 9 12.91h6c-.027.608-.073 1.18-.145 1.69A15.388 15.388 0 0 0 12 14.355v.009zm0 5.727c-.545-.327-1.745-1.3-2.473-3.727A14.095 14.095 0 0 1 12 16.182c.955 0 1.773.063 2.482.182-.727 2.454-1.927 3.4-2.473 3.727H12zm6.927-3.764a7.634 7.634 0 0 0-2.309-1.272 17.95 17.95 0 0 0 .2-2.146h3.31a8.11 8.11 0 0 1-1.2 3.418h-.001zM12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z"
+            />
+          </svg>
+          <a href="https://fincubes.ru" class="contact-link"> fincubes.ru </a>
+        </div>
+        <div class="copyright">
+          <p>© 2025 FinCubes. Все права защищены.</p>
+          <p class="copyright-note">
+            Это письмо отправлено автоматически. Пожалуйста, не отвечайте на
+            него.
+          </p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -33,7 +33,11 @@ async def send_email(
 
 
 async def send_confirm_code(email: str, code: str):
-    html = await get_template("mail_confirm_code.html", code=code)
+    html = await get_template(
+        "v2/verify-email.html",
+        verificationCode=code,
+        verificationLink=f"https://fincubes.ru/email/confirm?code={code}"
+    )
     text = f"""Код подтверждения для аккаунта FinCubes:\n\n{code}\n\nЕсли вы не запрашивали это действие, просто проигнорируйте письмо."""
     await send_email(
         to_email=email,
@@ -44,8 +48,10 @@ async def send_confirm_code(email: str, code: str):
 
 
 async def send_reset_password(email: str, user_id: int, token: str):
-    html = await get_template("mail_reset_password.html",
-                              user_id=user_id, token=token)
+    html = await get_template(
+        "v2/reset-password.html",
+        resetLink=f"https://fincubes.ru/password/confirm?token={token}&user_id={user_id}"
+    )
     text = f"""Вы запросили сброс пароля на FinCubes.\n\nЧтобы сбросить пароль, перейдите по ссылке:\nhttps://fincubes.ru/password/confirm?token={token}&user_id={user_id}\n\nЕсли вы не запрашивали сброс, проигнорируйте это сообщение."""
     await send_email(
         to_email=email,
@@ -62,7 +68,8 @@ async def send_warn_unverified(email: str, hours_delay: int):
     """
     html = await get_template(
         "mail_warn_confirm.html",
-        hours_delay=hours_delay
+        hoursRemaining=hours_delay,
+        verificationLink="https://fincubes.ru/confirm"
     )
 
     text = (
