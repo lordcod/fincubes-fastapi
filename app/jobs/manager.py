@@ -33,7 +33,7 @@ def shutdown_scheduler():
     _log.info("Scheduler stopped")
 
 
-def schedule_user_deletion(user_id: int, hours_delay: int | float = 8):
+def schedule_user_deletion(user_id: int, hours_delay: int | float = 24):
     """Schedule deletion of unverified user."""
     run_date = datetime.now() + timedelta(hours=hours_delay)
     scheduler.add_job(

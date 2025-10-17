@@ -1,5 +1,6 @@
 from datetime import timedelta
 from fastapi import APIRouter, Request, Response
+from app.jobs.manager import schedule_user_deletion
 from app.models.user.user import User
 from app.schemas.auth.auth import TokenResponse, UserCreate
 from app.shared.utils.auth import AuthRepository
@@ -12,7 +13,9 @@ EXPIRES_IN = int(timedelta(minutes=15).total_seconds())
 class SignUp(AuthRepository[UserCreate]):
     async def get_user(self) -> User:
         handler = get_registration_handler(self.user_login)
-        return await handler.register_user()
+        user = await handler.register_user()
+        schedule_user_deletion(user.id)
+        return user
 
 
 @router.post("/", response_model=TokenResponse)
