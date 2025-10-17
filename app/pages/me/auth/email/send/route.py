@@ -22,7 +22,7 @@ VERIFICATION_DELTA = timedelta(hours=1)
 async def send_verify_code(
     current_user: User = Depends(UserAuthSecurity()),
     send_limit=Depends(create_ratelimit(
-        "verify_code", MIN_TIME_BETWEEN_CODES)),
+        "verify_code", MIN_TIME_BETWEEN_CODES, count=15)),
 ):
     if current_user.verified:
         raise APIError(ErrorCode.ALREADY_VERIFIED)

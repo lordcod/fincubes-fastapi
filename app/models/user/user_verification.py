@@ -16,4 +16,4 @@ class UserVerification(TimestampedModel):
     token_type = fields.CharEnumField(
         enum_type=VerificationTokenEnum,
         default=VerificationTokenEnum.VERIFY_EMAIL)
-    state = fields.CharField(max_length=1024)
+    state = fields.CharField(max_length=1024, null=True)
