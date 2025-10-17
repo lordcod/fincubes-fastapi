@@ -67,7 +67,14 @@ jobs:
 
       - name: Install dependencies
         run: poetry install --no-interaction --no-root
-
+        
+      - name: Create jobs database
+        run: |
+          sudo apt-get install -y postgresql-client
+          psql -h localhost -U postgres -p ${{ job.services.postgres.ports[5432] }} -c "CREATE DATABASE jobs;"
+        env:
+          PGPASSWORD: postgres
+          
       - name: Build app
         run: poetry build
 
