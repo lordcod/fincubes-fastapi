@@ -67,7 +67,14 @@ jobs:
 
       - name: Install dependencies
         run: poetry install --no-interaction --no-root
-
+        
+      - name: Create jobs database
+        run: |
+          sudo apt-get install -y postgresql-client
+          psql -h localhost -U postgres -p ${{ job.services.postgres.ports[5432] }} -c "CREATE DATABASE jobs;"
+        env:
+          PGPASSWORD: postgres
+          
       - name: Build app
         run: poetry build
 
@@ -87,6 +94,7 @@ jobs:
           BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
           YANDEX_CDN_RESOURCE_ID: ${{ secrets.YANDEX_CDN_RESOURCE_ID }}
           DATABASE_URL: postgres://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}
+          DATABASE_URL_JOBS: postgresql+psycopg2://postgres:postgres@localhost:${{ job.services.postgres.ports[5432] }}/jobs
           REDIS_URL: redis://@localhost:${{ job.services.redis.ports[6379] }}
           MONGO_URL: mongodb://localhost:${{ job.services.mongo.ports[27017] }}
           MONGO_DB_NAME: fincubes_db
