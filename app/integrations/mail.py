@@ -67,7 +67,7 @@ async def send_warn_unverified(email: str, hours_delay: int):
     if not verified within `hours_delay` hours.
     """
     html = await get_template(
-        "mail_warn_confirm.html",
+        "v2/account-deletion.html",
         hoursRemaining=hours_delay,
         verificationLink="https://fincubes.ru/confirm"
     )
