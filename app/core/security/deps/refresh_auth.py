@@ -42,16 +42,8 @@ class RefreshTokenSecurity(RefreshAuthSecurity[RefreshToken]):
     async def resolve_entity(self, payload: dict):
         refresh = await RefreshToken.get_or_none(id=payload['jti']).prefetch_related('session')
 
-        # TODO DELETE 1 SEP
         if refresh is None:
-            session = await Session.create(user_id=payload['sub'])
-            refresh = await RefreshToken.create(
-                id=payload['jti'],
-                issued_at=payload['iat'],
-                expires_at=payload['exp'],
-                session=session,
-            )
-            return refresh
+            return await self._create_missing_refresh_token(payload)
 
         if refresh.session.revoked_at:
             raise APIError(ErrorCode.INVALID_TOKEN, "session revoked")
@@ -69,6 +61,16 @@ class RefreshTokenSecurity(RefreshAuthSecurity[RefreshToken]):
         await session.save()
 
         await RefreshToken.filter(session=session).update(revoked_at=now)
+
+    async def _create_missing_refresh_token(self, payload: dict) -> RefreshToken:
+        session = await Session.create(user_id=payload['sub'])
+        refresh = await RefreshToken.create(
+            id=payload['jti'],
+            issued_at=payload['iat'],
+            expires_at=payload['exp'],
+            session=session,
+        )
+        return refresh
 
 
 class UserRefreshTokenSecurity(RefreshAuthSecurity[User], UserResolveEntity):

@@ -10,6 +10,7 @@ class Competition(TimestampedModel):
     location = fields.CharField(max_length=255)
     city = fields.CharField(max_length=255, null=True)
     organizer = fields.CharField(max_length=100)
+    course = fields.CharField(max_length=10, null=True)
     status = fields.CharField(max_length=100, null=True)
     links = fields.JSONField()
     start_date = fields.DateField()
