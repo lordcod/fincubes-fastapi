@@ -39,8 +39,6 @@ async def post_refresh(
         user
     ).run()
 
-# TODO: DELETE 1 SEPTEMBER
-
 
 @router.put("/", status_code=204)
 async def add_refresh(

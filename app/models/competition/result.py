@@ -36,6 +36,7 @@ class Result(TimestampedModel):
     # dsq_final = fields.BooleanField(default=False)
     # dsq = fields.BooleanField(default=False)
     status = fields.CharField(max_length=20, default='COMPLETED')
+    metadata = fields.JSONField(null=True)
 
     class Meta:
         table = "results"

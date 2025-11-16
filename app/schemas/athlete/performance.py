@@ -6,7 +6,6 @@ from app.schemas.results.result import ResultDepth0_Pydantic
 
 
 class UserPerformance(ResultDepth0_Pydantic):
-    top_rank: Optional[int] = None
     best: bool = False
 
 

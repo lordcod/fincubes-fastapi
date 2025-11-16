@@ -7,7 +7,6 @@ from app.core.errors import APIError, ErrorCode
 from app.models.athlete.athlete import Athlete
 from app.models.competition.competition import Competition
 from app.models.competition.result import Result
-from app.repositories.ratings import get_rank
 from app.schemas.results.result import Result_Pydantic, ResultIn_Pydantic
 from app.shared.utils.scopes.request import require_scope
 
@@ -49,14 +48,4 @@ async def create_result(
         dsq=result.dsq,
         dsq_final=result.dsq_final,
     )
-
-    if result.result:
-        await get_rank(
-            redis, athlete.gender, result.stroke, result.distance, result.result
-        )
-    if result.final:
-        await get_rank(
-            redis, athlete.gender, result.stroke, result.distance, result.final
-        )
-
     return await Result_Pydantic.from_tortoise_orm(db_result)

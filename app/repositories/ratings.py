@@ -12,15 +12,6 @@ from pymongo import UpdateOne
 _log = logging.getLogger(__name__)
 
 BATCH_SIZE = 1000
-lua_script = """
-local zset_name = KEYS[1]
-local score = ARGV[1]
-local exists = redis.call('ZSCORE', zset_name, score)
-if exists == false then
-    redis.call('ZADD', zset_name, score, score)
-end
-return redis.call('ZRANK', zset_name, score)
-"""
 
 
 def as_duration(result: time):
@@ -30,15 +21,6 @@ def as_duration(result: time):
         + result.second
         + ((result.microsecond // 1000) / 1000)
     )
-
-
-async def get_rank(
-    client: AsyncIOMotorCollection, gender: str, stroke: str, distance: int, result_time: time
-):
-    result = as_duration(result_time)
-
-    rank = await client.eval(lua_script, 1, f"top:{gender}:{stroke}:{distance}", result)
-    return rank + 1
 
 
 async def update_ratings(collection: AsyncIOMotorCollection):

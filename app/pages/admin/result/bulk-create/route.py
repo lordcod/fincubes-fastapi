@@ -10,7 +10,6 @@ from app.core.errors import APIError, ErrorCode
 from app.models.athlete.athlete import Athlete
 from app.models.competition.competition import Competition
 from app.models.competition.result import Result
-from app.repositories.ratings import get_rank
 from app.schemas.results.result import (BulkCreateResult,
                                         BulkCreateResultResponse)
 from app.shared.utils.scopes.request import require_scope
@@ -25,8 +24,7 @@ router = APIRouter()
 @require_scope('result:create')
 async def bulk_create_results(
     results_data: List[BulkCreateResult],
-    ignore_exception: bool = True,
-    redis=Depends(get_redis),
+    ignore_exception: bool = True
 ):
     results = []
     errors = []
@@ -57,23 +55,6 @@ async def bulk_create_results(
                     competition=competition,
                     **result.model_dump()
                 )
-
-                if db_result.result:
-                    await get_rank(
-                        redis,
-                        athlete.gender,
-                        db_result.stroke,
-                        db_result.distance,
-                        db_result.result,
-                    )
-                if db_result.final:
-                    await get_rank(
-                        redis,
-                        athlete.gender,
-                        db_result.stroke,
-                        db_result.distance,
-                        db_result.final,
-                    )
                 results.append(db_result)
         except Exception as exc:
             if not ignore_exception:
