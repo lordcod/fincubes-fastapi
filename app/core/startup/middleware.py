@@ -1,8 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
+from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 
-from app.core.config import middleware_settings
+from app.core.config import middleware_settings, settings
 
 
 def add_middleware(app: FastAPI, mode: str):
@@ -27,3 +28,6 @@ def add_middleware(app: FastAPI, mode: str):
         TrustedHostMiddleware,
         allowed_hosts=allowed_hosts,
     )
+
+    if settings.SENTRY_DNS:
+        app.add_middleware(SentryAsgiMiddleware)

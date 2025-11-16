@@ -62,7 +62,7 @@ async def exchange_cuts(from_athlete_id: int, to_athlete_id: int):
     results = await Result.filter(athlete=athlete_from)
     for res in results:
         res.athlete = athlete_to
-        await res.save()
+        await res.save(update_fields=['athlete_id'])
     await athlete_from.delete()
     print(
         f"Результаты перенесены с {from_athlete_id} на {to_athlete_id}, спортсмен {from_athlete_id} удалён.")
