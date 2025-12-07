@@ -5,7 +5,7 @@ import aiohttp
 from fastapi import FastAPI
 
 from app.jobs.manager import shutdown_scheduler, start_scheduler
-from app.jobs.fix_resolved_time_column import fix_resolved_time_column
+from app.jobs.init_postgres import init_postgres
 from app.shared.clients import session
 from app.shared.clients import redis, mongodb
 
@@ -17,7 +17,7 @@ async def lifespan(app: FastAPI):
     _log.info("Starting application lifespan...")
 
     _log.info('Create db column...')
-    await fix_resolved_time_column()
+    await init_postgres()
 
     await redis.client.ping()
     app.state.redis = redis.client

@@ -11,8 +11,9 @@ services:
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONUNBUFFERED=1
       - REDIS_URL=redis://redis:6379/0
-      - DATABASE_URL=asyncpg://postgres:postgres@postgres:5432/postgres
-      - MONGODB_URL=mongodb://mongo:27017/fincubes_db
+      - MONGO_URL=mongodb://mongo:27017/fincubes_db
+      - DATABASE_URL=postgres://postgres:postgres@localhost:5432/postgres
+      - DATABASE_URL_JOBS=postgresql+psycopg2://postgres:postgres@localhost:5432/jobs
     depends_on:
       - redis
       - postgres
