@@ -118,7 +118,7 @@ jobs:
 
             docker build -t fincubes-fastapi .
             
-            source ~/fincube-venv/bin/activate
+            source ~/fincubes-venv/bin/activate
             pip install "aerich[toml]" "aerich[asyncpg]"
             aerich upgrade
 
