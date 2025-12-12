@@ -110,7 +110,7 @@ jobs:
           script: |
             set -e
 
-            cd ~/fincubes
+            cd ~/fincubes-fastapi
 
             git fetch origin main
             git checkout main
@@ -118,9 +118,10 @@ jobs:
 
             docker build -t fincubes-fastapi .
             
-            source ~/fincubes_venv/bin/activate
+            source ~/fincube-venv/bin/activate
+            pip install "aerich[toml]" "aerich[asyncpg]"
             aerich upgrade
 
-            sudo systemctl restart fincubes.service
+            sudo systemctl restart fincubes-fastapi.service
 
             echo "Deployment completed successfully"
