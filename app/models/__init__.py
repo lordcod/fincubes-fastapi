@@ -1,3 +1,4 @@
+from app.models.competition.result import CompetitionResult, CompetitionStage
 from app.models.tokens.sessions import Session
 from app.models.tokens.refresh_tokens import RefreshToken
 from .athlete.athlete import Athlete
@@ -7,7 +8,6 @@ from .base import TimestampedModel
 from .competition.competition import Competition
 from .competition.distance import Distance
 from .competition.recent_event import RecentEvent
-from .competition.result import Result
 from .misc.region import Region
 from .misc.standard_category import StandardCategory
 from .misc.bot import Bot

@@ -4,7 +4,7 @@ from datetime import date, datetime
 from typing import Optional
 from fastapi import APIRouter
 
-from app.models.competition.result import Result
+from app.models.competition.result import CompetitionResult
 from app.schemas.results.top import RandomTop
 from app.shared.utils.scopes.request import require_scope
 from app.shared.utils.metadata import COMBINATIONS
@@ -43,8 +43,8 @@ async def get_random_top():
         filters["competition__start_date__lte"] = date(season_year + 1, 8, 31)
         filters["athlete__gender"] = gender
 
-        results = await Result.filter(**filters).count()
-        if results >= 3:
+        results = await CompetitionResult.filter(**filters).count()
+        if results >= 5:
             logger.info(
                 "Results found for combination: style=%s, gender=%s, category=%s",
                 style, gender, category

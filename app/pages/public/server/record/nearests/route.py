@@ -5,7 +5,7 @@ from typing import List
 
 from fastapi import APIRouter
 
-from app.models.competition.result import Result
+from app.models.competition.result import CompetitionResult
 from app.schemas.results.result import Result_Pydantic
 from app.shared.utils.scopes.request import require_scope
 
@@ -21,7 +21,7 @@ async def get_records_nearests():
     season_start = date(season, 9, 1)
     season_end = date(season + 1, 8, 31)
 
-    candidate_ids = await Result.filter(
+    candidate_ids = await CompetitionResult.filter(
         record__isnull=False,
         record__not="",
         competition__start_date__gte=season_start,
@@ -32,6 +32,5 @@ async def get_records_nearests():
         return []
 
     selected_ids = random.sample(candidate_ids, min(3, len(candidate_ids)))
-    results = await Result.filter(id__in=selected_ids).prefetch_related("competition", "athlete")
-
-    return results
+    results = CompetitionResult.filter(id__in=selected_ids)
+    return await Result_Pydantic.from_queryset(results)

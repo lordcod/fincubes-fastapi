@@ -5,11 +5,11 @@ from pydantic import BaseModel, Field
 
 from app.models.athlete.athlete import Athlete
 from app.models.competition.competition import Competition
-from app.models.competition.result import Result
+from app.models.competition.result import CompetitionResult
 from app.repositories.sa.top_results import prepare_columns
 from app.schemas.athlete.athlete import Athlete_Pydantic
 from app.schemas.competition.competition import Competition_Pydantic
-from app.schemas.results.result import ResultDepth0_Pydantic
+from app.schemas.results.result import ResultDepthNullStages_Pydantic
 from app.shared.enums.enums import GenderEnum
 
 
@@ -28,7 +28,7 @@ class RandomTop(BaseModel):
 
 
 class BestFullResult(BaseModel):
-    result: ResultDepth0_Pydantic
+    result: ResultDepthNullStages_Pydantic
     athlete: Athlete_Pydantic
     competition: Competition_Pydantic
     row_num: int
@@ -43,7 +43,7 @@ class TopResponse(BaseModel):
 
 def parse_best_full_result(row: dict) -> BestFullResult:
     return BestFullResult(
-        result=prepare_columns(Result, row, 'result'),
+        result=prepare_columns(CompetitionResult, row, 'result'),
         athlete=prepare_columns(Athlete, row, 'athlete'),
         competition=prepare_columns(Competition, row, 'competition'),
         row_num=row["row_num"],

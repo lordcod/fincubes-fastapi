@@ -19,4 +19,4 @@ async def delete_keys_by_pattern(pattern):
     await client.delete(*keys_to_delete)
     print(f"Удалено {len(keys_to_delete)} ключей")
 
-asyncio.run(delete_keys_by_pattern("performances:*"))
+asyncio.run(delete_keys_by_pattern("top:*"))

@@ -3,10 +3,12 @@ import typer
 from functools import wraps
 
 from app.core.config import settings
-from app.models import Athlete, Result, Distance, User
+from app.models import Athlete, Distance, User
 from app.core.security.hashing import hash_password
 from tortoise.functions import Count
 from tortoise import Tortoise
+
+from app.models.competition.result import CompetitionResult
 
 app = typer.Typer()
 
@@ -30,7 +32,7 @@ def with_db_connection(func):
 @with_db_connection
 async def clear_results(competition_id: int):
     """Удалить результаты по ID соревнования"""
-    deleted = await Result.filter(competition_id=competition_id).delete()
+    deleted = await CompetitionResult.filter(competition_id=competition_id).delete()
     print(f"Удалено результатов: {deleted}")
 
 

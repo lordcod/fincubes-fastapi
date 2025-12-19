@@ -39,9 +39,9 @@ async def ensure_indexes(conn: BaseDBAsyncClient):
         "CREATE INDEX IF NOT EXISTS idx_athletes_first_name_trgm ON athletes USING gin (first_name gin_trgm_ops);",
         "CREATE INDEX IF NOT EXISTS idx_athletes_last_name_trgm ON athletes USING gin (last_name gin_trgm_ops);",
 
-        "CREATE INDEX IF NOT EXISTS idx_results_effective_search ON results (stroke, distance, athlete_id, result, final);",
+        # "CREATE INDEX IF NOT EXISTS idx_results_effective_search ON results (stroke, distance, athlete_id, result, final);",
         "CREATE INDEX IF NOT EXISTS idx_athletes_gender ON athletes (id, gender);",
-        "CREATE INDEX IF NOT EXISTS idx_results_not_null_result ON results (stroke, distance, athlete_id, result, final) WHERE result IS NOT NULL OR final IS NOT NULL;"
+        # "CREATE INDEX IF NOT EXISTS idx_results_not_null_result ON results (stroke, distance, athlete_id, result, final) WHERE result IS NOT NULL OR final IS NOT NULL;"
     ]
 
     for sql in indexes:
@@ -50,7 +50,7 @@ async def ensure_indexes(conn: BaseDBAsyncClient):
 
 async def init_postgres():
     async with in_transaction() as conn:
-        await ensure_resolved_time_column(conn)
+        # await ensure_resolved_time_column(conn)
 
         await ensure_pg_trgm_extension(conn)
 

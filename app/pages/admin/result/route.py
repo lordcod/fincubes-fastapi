@@ -6,7 +6,7 @@ from app.core.errors import APIError, ErrorCode
 
 from app.models.athlete.athlete import Athlete
 from app.models.competition.competition import Competition
-from app.models.competition.result import Result
+from app.models.competition.result import CompetitionResult
 from app.schemas.results.result import Result_Pydantic, ResultIn_Pydantic
 from app.shared.utils.scopes.request import require_scope
 
@@ -22,7 +22,6 @@ async def create_result(
     result: ResultIn_Pydantic,
     competition_id: int = Body(embed=True),
     athlete_id: int = Body(embed=True),
-    redis=Depends(get_redis),
 ):
     try:
         competition = await Competition.get(id=competition_id)
@@ -34,18 +33,9 @@ async def create_result(
             else ErrorCode.COMPETITION_NOT_FOUND
         ) from exc
 
-    db_result = await Result.create(
+    db_result = await CompetitionResult.create(
         athlete=athlete,
         competition=competition,
-        stroke=result.stroke,
-        distance=result.distance,
-        result=result.result,
-        final=result.final,
-        place=result.place,
-        points=result.points,
-        record=result.record,
-        final_rank=result.final_rank,
-        dsq=result.dsq,
-        dsq_final=result.dsq_final,
+        **result.model_dump()
     )
     return await Result_Pydantic.from_tortoise_orm(db_result)
