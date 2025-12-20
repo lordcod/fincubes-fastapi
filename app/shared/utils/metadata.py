@@ -5,7 +5,7 @@ categories = [
     {
         "name": "Малыши",
         "id": "kids",
-        "min_age": 0,
+        "min_age": None,
         "max_age": 9
     },
     {

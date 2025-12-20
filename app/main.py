@@ -65,6 +65,6 @@ def dev():
         factory=True,
         reload=True,
         host="0.0.0.0",
-        port=8000,
+        port=8001,
         log_config="app/core/config/log_config.json",
     )

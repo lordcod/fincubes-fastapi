@@ -36,3 +36,12 @@ def compile_query_with_dollar_params(query):
 
     param_values = params.values()
     return sql, list(param_values)
+
+
+def compile_query_with_literals(query):
+    compiled = query.compile(
+        dialect=postgresql.dialect(),
+        compile_kwargs={"literal_binds": True}
+    )
+    sql = str(compiled)
+    return sql
