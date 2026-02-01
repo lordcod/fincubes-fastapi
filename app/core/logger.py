@@ -1,3 +1,4 @@
+import contextlib
 import json
 import logging
 
@@ -27,7 +28,8 @@ if settings.SENTRY_DNS:
 
 def setup_logging():
     import os
-    os.mkdir('logs')
+    with contextlib.suppress(FileExistsError):
+        os.mkdir('./logs')
     with open(config_path, "rb") as f:
         config = json.loads(f.read())
     setup_cordlog(config)
