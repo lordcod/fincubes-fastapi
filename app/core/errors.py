@@ -120,6 +120,8 @@ class ErrorCode(Enum):
         1002, "Сессию пока нельзя отзывать — подождите немного.")
 
     # 4xxx — Внутренние ошибки / внешние сервисы
+    REVIEW_SESSION_NOT_FOUND = ErrorInfo(3017, "Review-сессия не найдена", 404)
+    REVIEW_ITEM_NOT_FOUND = ErrorInfo(3018, "Элемент review не найден", 404)
     SEND_EMAIL_EXCEPTION = ErrorInfo(
         4001, "Не удалось отправить электронное письмо", 500
     )

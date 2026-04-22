@@ -14,6 +14,9 @@ from .misc.bot import Bot
 from .roles.coach import Coach
 from .roles.coach_athlete import CoachAthlete
 from .roles.parent import Parent
+from .review.review_decision import ReviewDecision
+from .review.review_item import ReviewItem
+from .review.review_session import ReviewSession
 from .user.user import User
 from .user.user_role import UserRole
 from .user.user_verification import UserVerification
