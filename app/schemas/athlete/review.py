@@ -1,4 +1,4 @@
-from typing import Any, Literal, Optional
+from typing import Any, Literal, Optional, TypeAlias
 
 from pydantic import BaseModel, Field
 
@@ -10,6 +10,16 @@ from app.shared.enums.enums import (
     ReviewSessionStatusEnum,
     ReviewSourceTypeEnum,
 )
+
+
+ResolveCandidateSignalValue: TypeAlias = bool | str
+ResolveCandidateSignals: TypeAlias = dict[str, ResolveCandidateSignalValue]
+ResolveRecommendedAction: TypeAlias = Literal[
+    "match_existing",
+    "enrich_existing",
+    "create_new",
+    "manual_review",
+]
 
 
 class ResolveCandidateSourceItem(BaseModel):
@@ -35,6 +45,7 @@ class SuggestedPatch(BaseModel):
 
 class ResolveCandidateItem(BaseModel):
     id: int
+    athlete_id: int
     last_name: str
     first_name: str
     birth_year: int
@@ -47,6 +58,7 @@ class ResolveCandidateItem(BaseModel):
     reasons: list[str] = Field(default_factory=list)
     conflicts: list[str] = Field(default_factory=list)
     suggested_patch: Optional[SuggestedPatch] = None
+    signals: ResolveCandidateSignals = Field(default_factory=dict)
 
 
 class ResolveCandidatesResponseItem(BaseModel):
@@ -54,6 +66,10 @@ class ResolveCandidatesResponseItem(BaseModel):
     candidates: list[ResolveCandidateItem] = Field(default_factory=list)
     auto_match: bool = False
     confidence: ReviewConfidenceEnum = ReviewConfidenceEnum.LOW
+    recommended_action: Optional[ResolveRecommendedAction] = None
+    recommended_athlete_id: Optional[int] = None
+    reasons: list[str] = Field(default_factory=list)
+    conflicts: list[str] = Field(default_factory=list)
 
 
 class ResolveCandidatesResponse(BaseModel):
@@ -105,7 +121,15 @@ class BulkAthleteCreateResponse(BaseModel):
 
 class ResolvePreviewDecision(BaseModel):
     external_id: str
-    action: Literal["match", "create_new", "skip", "manual"]
+    action: Literal[
+        "match",
+        "match_existing",
+        "enrich_existing",
+        "create_new",
+        "skip",
+        "manual",
+        "manual_review",
+    ]
     athlete_id: Optional[int] = None
     source: Optional[ResolveCandidateSourceItem] = None
     note: Optional[str] = None
@@ -134,8 +158,21 @@ class ResolvePreviewCreateItem(BaseModel):
     payload: BulkAthleteCreateItem
 
 
+class ResolvePreviewItem(BaseModel):
+    external_id: str
+    action: ResolveRecommendedAction
+    athlete_id: Optional[int] = None
+    confidence: ReviewConfidenceEnum = ReviewConfidenceEnum.LOW
+    reasons: list[str] = Field(default_factory=list)
+    conflicts: list[str] = Field(default_factory=list)
+    resolved: bool = False
+    update_payload: Optional[SuggestedPatch] = None
+    create_payload: Optional[BulkAthleteCreateItem] = None
+
+
 class ResolvePreviewResponse(BaseModel):
     summary: ResolvePreviewSummary
+    items: list[ResolvePreviewItem] = Field(default_factory=list)
     enrich_updates: list[ResolvePreviewEnrichItem] = Field(default_factory=list)
     create_payloads: list[ResolvePreviewCreateItem] = Field(default_factory=list)
 
@@ -160,10 +197,15 @@ class ReviewSessionItemResponse(BaseModel):
     id: int
     external_id: str
     status: ReviewItemStatusEnum
+    action: ResolveRecommendedAction = "manual_review"
     auto_match: bool
     confidence: ReviewConfidenceEnum
     source_payload: dict[str, Any]
     selected_athlete_id: Optional[int] = None
+    resolved: bool = False
+    reasons: list[str] = Field(default_factory=list)
+    conflicts: list[str] = Field(default_factory=list)
+    updated_fields: list[str] = Field(default_factory=list)
     candidates_snapshot: list[dict[str, Any]] = Field(default_factory=list)
     note: Optional[str] = None
     created_at: Optional[str] = None
@@ -189,9 +231,15 @@ class ReviewApplyRequest(BaseModel):
 
 class ReviewApplyResultItem(BaseModel):
     review_item_id: int
+    external_id: Optional[str] = None
+    action: ResolveRecommendedAction
     status: ReviewItemStatusEnum
+    resolved: bool = False
     athlete_id: Optional[int] = None
+    selected_athlete_id: Optional[int] = None
     created_athlete_id: Optional[int] = None
+    reasons: list[str] = Field(default_factory=list)
+    conflicts: list[str] = Field(default_factory=list)
     updated_fields: list[str] = Field(default_factory=list)
 
 

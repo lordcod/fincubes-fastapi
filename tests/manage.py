@@ -80,7 +80,7 @@ async def exchange_cuts(from_athlete_id: int, to_athlete_id: int):
 async def transfer_results(
     from_athlete_id: int,
     to_athlete_id: int,
-    competition_id: int,
+    competition_id: Optional[int] = None,
     apply: bool = False,
     delete_empty_source: bool = False,
 ):

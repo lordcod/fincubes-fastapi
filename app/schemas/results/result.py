@@ -23,6 +23,7 @@ Result_Pydantic = with_nested(
 
 
 class BulkCreateResult(BaseModel):
+    external_id: Optional[str] = None
     competition_id: int
     athlete_id: int
     results: List[ResultIn_Pydantic]

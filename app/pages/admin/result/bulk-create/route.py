@@ -1,5 +1,5 @@
 
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends
 from tortoise.exceptions import DoesNotExist
@@ -12,6 +12,7 @@ from app.models.competition.competition import Competition
 from app.models.competition.result import Result
 from app.schemas.results.result import (BulkCreateResult,
                                         BulkCreateResultResponse)
+from app.services.athlete_identity.apply import validate_result_upload_resolution
 from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter()
@@ -24,11 +25,19 @@ router = APIRouter()
 @require_scope('result:create')
 async def bulk_create_results(
     results_data: List[BulkCreateResult],
-    ignore_exception: bool = True
+    ignore_exception: bool = True,
+    resolution_session_id: Optional[int] = None,
+    require_resolution: bool = True,
 ):
     results = []
     errors = []
     competitions = {}
+
+    if require_resolution:
+        await validate_result_upload_resolution(
+            results_data,
+            resolution_session_id,
+        )
 
     print("Start parsing", len(results_data), "athletes")
     count = len(results_data)
