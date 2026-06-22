@@ -30,7 +30,6 @@ RUN poetry config installer.parallel false \
 COPY . .
 
 RUN poetry install --only-root --no-interaction --no-ansi
-RUN poetry build -f wheel --no-interaction --no-ansi
 
 EXPOSE 8000
 CMD ["poetry", "run", "start"]

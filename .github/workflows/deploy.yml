@@ -116,12 +116,6 @@ jobs:
             git checkout main
             git reset --hard origin/main
 
-            docker build -t fincubes-fastapi .
-            
-            source ~/fincubes-venv/bin/activate
-            pip install "aerich[toml]" "aerich[asyncpg]"
-            aerich upgrade
-
-            sudo systemctl restart fincubes-fastapi.service
+            doppler run -- docker compose up -d --build
 
             echo "Deployment completed successfully"
