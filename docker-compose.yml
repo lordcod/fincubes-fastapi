@@ -1,49 +1,44 @@
-version: '3.8'
-
-services:
+services: 
   fincubes-fastapi:
     build: .
-    ports:
-      - "8000:8000"
-    env_file:
-      - .env
+    restart: unless-stopped
     environment:
-      - PYTHONDONTWRITEBYTECODE=1
-      - PYTHONUNBUFFERED=1
-      - REDIS_URL=redis://redis:6379/0
-      - MONGO_URL=mongodb://mongo:27017/fincubes_db
-      - DATABASE_URL=postgres://postgres:postgres@localhost:5432/postgres
-      - DATABASE_URL_JOBS=postgresql+psycopg2://postgres:postgres@localhost:5432/jobs
-    depends_on:
-      - redis
-      - postgres
-      - mongo
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required}
+      CAPTCHA_SECRET_KEY: ${CAPTCHA_SECRET_KEY:-}
+      HCAPTCHA_SECRET_KEY: ${HCAPTCHA_SECRET_KEY:-}
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      AWS_KEY_ID: ${AWS_KEY_ID:-}
+      AWS_SECRET_KEY: ${AWS_SECRET_KEY:-}
+      BUCKET_NAME: ${BUCKET_NAME:-}
+      YANDEX_CDN_RESOURCE_ID: ${YANDEX_CDN_RESOURCE_ID:-}
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      DATABASE_URL_JOBS: ${DATABASE_URL_JOBS:?DATABASE_URL_JOBS is required}
+      REDIS_URL: ${REDIS_URL:?REDIS_URL is required}
+      MONGO_URL: ${MONGO_URL:?MONGO_URL is required}
+      MONGO_DB_NAME: ${MONGO_DB_NAME:-fincubes_db}
+    volumes:
+      - ./logs:/app/logs
     command: poetry run start
-  redis:
-    image: redis:8-alpine
-    restart: unless-stopped
-    ports:
-      - "6379:6379" 
-  postgres:
-    image: postgres:17-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./docker/postgres-init:/docker-entrypoint-initdb.d 
-    ports:
-      - "5432:5432"
-  mongo:
-    image: mongo:7.0
-    restart: unless-stopped
-    volumes:
-      - mongodata:/data/db
-    ports:
-      - "27017:27017"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.fincubes-api.rule=Host(`api.fincubes.ru`)
+      - traefik.http.routers.fincubes-api.entrypoints=websecure
+      - traefik.http.routers.fincubes-api.tls=true
+      - traefik.http.routers.fincubes-api.tls.certresolver=letsencrypt
+      - traefik.http.services.fincubes-api.loadbalancer.server.port=8000
+      - traefik.http.routers.fincubes-api-http.rule=Host(`api.fincubes.ru`)
+      - traefik.http.routers.fincubes-api-http.entrypoints=web
+      - traefik.http.routers.fincubes-api-http.middlewares=fincubes-api-redirect
+      - traefik.http.middlewares.fincubes-api-redirect.redirectscheme.scheme=https
+    networks:
+      - proxy
 
-volumes:
-  pgdata:
-  mongodata:
+networks:
+  proxy:
+    external: true
