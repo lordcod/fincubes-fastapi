@@ -12,10 +12,15 @@ class Distance(TimestampedModel):
     order = fields.IntField()
     stroke = fields.CharField(max_length=50)
     distance = fields.IntField()
+    relay_count = fields.IntField(default=1)
     category = fields.CharField(max_length=255, null=True)
     gender = fields.CharField(max_length=1)
     min_year = fields.IntField(null=True)
     max_year = fields.IntField(null=True)
+
+    @property
+    def total_distance(self) -> int:
+        return self.distance * self.relay_count
 
     class Meta:
         table = "distances"

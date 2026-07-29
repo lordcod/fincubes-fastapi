@@ -138,6 +138,21 @@ class ErrorCode(Enum):
     LOCATION_OBJECT_NOT_FOUND = ErrorInfo(
         3024, "Объект локации не найден", 404
     )
+    RELAY_RESULT_NOT_FOUND = ErrorInfo(
+        3025, "Результат эстафеты не найден", 404
+    )
+    RELAY_ATHLETE_COUNT_MISMATCH = ErrorInfo(
+        3026, "Количество участников не совпадает с relay_count", 422
+    )
+    RELAY_LEG_ORDER_INVALID = ErrorInfo(
+        3027, "Порядок этапов эстафеты должен идти от 1 до relay_count", 422
+    )
+    RELAY_ATHLETE_DUPLICATE = ErrorInfo(
+        3028, "Один атлет не может занимать несколько этапов эстафеты", 422
+    )
+    RELAY_COUNT_INVALID = ErrorInfo(
+        3029, "Для результата эстафеты relay_count должен быть больше 1", 422
+    )
     SEND_EMAIL_EXCEPTION = ErrorInfo(
         4001, "Не удалось отправить электронное письмо", 500
     )

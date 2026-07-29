@@ -7,6 +7,8 @@ from .base import TimestampedModel
 from .competition.competition import Competition
 from .competition.distance import Distance
 from .competition.recent_event import RecentEvent
+from .competition.relay_leg import RelayLeg
+from .competition.relay_result import RelayResult
 from .competition.result import Result
 from .location.athlete_location import AthleteLocation
 from .location.location_object import LocationObject
