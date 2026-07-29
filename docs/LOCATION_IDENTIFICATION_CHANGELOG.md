@@ -4,6 +4,8 @@
 > и фильтрацию по `region_id`/`city_id`, описан в
 > [LOCATION_CATALOG_ADDITIONS.md](LOCATION_CATALOG_ADDITIONS.md) и заменяет
 > первоначальный пример формата ниже.
+> Добавление новых aliases существующему объекту выполняется через
+> `POST /admin/locations/aliases/{location_id}/aliases/`.
 
 ## Что изменилось в backend
 

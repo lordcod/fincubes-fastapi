@@ -11,8 +11,12 @@ from app.core.errors import APIError, ErrorCode
 from app.data.location_aliases import locations as legacy_locations
 from app.models.location.location_object import LocationObject
 from app.pages.admin.locations.aliases.route import get_location_catalog
-from app.schemas.location.location import LocationObjectCreate
+from app.schemas.location.location import (
+    LocationAliasesAdd,
+    LocationObjectCreate,
+)
 from app.services.location_catalog import (
+    add_aliases_to_location_object,
     create_location_object,
     deterministic_entity_id,
     deterministic_location_object_id,
@@ -146,6 +150,9 @@ def test_location_create_requires_region_and_consistent_optional_ids():
     )
     assert payload.aliases == ["Команда ", "КОМАНДА"]
     assert payload.region == "Москва"
+
+    with pytest.raises(ValidationError):
+        LocationAliasesAdd(aliases=["Команда", "Команда"])
 
 
 def test_exact_alias_requires_region_when_several_objects(monkeypatch):
@@ -331,6 +338,85 @@ def test_create_allows_duplicate_alias_only_with_required_region():
                 == ErrorCode.LOCATION_ALIAS_CONFLICT.code
             )
             assert first.id != second.id
+        finally:
+            await Tortoise.close_connections()
+
+    asyncio.run(scenario())
+
+
+def test_add_aliases_updates_existing_object_idempotently():
+    async def scenario():
+        await Tortoise.init(
+            db_url="sqlite://:memory:",
+            modules={"models": ["app.models.location.location_object"]},
+        )
+        await Tortoise.generate_schemas()
+        try:
+            first = await create_location_object(
+                LocationObjectCreate(
+                    aliases=["Первая команда"],
+                    club="Общая школа",
+                    city="Первый город",
+                    region="Первый регион",
+                    required={"region"},
+                )
+            )
+            second = await create_location_object(
+                LocationObjectCreate(
+                    aliases=["Вторая команда"],
+                    club="Общая школа",
+                    city="Второй город",
+                    region="Второй регион",
+                    required={"region"},
+                )
+            )
+
+            updated = await add_aliases_to_location_object(
+                first.id,
+                ["Новый alias"],
+            )
+            assert updated.id == first.id
+            assert updated.aliases == ["Первая команда", "Новый alias"]
+
+            repeated = await add_aliases_to_location_object(
+                first.id,
+                ["Новый alias"],
+            )
+            assert repeated.aliases.count("Новый alias") == 1
+
+            second_updated = await add_aliases_to_location_object(
+                second.id,
+                ["Новый alias"],
+            )
+            assert "Новый alias" in second_updated.aliases
+
+            third = await create_location_object(
+                LocationObjectCreate(
+                    aliases=["Третья команда"],
+                    club="Третья школа",
+                    city="Третий город",
+                    region="Третий регион",
+                )
+            )
+            with pytest.raises(APIError) as conflict:
+                await add_aliases_to_location_object(
+                    third.id,
+                    ["Новый alias"],
+                )
+            assert (
+                conflict.value.error_code
+                == ErrorCode.LOCATION_ALIAS_CONFLICT.code
+            )
+
+            with pytest.raises(APIError) as missing:
+                await add_aliases_to_location_object(
+                    uuid4(),
+                    ["Alias"],
+                )
+            assert (
+                missing.value.error_code
+                == ErrorCode.LOCATION_OBJECT_NOT_FOUND.code
+            )
         finally:
             await Tortoise.close_connections()
 

@@ -6,12 +6,14 @@ from fastapi import APIRouter, Depends, Query, status
 from app.core.errors import APIError, ErrorCode
 from app.models.location.location_object import LocationObject
 from app.schemas.location.location import (
+    LocationAliasesAdd,
     LocationCatalogItem,
     LocationEntitySearchItem,
     LocationObjectCreate,
     LocationObjectOut,
 )
 from app.services.location_catalog import (
+    add_aliases_to_location_object,
     create_location_object,
     find_exact_alias,
     matches_required_location_context,
@@ -93,3 +95,18 @@ async def search_aliases(
 @require_scope("athlete:create")
 async def add_location_object(payload: LocationObjectCreate):
     return await create_location_object(payload)
+
+
+@router.post(
+    "/{location_id}/aliases/",
+    response_model=LocationObjectOut,
+)
+@require_scope("athlete:create")
+async def add_location_aliases(
+    location_id: UUID,
+    payload: LocationAliasesAdd,
+):
+    return await add_aliases_to_location_object(
+        location_id,
+        payload.aliases,
+    )

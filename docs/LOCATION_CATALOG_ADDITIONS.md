@@ -102,6 +102,19 @@ GET /admin/locations/aliases/resolve?alias=СШ ВВС&region_id=<region-uuid>
 
 Во всех остальных случаях возвращается `3021 LOCATION_ALIAS_CONFLICT`.
 
+Если объект уже существует и требуется только дополнить его aliases,
+используется отдельный idempotent endpoint:
+
+```http
+POST /admin/locations/aliases/{location_id}/aliases/
+```
+
+```json
+{
+  "aliases": ["новое исходное название"]
+}
+```
+
 ## Миграция существующих атлетов
 
 Для неоднозначного alias скрипт `migrate_athlete_locations.py` пытается выбрать

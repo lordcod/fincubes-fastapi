@@ -7,6 +7,21 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 RequiredLocationField = Literal["city", "region"]
 
 
+class LocationAliasesAdd(BaseModel):
+    aliases: list[str] = Field(min_length=1)
+
+    @field_validator("aliases")
+    @classmethod
+    def validate_aliases(cls, values: list[str]) -> list[str]:
+        if any(not value.strip() for value in values):
+            raise ValueError("alias не может быть пустым")
+        if any(len(value) > 512 for value in values):
+            raise ValueError("alias не может быть длиннее 512 символов")
+        if len(set(values)) != len(values):
+            raise ValueError("aliases не должны повторяться")
+        return values
+
+
 class LocationObjectCreate(BaseModel):
     aliases: list[str] = Field(min_length=1)
     club: Optional[str] = Field(default=None, max_length=512)

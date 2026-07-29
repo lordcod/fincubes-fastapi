@@ -230,6 +230,41 @@ async def create_location_object(
         raise APIError(ErrorCode.LOCATION_ALIAS_CONFLICT) from exc
 
 
+async def add_aliases_to_location_object(
+    location_id: UUID,
+    aliases: list[str],
+) -> LocationObject:
+    location = await LocationObject.get_or_none(id=location_id)
+    if location is None:
+        raise APIError(ErrorCode.LOCATION_OBJECT_NOT_FOUND)
+
+    new_aliases = [
+        alias
+        for alias in aliases
+        if alias not in (location.aliases or [])
+    ]
+    if not new_aliases:
+        return location
+
+    for other in await LocationObject.exclude(id=location_id):
+        duplicate_aliases = set(new_aliases) & set(other.aliases or [])
+        if not duplicate_aliases:
+            continue
+        can_disambiguate_by_region = (
+            location.region_id != other.region_id
+            and "region" in set(location.required or [])
+            and "region" in set(other.required or [])
+        )
+        if not can_disambiguate_by_region:
+            raise APIError(ErrorCode.LOCATION_ALIAS_CONFLICT)
+
+    location.aliases = list(
+        dict.fromkeys([*(location.aliases or []), *new_aliases])
+    )
+    await location.save(update_fields=["aliases", "updated_at"])
+    return location
+
+
 async def resolve_location_link(
     payload: AthleteLocationCreate,
 ) -> LocationObject:

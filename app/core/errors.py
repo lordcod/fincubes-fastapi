@@ -135,6 +135,9 @@ class ErrorCode(Enum):
     LOCATION_ENTITY_ID_CONFLICT = ErrorInfo(
         3023, "Название локации уже связано с другим ID", 409
     )
+    LOCATION_OBJECT_NOT_FOUND = ErrorInfo(
+        3024, "Объект локации не найден", 404
+    )
     SEND_EMAIL_EXCEPTION = ErrorInfo(
         4001, "Не удалось отправить электронное письмо", 500
     )
