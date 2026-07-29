@@ -1,11 +1,36 @@
-from pydantic import Field
+from typing import Optional
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from tortoise.contrib.pydantic import pydantic_model_creator
-from app.schemas import create_pydantic_model, with_nested
 
 from app.models.athlete.athlete import Athlete
+from app.schemas import create_pydantic_model, with_nested
+from app.schemas.location.location import AthleteLocationCreate
 
 AthleteIn_Pydantic = pydantic_model_creator(Athlete, exclude_readonly=True)
 Athlete_Pydantic = create_pydantic_model(Athlete)
+
+
+class AthleteCreateRequest(BaseModel):
+    """Backward-compatible athlete payload with an optional normalized location."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    last_name: str = Field(max_length=100)
+    first_name: str = Field(max_length=100)
+    birth_year: int = Field(ge=1000, le=9999)
+    gender: str = Field(min_length=1, max_length=1)
+    club: Optional[str] = Field(default=None, max_length=255)
+    city: Optional[str] = Field(default=None, max_length=255)
+    license: Optional[str] = Field(default=None, max_length=50)
+    avatar_url: Optional[str] = Field(default=None, max_length=250)
+    is_top: bool = False
+    location: Optional[AthleteLocationCreate] = None
+
+    @field_validator("gender")
+    @classmethod
+    def normalize_gender(cls, value: str) -> str:
+        return value.upper()
 
 
 AthleteDetailed_Pydantic = with_nested(

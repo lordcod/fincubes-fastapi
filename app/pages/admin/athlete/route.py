@@ -3,10 +3,19 @@ from typing import List
 
 from fastapi import APIRouter, Depends
 from tortoise.expressions import Q
+from tortoise.transactions import in_transaction
 
 
 from app.models.athlete.athlete import Athlete
-from app.schemas.athlete.athlete import Athlete_Pydantic, AthleteIn_Pydantic
+from app.models.location.athlete_location import AthleteLocation
+from app.schemas.athlete.athlete import (
+    AthleteCreateRequest,
+    Athlete_Pydantic,
+)
+from app.services.location_catalog import (
+    legacy_club_value,
+    resolve_location_link,
+)
 from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter(tags=['Admin/Athlete'])
@@ -82,6 +91,31 @@ async def get_athletes_admin(
     response_model=Athlete_Pydantic
 )
 @require_scope('athlete:create')
-async def create_athlete(athlete: AthleteIn_Pydantic):
-    db_athlete = await Athlete.create(**athlete.model_dump())
+async def create_athlete(athlete: AthleteCreateRequest):
+    location_object = (
+        await resolve_location_link(athlete.location)
+        if athlete.location is not None
+        else None
+    )
+    athlete_data = athlete.model_dump(exclude={"location"})
+    athlete_data["birth_year"] = str(athlete_data["birth_year"])
+    if location_object is not None:
+        athlete_data["club"] = athlete_data["club"] or legacy_club_value(
+            athlete.location.alias,
+            location_object.club,
+        )
+        athlete_data["city"] = athlete_data["city"] or location_object.city
+
+    async with in_transaction() as connection:
+        db_athlete = await Athlete.create(
+            **athlete_data,
+            using_db=connection,
+        )
+        if location_object is not None:
+            await AthleteLocation.create(
+                athlete=db_athlete,
+                location_object=location_object,
+                alias=athlete.location.alias,
+                using_db=connection,
+            )
     return db_athlete

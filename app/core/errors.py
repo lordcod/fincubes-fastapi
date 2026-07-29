@@ -120,8 +120,21 @@ class ErrorCode(Enum):
         1002, "Сессию пока нельзя отзывать — подождите немного.")
 
     # 4xxx — Внутренние ошибки / внешние сервисы
-    REVIEW_SESSION_NOT_FOUND = ErrorInfo(3017, "Review-сессия не найдена", 404)
-    REVIEW_ITEM_NOT_FOUND = ErrorInfo(3018, "Элемент review не найден", 404)
+    LOCATION_REGION_REQUIRED = ErrorInfo(
+        3019, "Для локации обязательно указать регион", 422
+    )
+    LOCATION_ALIAS_NOT_FOUND = ErrorInfo(
+        3020, "Алиас локации не найден", 404
+    )
+    LOCATION_ALIAS_CONFLICT = ErrorInfo(
+        3021, "Такой алиас локации уже существует", 409
+    )
+    LOCATION_ALIAS_MISMATCH = ErrorInfo(
+        3022, "Алиас не соответствует выбранному объекту локации", 422
+    )
+    LOCATION_ENTITY_ID_CONFLICT = ErrorInfo(
+        3023, "Название локации уже связано с другим ID", 409
+    )
     SEND_EMAIL_EXCEPTION = ErrorInfo(
         4001, "Не удалось отправить электронное письмо", 500
     )

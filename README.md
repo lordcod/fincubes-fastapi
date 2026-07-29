@@ -69,6 +69,16 @@ docker-compose up --build
 Автоматически генерируемая документация доступна по адресу:
 [https://api.fincubes.ru/docs](https://api.fincubes.ru/docs)
 
+Изменения API нормализованных локаций и порядок миграции описаны в
+[docs/LOCATION_IDENTIFICATION_CHANGELOG.md](docs/LOCATION_IDENTIFICATION_CHANGELOG.md).
+
+Правила импорта дополнительного справочника и разрешения aliases, относящихся
+к нескольким регионам:
+[docs/LOCATION_CATALOG_ADDITIONS.md](docs/LOCATION_CATALOG_ADDITIONS.md).
+
+Breaking change `GET /admin/locations/aliases/` и инструкция для обработчиков:
+[docs/LOCATION_ALIASES_HANDLER_CHANGELOG.md](docs/LOCATION_ALIASES_HANDLER_CHANGELOG.md).
+
 \[Dybfuo Projects]
 
 

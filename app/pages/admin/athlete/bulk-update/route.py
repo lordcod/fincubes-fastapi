@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 
 from app.core.errors import APIError, ErrorCode
 from app.models.athlete.athlete import Athlete
-from app.schemas.athlete.review import (
+from app.schemas.athlete.bulk import (
     BulkAthleteUpdateRequest,
     BulkAthleteUpdateResponse,
 )
