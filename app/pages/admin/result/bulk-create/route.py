@@ -1,10 +1,9 @@
 
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from tortoise.exceptions import DoesNotExist
 
-from app.core.deps.redis import get_redis
 from app.core.errors import APIError, ErrorCode
 
 from app.models.athlete.athlete import Athlete
@@ -24,7 +23,7 @@ router = APIRouter()
 @require_scope('result:create')
 async def bulk_create_results(
     results_data: List[BulkCreateResult],
-    ignore_exception: bool = True
+    ignore_exception: bool = True,
 ):
     results = []
     errors = []

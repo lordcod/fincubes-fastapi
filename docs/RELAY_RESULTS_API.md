@@ -4,6 +4,11 @@
 Название команды сохраняется буквально в поле `name`; ссылок на объект
 локации или `distance_id` нет.
 
+Поле `event_type` назначается сервером и не передаётся при создании:
+
+- обычный `Result` возвращается с `event_type: "INDIVIDUAL"`;
+- `RelayResult` возвращается с `event_type: "RELAY"`.
+
 ## Семантика дистанции
 
 - `distance` — длина одного этапа;
@@ -120,6 +125,72 @@ GET /admin/relay-results/{id}/
 
 Ответ содержит вычисленный `total_distance` и отсортированный по `order`
 массив `legs`.
+
+## Общий endpoint результатов атлета
+
+```http
+GET /public/server/athlete/{athlete_id}/performances/
+```
+
+Scope: `athlete.results:read`.
+
+Endpoint возвращает индивидуальные результаты и этапы эстафет в общем
+массиве `performances`.
+
+Индивидуальный результат:
+
+```json
+{
+  "id": 501,
+  "event_type": "INDIVIDUAL",
+  "stroke": "SURFACE",
+  "distance": 100,
+  "relay_count": 1,
+  "total_distance": 100,
+  "result": "00:45,20",
+  "split_result": null,
+  "name": null,
+  "relay_order": null,
+  "relay_leg_id": null,
+  "leg_metadata": null,
+  "best": true
+}
+```
+
+Эстафетный результат конкретного атлета:
+
+```json
+{
+  "id": 701,
+  "event_type": "RELAY",
+  "stroke": "SURFACE",
+  "distance": 50,
+  "relay_count": 4,
+  "total_distance": 200,
+  "name": "СШ ВВС",
+  "result": "01:40,30",
+  "split_result": "00:24,10",
+  "relay_order": 1,
+  "relay_leg_id": 9001,
+  "leg_metadata": null,
+  "place": "1",
+  "points": "50",
+  "status": "COMPLETED",
+  "best": false
+}
+```
+
+Для эстафеты:
+
+- `id` — ID общего `RelayResult`;
+- `result` — итоговое время команды;
+- `split_result` — время этапа данного атлета;
+- `relay_leg_id` — ID связи атлета с эстафетой;
+- `relay_order` — номер этапа атлета;
+- `distance` — длина одного этапа;
+- `total_distance` — полная длина эстафеты.
+
+Эстафетные split-time не участвуют в вычислении `best`.
 
 ## Удаление
 

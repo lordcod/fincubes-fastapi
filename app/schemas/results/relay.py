@@ -3,6 +3,7 @@ from pydantic import computed_field, field_validator
 from app.models.competition.relay_leg import RelayLeg
 from app.models.competition.relay_result import RelayResult
 from app.schemas import create_pydantic_model
+from app.shared.enums.enums import EventTypeEnum
 
 
 _RelayResultIn_Pydantic = create_pydantic_model(
@@ -38,6 +39,7 @@ _RelayResult_Pydantic = create_pydantic_model(
 
 class RelayResult_Pydantic(_RelayResult_Pydantic):
     competition_id: int
+    event_type: EventTypeEnum = EventTypeEnum.RELAY
 
     @computed_field
     @property

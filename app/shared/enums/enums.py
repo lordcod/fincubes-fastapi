@@ -19,6 +19,11 @@ class GenderEnum(StrEnum):
     MALE = "M"
 
 
+class EventTypeEnum(StrEnum):
+    INDIVIDUAL = "INDIVIDUAL"
+    RELAY = "RELAY"
+
+
 class CoachAthleteStatusEnum(StrEnum):
     ACCEPTED = 'accepted'
     PENDING = 'pending'

@@ -1,5 +1,5 @@
 import asyncio
-from datetime import date
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -14,7 +14,9 @@ from app.models.competition.competition import Competition
 from app.models.competition.distance import Distance
 from app.models.competition.relay_leg import RelayLeg
 from app.models.competition.relay_result import RelayResult
+from app.models.competition.result import Result
 from app.schemas.competition.distance import DistanceIn_Pydantic
+from app.schemas.athlete.performance import UserPerformance
 from app.schemas.results.relay import (
     RelayResultCreate,
     RelayResult_Pydantic,
@@ -27,6 +29,8 @@ from app.services.relay_results import (
     list_relay_results,
     validate_relay_composition,
 )
+from app.services.athlete_performances import build_athlete_performances
+from app.shared.enums.enums import EventTypeEnum
 
 
 def _relay_create_payload(**updates) -> RelayResultCreate:
@@ -228,6 +232,29 @@ def test_relay_routes_are_registered():
     assert "/admin/relay-results/{id}/" in paths
 
 
+def test_common_performance_contract_exposes_team_and_split_results():
+    performance = UserPerformance(
+        id=701,
+        created_at=datetime(2026, 7, 29, tzinfo=timezone.utc),
+        updated_at=datetime(2026, 7, 29, tzinfo=timezone.utc),
+        event_type=EventTypeEnum.RELAY,
+        stroke="SURFACE",
+        distance=50,
+        relay_count=4,
+        total_distance=200,
+        name="СШ ВВС",
+        result="01:40.30",
+        split_result="00:24.10",
+        relay_order=1,
+        relay_leg_id=9001,
+    )
+
+    data = performance.model_dump(mode="json")
+    assert data["event_type"] == "RELAY"
+    assert data["result"] == "01:40,30"
+    assert data["split_result"] == "00:24,10"
+
+
 def test_relay_result_service_round_trip():
     async def scenario():
         await Tortoise.init(
@@ -281,6 +308,36 @@ def test_relay_result_service_round_trip():
 
             listed = await list_relay_results(competition.id)
             assert [item.id for item in listed] == [created.id]
+
+            await Result.create(
+                athlete=athletes[0],
+                competition=competition,
+                stroke="SURFACE",
+                distance=100,
+                result=None,
+                status="COMPLETED",
+            )
+            athlete_results = await build_athlete_performances(
+                athletes[0].id,
+            )
+            performances = athlete_results.results[0].performances
+            individual = next(
+                item
+                for item in performances
+                if item.event_type == EventTypeEnum.INDIVIDUAL
+            )
+            relay = next(
+                item
+                for item in performances
+                if item.event_type == EventTypeEnum.RELAY
+            )
+            assert individual.total_distance == 100
+            assert individual.relay_count == 1
+            assert relay.name == "СШ ВВС"
+            assert relay.total_distance == 200
+            assert relay.relay_count == 4
+            assert relay.relay_order == 1
+            assert relay.relay_leg_id == created.legs[0].id
 
             await delete_relay_result(created.id)
             with pytest.raises(APIError) as exc_info:

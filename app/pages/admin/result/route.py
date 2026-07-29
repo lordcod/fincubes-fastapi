@@ -1,7 +1,6 @@
-from fastapi import APIRouter, Body, Depends
+from fastapi import APIRouter, Body
 from tortoise.exceptions import DoesNotExist
 
-from app.core.deps.redis import get_redis
 from app.core.errors import APIError, ErrorCode
 
 from app.models.athlete.athlete import Athlete
@@ -22,7 +21,6 @@ async def create_result(
     result: ResultIn_Pydantic,
     competition_id: int = Body(embed=True),
     athlete_id: int = Body(embed=True),
-    redis=Depends(get_redis),
 ):
     try:
         competition = await Competition.get(id=competition_id)

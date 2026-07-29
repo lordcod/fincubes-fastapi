@@ -7,15 +7,22 @@ from app.models.competition.result import Result
 from app.schemas import create_pydantic_model, with_nested
 from app.schemas.athlete.athlete import Athlete_Pydantic
 from app.schemas.competition.competition import Competition_Pydantic
+from app.shared.enums.enums import EventTypeEnum
 from app.shared.utils.flexible_time import FlexibleTime
 
-ResultDepth0_Pydantic = create_pydantic_model(Result)
+_ResultDepth0_Pydantic = create_pydantic_model(Result)
+
+
+class ResultDepth0_Pydantic(_ResultDepth0_Pydantic):
+    event_type: EventTypeEnum = EventTypeEnum.INDIVIDUAL
+
+
 ResultIn_Pydantic = with_nested(
     create_pydantic_model(Result, exclude_readonly=True,
                           exclude=('resolved_time', ))
 )
 Result_Pydantic = with_nested(
-    create_pydantic_model(Result),
+    ResultDepth0_Pydantic,
     athlete=Athlete_Pydantic,
     competition=Competition_Pydantic,
     best=(Optional[FlexibleTime], None),
