@@ -1,3 +1,4 @@
+import json
 from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
@@ -53,6 +54,10 @@ def parse_best_full_result(row: dict) -> BestFullResult:
             EventTypeEnum.INDIVIDUAL,
         )
     )
+    metadata = result_data.get("metadata")
+    if isinstance(metadata, str):
+        result_data["metadata"] = json.loads(metadata)
+
     return BestFullResult(
         result=ResultDepth0_Pydantic.model_validate(result_data),
         athlete=prepare_columns(Athlete, row, 'athlete'),

@@ -39,7 +39,7 @@ def test_top_result_parser_preserves_relay_event_type():
         "result_points": "50",
         "result_record": None,
         "result_status": "COMPLETED",
-        "result_metadata": None,
+        "result_metadata": "{}",
         "result_event_type": "RELAY",
         "athlete_created_at": now,
         "athlete_updated_at": now,
@@ -75,6 +75,7 @@ def test_top_result_parser_preserves_relay_event_type():
     assert parsed.result.event_type == EventTypeEnum.RELAY
     assert parsed.result.id == 9001
     assert str(parsed.result.result) == "00:24,10"
+    assert parsed.result.metadata == {}
     assert parsed.row_num == 3
 
 

@@ -1,4 +1,5 @@
 import hashlib
+import logging
 from datetime import date
 from typing import List, Optional
 
@@ -8,6 +9,8 @@ from app.repositories.sa.top_results import build_top_results_query
 from app.repositories.sa.utils import compile_query_with_dollar_params, compile_query_with_literals
 from app.shared.cache.redis_compressed import RedisCachePickleCompressed
 from app.shared.clients.redis import client
+
+_log = logging.getLogger(__name__)
 
 
 async def get_top_results(
@@ -70,7 +73,7 @@ async def get_top_results(
     )
 
     sql = compile_query_with_literals(query)
-    print(sql)
+    _log.debug("Top results query: %s", sql)
     results = await Tortoise.get_connection("default").execute_query_dict(sql)
 
     if use_cache:
