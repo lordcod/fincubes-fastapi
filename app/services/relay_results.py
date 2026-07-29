@@ -13,6 +13,7 @@ from app.schemas.results.relay import (
     RelayResultCreate,
     RelayResultWithLegs,
 )
+from app.shared.enums.enums import GenderEnum
 
 
 def validate_relay_composition(payload: RelayResultCreate) -> None:
@@ -157,7 +158,7 @@ async def list_relay_results(
     stroke: str | None = None,
     distance: int | None = None,
     relay_count: int | None = None,
-    gender: str | None = None,
+    gender: GenderEnum | None = None,
 ) -> list[RelayResultWithLegs]:
     if not await Competition.filter(id=competition_id).exists():
         raise APIError(ErrorCode.COMPETITION_NOT_FOUND)

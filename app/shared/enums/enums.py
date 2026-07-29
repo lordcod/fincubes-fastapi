@@ -17,6 +17,8 @@ class VerificationTokenEnum(StrEnum):
 class GenderEnum(StrEnum):
     FEMALE = "F"
     MALE = "M"
+    MIXED = "X"
+    ALL = "A"
 
 
 class EventTypeEnum(StrEnum):

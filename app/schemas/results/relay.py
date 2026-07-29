@@ -3,7 +3,7 @@ from pydantic import computed_field, field_validator
 from app.models.competition.relay_leg import RelayLeg
 from app.models.competition.relay_result import RelayResult
 from app.schemas import create_pydantic_model
-from app.shared.enums.enums import EventTypeEnum
+from app.shared.enums.enums import EventTypeEnum, GenderEnum
 
 
 _RelayResultIn_Pydantic = create_pydantic_model(
@@ -14,6 +14,7 @@ _RelayResultIn_Pydantic = create_pydantic_model(
 
 
 class RelayResultIn_Pydantic(_RelayResultIn_Pydantic):
+    gender: GenderEnum
     relay_count: int = 1
     status: str = "COMPLETED"
 
@@ -40,6 +41,7 @@ _RelayResult_Pydantic = create_pydantic_model(
 class RelayResult_Pydantic(_RelayResult_Pydantic):
     competition_id: int
     event_type: EventTypeEnum = EventTypeEnum.RELAY
+    gender: GenderEnum
 
     @computed_field
     @property

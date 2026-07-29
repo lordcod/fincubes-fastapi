@@ -36,6 +36,13 @@ POST /admin/relay-results/
 
 Scope: `result:create`.
 
+Допустимые значения `gender`:
+
+- `F` — женская;
+- `M` — мужская;
+- `X` — смешанная;
+- `A` — все.
+
 ```json
 {
   "competition_id": 123,

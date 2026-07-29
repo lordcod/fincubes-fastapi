@@ -8,6 +8,7 @@ from app.services.relay_results import (
     create_relay_result,
     list_relay_results,
 )
+from app.shared.enums.enums import GenderEnum
 from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter(tags=["Admin/Relay results"])
@@ -35,7 +36,7 @@ async def list_relay_results_endpoint(
     stroke: str | None = None,
     distance: int | None = Query(default=None, gt=0),
     relay_count: int | None = Query(default=None, gt=1),
-    gender: str | None = Query(default=None, min_length=1, max_length=1),
+    gender: GenderEnum | None = None,
 ):
     return await list_relay_results(
         competition_id=competition_id,

@@ -30,7 +30,7 @@ from app.services.relay_results import (
     validate_relay_composition,
 )
 from app.services.athlete_performances import build_athlete_performances
-from app.shared.enums.enums import EventTypeEnum
+from app.shared.enums.enums import EventTypeEnum, GenderEnum
 
 
 def _relay_create_payload(**updates) -> RelayResultCreate:
@@ -182,6 +182,26 @@ def test_valid_relay_composition():
     validate_relay_composition(_relay_create_payload())
 
 
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("F", GenderEnum.FEMALE),
+        ("M", GenderEnum.MALE),
+        ("X", GenderEnum.MIXED),
+        ("A", GenderEnum.ALL),
+    ],
+)
+def test_relay_result_accepts_supported_genders(value, expected):
+    payload = _relay_create_payload(gender=value)
+
+    assert payload.gender == expected
+
+
+def test_relay_result_rejects_unknown_gender():
+    with pytest.raises(ValidationError):
+        _relay_create_payload(gender="U")
+
+
 def test_relay_composition_requires_exact_leg_count():
     payload = _relay_create_payload(
         legs=_relay_create_payload().legs[:3],
@@ -230,6 +250,9 @@ def test_relay_routes_are_registered():
     assert "/admin/relay-results/" in paths
     assert "/admin/relay-results/bulk-create/" in paths
     assert "/admin/relay-results/{id}/" in paths
+
+    gender_schema = app.openapi()["components"]["schemas"]["GenderEnum"]
+    assert gender_schema["enum"] == ["F", "M", "X", "A"]
 
 
 def test_common_performance_contract_exposes_team_and_split_results():

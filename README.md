@@ -69,6 +69,9 @@ docker-compose up --build
 Автоматически генерируемая документация доступна по адресу:
 [https://api.fincubes.ru/docs](https://api.fincubes.ru/docs)
 
+Frontend changelog for 2026-07-29:
+[docs/FRONTEND_CHANGELOG_2026-07-29.md](docs/FRONTEND_CHANGELOG_2026-07-29.md).
+
 Изменения API нормализованных локаций и порядок миграции описаны в
 [docs/LOCATION_IDENTIFICATION_CHANGELOG.md](docs/LOCATION_IDENTIFICATION_CHANGELOG.md).
 
