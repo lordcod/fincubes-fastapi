@@ -192,6 +192,37 @@ Endpoint возвращает индивидуальные результаты 
 
 Эстафетные split-time не участвуют в вычислении `best`.
 
+## Учёт в рейтинге
+
+Split эстафеты участвует в top-рейтинге только при одновременном выполнении
+условий:
+
+- `RelayLeg.order == 1`;
+- `RelayLeg.result` заполнен.
+
+В рейтинг передаётся именно время первого этапа:
+
+- `result` и `resolved_time` равны `RelayLeg.result`;
+- `stroke` и `distance` берутся из `RelayResult`;
+- `event_type` равен `RELAY`.
+
+Командное время `RelayResult.result` и этапы с `order > 1` в рейтинге не
+участвуют. Первый этап сравнивается с индивидуальными результатами атлета
+на той же комбинации `stroke + distance`.
+
+Персональный рейтинг читается через:
+
+```http
+GET /public/server/athlete/{athlete_id}/top/
+```
+
+Рейтинг материализуется в MongoDB ежедневной задачей. Для немедленного
+пересчёта после импорта:
+
+```powershell
+doppler run -- .\.venv\Scripts\python.exe .\scripts\rebuild_ratings.py
+```
+
 ## Удаление
 
 ```http

@@ -1,15 +1,82 @@
-from typing import Any, List, Optional
+from datetime import date
+from typing import List, Optional
+
 from sqlalchemy import (
-    CTE, Table, Integer, select, and_, func, cast, text, or_
+    Integer,
+    and_,
+    cast,
+    func,
+    literal,
+    null,
+    or_,
+    select,
+    text,
+    union_all,
 )
 from sqlalchemy.sql.functions import dense_rank
-from datetime import date
-from sqlalchemy.dialects import postgresql
-from sqlalchemy.dialects.postgresql import array
-from app.repositories.sa.models import athletes, results, competitions
-from app.repositories.sa.utils import prepare_columns, label_columns
+
+from app.repositories.sa.models import (
+    athletes,
+    competitions,
+    relay_legs,
+    relay_results,
+    results,
+)
+from app.repositories.sa.utils import label_columns
+from app.shared.enums.enums import EventTypeEnum
 from app.shared.utils.metadata import categories as CATEGORY_CONFIG
+
 CATEGORY_INDEX = {c["id"]: c for c in CATEGORY_CONFIG}
+
+
+def build_rankable_results():
+    individual_results = select(
+        *results.c,
+        literal(EventTypeEnum.INDIVIDUAL.value).label("event_type"),
+    )
+
+    relay_column_values = {
+        "created_at": relay_legs.c.created_at,
+        "updated_at": relay_legs.c.updated_at,
+        "id": relay_legs.c.id,
+        "athlete_id": relay_legs.c.athlete_id,
+        "competition_id": relay_results.c.competition_id,
+        "stroke": relay_results.c.stroke,
+        "distance": relay_results.c.distance,
+        "result": relay_legs.c.result,
+        "final": null(),
+        "resolved_time": relay_legs.c.result,
+        "place": relay_results.c.place,
+        "final_rank": null(),
+        "points": relay_results.c.points,
+        "record": null(),
+        "status": relay_results.c.status,
+        "metadata": relay_legs.c.metadata,
+    }
+    relay_first_legs = (
+        select(
+            *[
+                relay_column_values[column.name].label(column.name)
+                for column in results.c
+            ],
+            literal(EventTypeEnum.RELAY.value).label("event_type"),
+        )
+        .select_from(
+            relay_legs.join(
+                relay_results,
+                relay_results.c.id == relay_legs.c.relay_result_id,
+            )
+        )
+        .where(
+            relay_legs.c.order == 1,
+            relay_legs.c.result.isnot(None),
+        )
+    )
+
+    return union_all(
+        individual_results,
+        relay_first_legs,
+    ).cte("rankable_results")
 
 
 def build_top_results_query(
@@ -29,6 +96,7 @@ def build_top_results_query(
     courses: Optional[List[str]] = None,
     statuses: Optional[List[str]] = None,
 ):
+    rankable_results = build_rankable_results()
     current_date = date.today()
     current_year = current_date.year
 
@@ -40,11 +108,11 @@ def build_top_results_query(
     season_start = date(season, 9, 1) if season else None
     season_end = date(season + 1, 8, 31) if season else None
 
-    base_filters = [results.c.resolved_time.isnot(None)]
+    base_filters = [rankable_results.c.resolved_time.isnot(None)]
     if stroke:
-        base_filters.append(results.c.stroke == stroke)
+        base_filters.append(rankable_results.c.stroke == stroke)
     if distance:
-        base_filters.append(results.c.distance == distance)
+        base_filters.append(rankable_results.c.distance == distance)
     if gender:
         base_filters.append(athletes.c.gender == gender)
 
@@ -79,48 +147,66 @@ def build_top_results_query(
 
     best_results_subq = (
         select(
-            results.c.athlete_id,
-            results.c.stroke,
-            results.c.distance,
-            func.min(results.c.resolved_time).label("resolved_time")
+            rankable_results.c.athlete_id,
+            rankable_results.c.stroke,
+            rankable_results.c.distance,
+            func.min(
+                rankable_results.c.resolved_time,
+            ).label("resolved_time"),
         )
         .select_from(
-            results
-            .join(athletes, athletes.c.id == results.c.athlete_id)
-            .join(competitions, competitions.c.id == results.c.competition_id)
+            rankable_results
+            .join(
+                athletes,
+                athletes.c.id == rankable_results.c.athlete_id,
+            )
+            .join(
+                competitions,
+                competitions.c.id == rankable_results.c.competition_id,
+            )
         )
         .where(and_(*best_results_filters))
         .group_by(
-            results.c.athlete_id,
-            results.c.stroke,
-            results.c.distance,
+            rankable_results.c.athlete_id,
+            rankable_results.c.stroke,
+            rankable_results.c.distance,
         )
         .subquery("best_results")
     )
 
     query = (
         select(
-            *label_columns(results, "result"),
+            *label_columns(rankable_results, "result"),
             *label_columns(athletes, "athlete"),
             *label_columns(competitions, "competition"),
             dense_rank().over(
                 partition_by=[
-                    results.c.stroke,
-                    results.c.distance,
+                    rankable_results.c.stroke,
+                    rankable_results.c.distance,
                     athletes.c.gender
                 ],
-                order_by=results.c.resolved_time
+                order_by=rankable_results.c.resolved_time
             ).label("row_num")
         )
         .select_from(
-            results
-            .join(athletes, athletes.c.id == results.c.athlete_id)
-            .join(competitions, competitions.c.id == results.c.competition_id)
+            rankable_results
+            .join(
+                athletes,
+                athletes.c.id == rankable_results.c.athlete_id,
+            )
+            .join(
+                competitions,
+                competitions.c.id == rankable_results.c.competition_id,
+            )
             .join(best_results_subq, and_(
-                results.c.athlete_id == best_results_subq.c.athlete_id,
-                results.c.stroke == best_results_subq.c.stroke,
-                results.c.distance == best_results_subq.c.distance,
-                results.c.resolved_time == best_results_subq.c.resolved_time,
+                rankable_results.c.athlete_id
+                == best_results_subq.c.athlete_id,
+                rankable_results.c.stroke
+                == best_results_subq.c.stroke,
+                rankable_results.c.distance
+                == best_results_subq.c.distance,
+                rankable_results.c.resolved_time
+                == best_results_subq.c.resolved_time,
             ))
         )
         .where(and_(*base_filters))

@@ -1,16 +1,14 @@
-from datetime import date
 from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
 from app.models.athlete.athlete import Athlete
 from app.models.competition.competition import Competition
-from app.models.competition.result import Result
-from app.repositories.sa.top_results import prepare_columns
+from app.repositories.sa.utils import prepare_columns
 from app.schemas.athlete.athlete import Athlete_Pydantic
 from app.schemas.competition.competition import Competition_Pydantic
 from app.schemas.results.result import ResultDepth0_Pydantic
-from app.shared.enums.enums import GenderEnum
+from app.shared.enums.enums import EventTypeEnum, GenderEnum
 
 
 class AgeCategory(BaseModel):
@@ -42,8 +40,21 @@ class TopResponse(BaseModel):
 
 
 def parse_best_full_result(row: dict) -> BestFullResult:
+    result_fields = set(ResultDepth0_Pydantic.model_fields)
+    result_data = {
+        field_name: value
+        for name, value in row.items()
+        if name.startswith("result_")
+        and (field_name := name.removeprefix("result_")) in result_fields
+    }
+    result_data["event_type"] = EventTypeEnum(
+        result_data.get(
+            "event_type",
+            EventTypeEnum.INDIVIDUAL,
+        )
+    )
     return BestFullResult(
-        result=prepare_columns(Result, row, 'result'),
+        result=ResultDepth0_Pydantic.model_validate(result_data),
         athlete=prepare_columns(Athlete, row, 'athlete'),
         competition=prepare_columns(Competition, row, 'competition'),
         row_num=row["row_num"],

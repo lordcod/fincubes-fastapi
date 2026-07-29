@@ -30,6 +30,7 @@ async def get_top_results(
 
     courses: Optional[List[str]] = None,
     statuses: Optional[List[str]] = None,
+    use_cache: bool = True,
 ):
     cache = RedisCachePickleCompressed(client)
 
@@ -41,13 +42,14 @@ async def get_top_results(
         f"{start_date}:{end_date}:"
         f"{courses}:{statuses}"
     )
-    cache_key = "top_results:" + hashlib.sha256(
+    cache_key = "top_results:v2:" + hashlib.sha256(
         cache_key_raw.encode()
     ).hexdigest()
 
-    cached = await cache.get(cache_key)
-    if cached:
-        return cached
+    if use_cache:
+        cached = await cache.get(cache_key)
+        if cached:
+            return cached
 
     query = build_top_results_query(
         stroke=stroke,
@@ -71,5 +73,6 @@ async def get_top_results(
     print(sql)
     results = await Tortoise.get_connection("default").execute_query_dict(sql)
 
-    await cache.set(cache_key, results, expire_seconds=60 * 60)
+    if use_cache:
+        await cache.set(cache_key, results, expire_seconds=60 * 60)
     return results

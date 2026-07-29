@@ -36,7 +36,8 @@ async def update_ratings(collection: AsyncIOMotorCollection):
 
             results = await get_top_results(min_age=category['min_age'],
                                             max_age=category['max_age'],
-                                            current_season=season)
+                                            current_season=season,
+                                            use_cache=False)
             results = [parse_best_full_result(res) for res in results]
             for top in results:
                 athlete_results[top.athlete.id][
