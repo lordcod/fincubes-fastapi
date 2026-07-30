@@ -2,6 +2,7 @@
 from typing import List, Optional
 
 from fastapi import APIRouter
+from tortoise.functions import Count
 
 
 from app.models.competition.competition import Competition
@@ -29,17 +30,26 @@ async def get_competitions(limit: Optional[int] = None, offset: Optional[int] = 
     if not competition_ids:
         return competitions
 
-    result_competition_ids = await Result.filter(
+    result_counts = await Result.filter(
         competition_id__in=competition_ids
-    ).distinct().values_list("competition_id", flat=True)
-    relay_result_competition_ids = await RelayResult.filter(
+    ).annotate(results_count=Count("id")).group_by("competition_id").values(
+        "competition_id",
+        "results_count",
+    )
+    relay_result_counts = await RelayResult.filter(
         competition_id__in=competition_ids
-    ).distinct().values_list("competition_id", flat=True)
-    competitions_with_results = (
-        set(result_competition_ids) | set(relay_result_competition_ids)
+    ).annotate(results_count=Count("id")).group_by("competition_id").values(
+        "competition_id",
+        "results_count",
     )
 
+    results_count_by_competition = dict.fromkeys(competition_ids, 0)
+    for row in result_counts + relay_result_counts:
+        competition_id = row["competition_id"]
+        results_count_by_competition[competition_id] += row["results_count"]
+
     for competition in competitions:
-        competition.has_results = competition.id in competitions_with_results
+        competition.results_count = results_count_by_competition[competition.id]
+        competition.has_results = competition.results_count > 0
 
     return competitions
