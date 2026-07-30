@@ -1,4 +1,6 @@
-from pydantic import computed_field, field_validator
+from typing import Optional
+
+from pydantic import BaseModel, Field, computed_field, field_validator
 
 from app.models.competition.relay_leg import RelayLeg
 from app.models.competition.relay_result import RelayResult
@@ -15,7 +17,7 @@ _RelayResultIn_Pydantic = create_pydantic_model(
 
 class RelayResultIn_Pydantic(_RelayResultIn_Pydantic):
     gender: GenderEnum
-    relay_count: int = 1
+    relay_count: int = Field(gt=1)
     status: str = "COMPLETED"
 
     @field_validator("name")
@@ -42,6 +44,7 @@ class RelayResult_Pydantic(_RelayResult_Pydantic):
     competition_id: int
     event_type: EventTypeEnum = EventTypeEnum.RELAY
     gender: GenderEnum
+    relay_count: int = Field(gt=1)
 
     @computed_field
     @property
@@ -73,9 +76,18 @@ _RelayLeg_Pydantic = create_pydantic_model(
 )
 
 
+class RelayLegAthlete_Pydantic(BaseModel):
+    id: int
+    first_name: str
+    last_name: str
+    birth_year: int
+    club: Optional[str] = None
+
+
 class RelayLeg_Pydantic(_RelayLeg_Pydantic):
     relay_result_id: int
     athlete_id: int
+    athlete: RelayLegAthlete_Pydantic
 
 
 class RelayResultCreate(RelayResultIn_Pydantic):

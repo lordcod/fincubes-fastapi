@@ -33,6 +33,7 @@ def validate_relay_composition(payload: RelayResultCreate) -> None:
 
 
 def _serialize_relay_leg(leg: RelayLeg) -> RelayLeg_Pydantic:
+    athlete = leg.athlete
     return RelayLeg_Pydantic.model_validate(
         {
             "id": leg.id,
@@ -43,6 +44,13 @@ def _serialize_relay_leg(leg: RelayLeg) -> RelayLeg_Pydantic:
             "order": leg.order,
             "result": leg.result,
             "metadata": leg.metadata,
+            "athlete": {
+                "id": athlete.id,
+                "first_name": athlete.first_name,
+                "last_name": athlete.last_name,
+                "birth_year": athlete.birth_year,
+                "club": athlete.club,
+            },
         }
     )
 
@@ -113,7 +121,7 @@ async def _create_relay_result(
 
     saved_legs = await RelayLeg.filter(
         relay_result_id=relay_result.id,
-    ).using_db(db).order_by("order")
+    ).using_db(db).prefetch_related("athlete").order_by("order")
     return serialize_relay_result(relay_result, saved_legs)
 
 
@@ -149,7 +157,7 @@ async def get_relay_result(
 
     legs = await RelayLeg.filter(
         relay_result_id=relay_result.id,
-    ).order_by("order")
+    ).prefetch_related("athlete").order_by("order")
     return serialize_relay_result(relay_result, legs)
 
 
@@ -180,7 +188,7 @@ async def list_relay_results(
     result_ids = [result.id for result in relay_results]
     legs = await RelayLeg.filter(
         relay_result_id__in=result_ids,
-    ).order_by("relay_result_id", "order")
+    ).prefetch_related("athlete").order_by("relay_result_id", "order")
 
     legs_by_result: dict[int, list[RelayLeg]] = {
         result_id: []

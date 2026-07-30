@@ -145,15 +145,11 @@ def test_distance_input_rejects_non_positive_relay_count():
 
 
 def test_relay_result_creation_requires_more_than_one_leg():
-    payload = _relay_create_payload(
-        relay_count=1,
-        legs=_relay_create_payload().legs[:1],
-    )
-
-    with pytest.raises(APIError) as exc_info:
-        validate_relay_composition(payload)
-
-    assert exc_info.value.error_code == ErrorCode.RELAY_COUNT_INVALID.code
+    with pytest.raises(ValidationError):
+        _relay_create_payload(
+            relay_count=1,
+            legs=_relay_create_payload().legs[:1],
+        )
 
 
 def test_relay_result_response_contains_total_distance():
@@ -176,6 +172,13 @@ def test_relay_result_response_contains_total_distance():
 
     assert result.total_distance == 200
     assert result.model_dump()["total_distance"] == 200
+
+
+def test_relay_result_schema_requires_more_than_one_leg():
+    schema = RelayResultCreate.model_json_schema()
+
+    assert "default" not in schema["properties"]["relay_count"]
+    assert schema["properties"]["relay_count"]["exclusiveMinimum"] == 1
 
 
 def test_valid_relay_composition():
@@ -310,6 +313,7 @@ def test_relay_result_service_round_trip():
                     first_name=f"Имя{index}",
                     birth_year="2008",
                     gender="M",
+                    club=f"Клуб {index}",
                 )
                 for index in range(1, 5)
             ]
@@ -330,13 +334,20 @@ def test_relay_result_service_round_trip():
             created = await create_relay_result(payload)
             assert created.total_distance == 200
             assert [leg.order for leg in created.legs] == [1, 2, 3, 4]
+            assert created.legs[0].athlete.id == athletes[0].id
+            assert created.legs[0].athlete.first_name == athletes[0].first_name
+            assert created.legs[0].athlete.last_name == athletes[0].last_name
+            assert created.legs[0].athlete.birth_year == 2008
+            assert created.legs[0].athlete.club == athletes[0].club
 
             fetched = await get_relay_result(created.id)
-            assert fetched.name == "СШ ВВС"
+            assert fetched.name == created.name
             assert len(fetched.legs) == 4
+            assert fetched.legs[0].athlete.id == athletes[0].id
 
             listed = await list_relay_results(competition.id)
             assert [item.id for item in listed] == [created.id]
+            assert listed[0].legs[0].athlete.id == athletes[0].id
 
             await Result.create(
                 athlete=athletes[0],
