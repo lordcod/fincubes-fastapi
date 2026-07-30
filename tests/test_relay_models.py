@@ -240,16 +240,22 @@ def test_relay_composition_rejects_duplicate_athlete():
 
 def test_relay_routes_are_registered():
     app = FastAPI()
-    routes_dir = Path("app/pages/admin/relay-results")
+    admin_routes_dir = Path("app/pages/admin/relay-results")
     app.include_router(
-        FileRouter(routes_dir).build(),
+        FileRouter(admin_routes_dir).build(),
         prefix="/admin/relay-results",
+    )
+    public_routes_dir = Path("app/pages/public/client/relay-results")
+    app.include_router(
+        FileRouter(public_routes_dir).build(),
+        prefix="/public/client/relay-results",
     )
 
     paths = app.openapi()["paths"]
     assert "/admin/relay-results/" in paths
     assert "/admin/relay-results/bulk-create/" in paths
     assert "/admin/relay-results/{id}/" in paths
+    assert "/public/client/relay-results/" in paths
 
     gender_schema = app.openapi()["components"]["schemas"]["GenderEnum"]
     assert gender_schema["enum"] == ["F", "M", "X", "A"]
