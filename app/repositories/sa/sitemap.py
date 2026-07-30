@@ -1,7 +1,7 @@
 from sqlalchemy import (
     select, func
 )
-from app.repositories.sa.models import athletes, results, competitions
+from app.repositories.sa.models import athletes, competitions, relay_legs, relay_results, results
 
 
 def build_competitions_last_update_query():
@@ -13,12 +13,27 @@ def build_competitions_last_update_query():
                 func.coalesce(
                     func.max(func.date(results.c.updated_at)),
                     func.date(competitions.c.updated_at)
+                ),
+                func.coalesce(
+                    func.max(func.date(relay_results.c.updated_at)),
+                    func.date(competitions.c.updated_at)
+                ),
+                func.coalesce(
+                    func.max(func.date(relay_legs.c.updated_at)),
+                    func.date(competitions.c.updated_at)
                 )
             ).label("last_update"),
         )
         .select_from(
-            competitions.outerjoin(
+            competitions
+            .outerjoin(
                 results, competitions.c.id == results.c.competition_id
+            )
+            .outerjoin(
+                relay_results, competitions.c.id == relay_results.c.competition_id
+            )
+            .outerjoin(
+                relay_legs, relay_results.c.id == relay_legs.c.relay_result_id
             )
         )
         .group_by(competitions.c.id)
@@ -35,12 +50,27 @@ def build_athletes_last_update_query():
                 func.coalesce(
                     func.max(func.date(results.c.updated_at)),
                     func.date(athletes.c.updated_at)
+                ),
+                func.coalesce(
+                    func.max(func.date(relay_legs.c.updated_at)),
+                    func.date(athletes.c.updated_at)
+                ),
+                func.coalesce(
+                    func.max(func.date(relay_results.c.updated_at)),
+                    func.date(athletes.c.updated_at)
                 )
             ).label("last_update"),
         )
         .select_from(
-            athletes.outerjoin(
+            athletes
+            .outerjoin(
                 results, athletes.c.id == results.c.athlete_id
+            )
+            .outerjoin(
+                relay_legs, athletes.c.id == relay_legs.c.athlete_id
+            )
+            .outerjoin(
+                relay_results, relay_legs.c.relay_result_id == relay_results.c.id
             )
         )
         .group_by(athletes.c.id)

@@ -1,5 +1,9 @@
 from datetime import date, datetime, time, timezone
 
+from app.repositories.sa.sitemap import (
+    build_athletes_last_update_query,
+    build_competitions_last_update_query,
+)
 from app.repositories.sa.top_results import build_top_results_query
 from app.repositories.sa.utils import compile_query_with_literals
 from app.schemas.results.top import parse_best_full_result
@@ -19,6 +23,20 @@ def test_top_results_query_includes_only_first_relay_leg():
     assert "'RELAY' AS event_type" in sql
     assert 'relay_legs."order" = 1' in sql
     assert "relay_legs.result IS NOT NULL" in sql
+
+
+def test_sitemap_last_update_queries_include_relay_results():
+    competitions_sql = compile_query_with_literals(
+        build_competitions_last_update_query()
+    )
+    athletes_sql = compile_query_with_literals(
+        build_athletes_last_update_query()
+    )
+
+    assert "relay_results" in competitions_sql
+    assert "relay_legs" in competitions_sql
+    assert "relay_results" in athletes_sql
+    assert "relay_legs" in athletes_sql
 
 
 def test_top_result_parser_preserves_relay_event_type():

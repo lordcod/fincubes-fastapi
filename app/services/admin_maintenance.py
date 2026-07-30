@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 from tortoise.functions import Count
 
 from app.core.security.hashing import hash_password
-from app.models import Athlete, Distance, Result, User
+from app.models import Athlete, Distance, RelayLeg, RelayResult, Result, User
 
 
 class AthleteSnapshot(BaseModel):
@@ -31,8 +31,11 @@ class TransferResultsResult(MaintenanceOperationResult):
     from_athlete: Optional[AthleteSnapshot] = None
     to_athlete: Optional[AthleteSnapshot] = None
     competition_id: Optional[int] = None
+    individual_results: int = 0
+    relay_legs: int = 0
     competitions: list[CompetitionResultCount] = Field(default_factory=list)
     remaining_source_results: Optional[int] = None
+    remaining_source_relay_legs: Optional[int] = None
     deleted_source_athlete: bool = False
 
 
@@ -85,14 +88,25 @@ async def transfer_results(
         query = query.filter(competition_id=competition_id)
 
     results = await query.order_by("competition_id", "id").all()
-    response.affected = len(results)
-    if not results:
-        response.messages.append("No results to transfer.")
+
+    relay_query = RelayLeg.filter(athlete_id=from_athlete_id).prefetch_related("relay_result")
+    if competition_id is not None:
+        relay_query = relay_query.filter(relay_result__competition_id=competition_id)
+    relay_legs = await relay_query.order_by("relay_result__competition_id", "relay_result_id", "order").all()
+
+    response.individual_results = len(results)
+    response.relay_legs = len(relay_legs)
+    response.affected = response.individual_results + response.relay_legs
+    if response.affected == 0:
+        response.messages.append("No individual results or relay legs to transfer.")
         return response
 
     competition_counts: dict[int, int] = {}
     for result in results:
         competition_counts[result.competition_id] = competition_counts.get(result.competition_id, 0) + 1
+    for leg in relay_legs:
+        relay_competition_id = leg.relay_result.competition_id
+        competition_counts[relay_competition_id] = competition_counts.get(relay_competition_id, 0) + 1
     response.competitions = [
         CompetitionResultCount(competition_id=comp_id, results=count)
         for comp_id, count in sorted(competition_counts.items())
@@ -104,17 +118,29 @@ async def transfer_results(
 
     for result in results:
         result.athlete_id = to_athlete_id
-    await Result.bulk_update(results, ["athlete_id"])
+    if results:
+        await Result.bulk_update(results, ["athlete_id"])
+
+    for relay_leg in relay_legs:
+        relay_leg.athlete_id = to_athlete_id
+    if relay_legs:
+        await RelayLeg.bulk_update(relay_legs, ["athlete_id"])
 
     response.messages.append(
-        f"Moved {len(results)} result(s) from athlete #{from_athlete_id} to #{to_athlete_id}."
+        f"Moved {len(results)} individual result(s) and {len(relay_legs)} relay leg(s) "
+        f"from athlete #{from_athlete_id} to #{to_athlete_id}."
     )
 
-    remaining = await Result.filter(athlete_id=from_athlete_id).count()
-    response.remaining_source_results = remaining
-    response.messages.append(f"Source athlete remaining results: {remaining}")
+    remaining_results = await Result.filter(athlete_id=from_athlete_id).count()
+    remaining_relay_legs = await RelayLeg.filter(athlete_id=from_athlete_id).count()
+    response.remaining_source_results = remaining_results
+    response.remaining_source_relay_legs = remaining_relay_legs
+    response.messages.append(
+        f"Source athlete remaining records: {remaining_results} individual result(s), "
+        f"{remaining_relay_legs} relay leg(s)."
+    )
 
-    if delete_empty_source and remaining == 0:
+    if delete_empty_source and remaining_results == 0 and remaining_relay_legs == 0:
         await athlete_from.delete()
         response.deleted_source_athlete = True
         response.messages.append(f"Deleted empty source athlete #{from_athlete_id}.")
@@ -125,7 +151,9 @@ async def transfer_results(
 
 
 async def clear_results(competition_id: int, apply: bool = False) -> MaintenanceOperationResult:
-    count = await Result.filter(competition_id=competition_id).count()
+    individual_count = await Result.filter(competition_id=competition_id).count()
+    relay_count = await RelayResult.filter(competition_id=competition_id).count()
+    count = individual_count + relay_count
     response = MaintenanceOperationResult(
         operation="clear_results",
         dry_run=not apply,
@@ -136,9 +164,13 @@ async def clear_results(competition_id: int, apply: bool = False) -> Maintenance
         response.messages.append("Dry-run only. Re-run with apply=true to delete these results.")
         return response
 
-    deleted = await Result.filter(competition_id=competition_id).delete()
-    response.affected = deleted
-    response.messages.append(f"Deleted results: {deleted}")
+    await Result.filter(competition_id=competition_id).delete()
+    await RelayResult.filter(competition_id=competition_id).delete()
+    response.affected = count
+    response.messages.append(
+        f"Deleted results: {individual_count} individual result(s), "
+        f"{relay_count} relay result(s)."
+    )
     return response
 
 
@@ -161,7 +193,10 @@ async def clear_distances(competition_id: int, apply: bool = False) -> Maintenan
 
 
 async def clear_empty_athletes(apply: bool = False) -> MaintenanceOperationResult:
-    athletes_without_results = await Athlete.annotate(results_count=Count("results")).filter(results_count=0)
+    athletes_without_results = await Athlete.annotate(
+        results_count=Count("results"),
+        relay_legs_count=Count("relay_legs"),
+    ).filter(results_count=0, relay_legs_count=0)
     count = len(athletes_without_results)
     response = MaintenanceOperationResult(
         operation="clear_empty_athletes",
