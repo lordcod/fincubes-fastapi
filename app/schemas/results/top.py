@@ -3,11 +3,11 @@ from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-from app.models.athlete.athlete import Athlete
 from app.models.competition.competition import Competition
 from app.repositories.sa.utils import prepare_columns
 from app.schemas.athlete.athlete import Athlete_Pydantic
 from app.schemas.competition.competition import Competition_Pydantic
+from app.schemas.location.location import LocationObjectOut
 from app.schemas.results.result import ResultDepth0_Pydantic
 from app.shared.enums.enums import EventTypeEnum, GenderEnum
 
@@ -58,9 +58,41 @@ def parse_best_full_result(row: dict) -> BestFullResult:
     if isinstance(metadata, str):
         result_data["metadata"] = json.loads(metadata)
 
+    athlete_fields = set(Athlete_Pydantic.model_fields)
+    athlete_data = {
+        field_name: value
+        for name, value in row.items()
+        if name.startswith("athlete_")
+        and (field_name := name.removeprefix("athlete_")) in athlete_fields
+    }
+
+    location_id = row.get("location_id")
+    location = None
+    if location_id is not None:
+        aliases = row.get("location_aliases") or []
+        required = row.get("location_required") or []
+        if isinstance(aliases, str):
+            aliases = json.loads(aliases)
+        if isinstance(required, str):
+            required = json.loads(required)
+        location = LocationObjectOut.model_validate(
+            {
+                "id": location_id,
+                "aliases": aliases,
+                "club": row.get("location_club"),
+                "city": row.get("location_city"),
+                "region": row.get("location_region"),
+                "required": required,
+            }
+        )
+        athlete_data["location"] = location
+        athlete_data["club"] = location.club
+        athlete_data["city"] = location.city
+        athlete_data["region"] = location.region
+
     return BestFullResult(
         result=ResultDepth0_Pydantic.model_validate(result_data),
-        athlete=prepare_columns(Athlete, row, 'athlete'),
+        athlete=Athlete_Pydantic.model_validate(athlete_data),
         competition=prepare_columns(Competition, row, 'competition'),
         row_num=row["row_num"],
     )

@@ -1,4 +1,5 @@
 from tortoise import fields
+from tortoise.queryset import QuerySet
 
 from app.models.base import TimestampedModel
 
@@ -23,16 +24,22 @@ class Athlete(TimestampedModel):
     @property
     def club(self):
         location = getattr(self, "location_object", None)
+        if location is None or isinstance(location, QuerySet):
+            return None
         return location.club if location else None
 
     @property
     def city(self):
         location = getattr(self, "location_object", None)
+        if location is None or isinstance(location, QuerySet):
+            return None
         return location.city if location else None
 
     @property
     def region(self):
         location = getattr(self, "location_object", None)
+        if location is None or isinstance(location, QuerySet):
+            return None
         return location.region if location else None
 
     class Meta:
