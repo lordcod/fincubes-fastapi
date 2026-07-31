@@ -10,7 +10,7 @@ from app.schemas.athlete.athlete import (
     AthleteCreateRequest,
     Athlete_Pydantic,
 )
-from app.services.location_catalog import resolve_athlete_location_fields
+from app.services.location_catalog import resolve_athlete_location_object
 from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter(tags=['Admin/Athlete'])
@@ -72,11 +72,11 @@ async def get_athletes_admin(
     if birth_year:
         q_filter &= Q(birth_year=birth_year)
     if club:
-        q_filter &= Q(club__icontains=club)
+        q_filter &= Q(location_object__club__icontains=club)
     if city:
-        q_filter &= Q(city__icontains=city)
+        q_filter &= Q(location_object__city__icontains=city)
     if region:
-        q_filter &= Q(region__icontains=region)
+        q_filter &= Q(location_object__region__icontains=region)
     if gender:
         q_filter &= Q(gender=gender)
 
@@ -84,7 +84,7 @@ async def get_athletes_admin(
         athletes = await Athlete.filter(q_filter)
     else:
         athletes = await Athlete.filter(q_filter).limit(limit)
-    return athletes
+    return await Athlete_Pydantic.from_queryset(athletes)
 
 
 @router.post(
@@ -95,14 +95,18 @@ async def get_athletes_admin(
 async def create_athlete(athlete: AthleteCreateRequest):
     athlete_data = athlete.model_dump()
     location_alias = athlete_data.pop("alias", None)
+    club = athlete_data.pop("club", None)
+    city = athlete_data.pop("city", None)
+    region = athlete_data.pop("region", None)
     athlete_data["birth_year"] = str(athlete_data["birth_year"])
-    athlete_data.update(
-        await resolve_athlete_location_fields(
-            alias=location_alias,
-            club=athlete_data.get("club"),
-            city=athlete_data.get("city"),
-            region=athlete_data.get("region"),
-        )
+    location = await resolve_athlete_location_object(
+        alias=location_alias,
+        club=club,
+        city=city,
+        region=region,
     )
-    db_athlete = await Athlete.create(**athlete_data)
-    return db_athlete
+    db_athlete = await Athlete.create(
+        **athlete_data,
+        location_object=location,
+    )
+    return await Athlete_Pydantic.from_tortoise_orm(db_athlete)

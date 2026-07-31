@@ -55,6 +55,39 @@ class LocationObjectCreate(BaseModel):
         return stripped or None
 
 
+class LocationObjectUpdate(BaseModel):
+    aliases: Optional[list[str]] = None
+    club: Optional[str] = Field(default=None, max_length=512)
+    city: Optional[str] = Field(default=None, max_length=255)
+    region: Optional[str] = Field(default=None, min_length=1, max_length=255)
+    required: Optional[set[RequiredLocationField]] = None
+
+    @field_validator("aliases")
+    @classmethod
+    def validate_aliases(cls, values: Optional[list[str]]) -> Optional[list[str]]:
+        if values is None:
+            return None
+        return LocationAliasesAdd(aliases=values).aliases
+
+    @field_validator("region")
+    @classmethod
+    def strip_region(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("region cannot be empty")
+        return stripped
+
+    @field_validator("club", "city")
+    @classmethod
+    def strip_optional_text(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        stripped = value.strip()
+        return stripped or None
+
+
 class LocationObjectOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

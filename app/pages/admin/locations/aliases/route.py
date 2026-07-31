@@ -11,6 +11,7 @@ from app.schemas.location.location import (
     LocationEntitySearchItem,
     LocationObjectCreate,
     LocationObjectOut,
+    LocationObjectUpdate,
     LocationResolveRequest,
     LocationResolveResult,
 )
@@ -20,6 +21,7 @@ from app.services.location_catalog import (
     matches_required_location_context,
     resolve_location_alias as resolve_location_alias_service,
     search_location_entities,
+    update_location_object,
 )
 from app.shared.utils.scopes.request import require_scope
 
@@ -97,6 +99,18 @@ async def search_aliases(
 @require_scope("athlete:create")
 async def add_location_object(payload: LocationObjectCreate):
     return await create_location_object(payload)
+
+
+@router.patch(
+    "/{location_id}/",
+    response_model=LocationObjectOut,
+)
+@require_scope("athlete:write")
+async def edit_location_object(
+    location_id: UUID,
+    payload: LocationObjectUpdate,
+):
+    return await update_location_object(location_id, payload)
 
 
 @router.post(

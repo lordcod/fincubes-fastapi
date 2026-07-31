@@ -7,7 +7,8 @@ from app.schemas.athlete.bulk import (
     BulkAthleteCreateResponse,
     BulkAthleteCreateResultItem,
 )
-from app.services.location_catalog import resolve_athlete_location_fields
+from app.schemas.athlete.athlete import Athlete_Pydantic
+from app.services.location_catalog import resolve_athlete_location_object
 from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter()
@@ -23,7 +24,7 @@ async def bulk_create_athletes(payload: BulkAthleteCreateRequest):
 
     async with in_transaction() as connection:
         for item in payload.items:
-            location_fields = await resolve_athlete_location_fields(
+            location = await resolve_athlete_location_object(
                 alias=item.alias,
                 club=item.club,
                 city=item.city,
@@ -34,9 +35,7 @@ async def bulk_create_athletes(payload: BulkAthleteCreateRequest):
                 first_name=item.first_name,
                 birth_year=str(item.birth_year),
                 gender=item.gender.upper(),
-                city=location_fields["city"],
-                region=location_fields["region"],
-                club=location_fields["club"],
+                location_object=location,
                 license=item.license,
                 using_db=connection,
             )
@@ -45,7 +44,7 @@ async def bulk_create_athletes(payload: BulkAthleteCreateRequest):
     response_items = [
         BulkAthleteCreateResultItem(
             external_id=input_item.external_id,
-            athlete=created_athlete,
+            athlete=await Athlete_Pydantic.from_tortoise_orm(created_athlete),
         )
         for input_item, created_athlete in zip(payload.items, created_models)
     ]

@@ -1,4 +1,5 @@
 from typing import Optional
+from uuid import UUID
 
 from pydantic import BaseModel, Field
 
@@ -11,6 +12,7 @@ class BulkAthleteUpdateItem(BaseModel):
     first_name: Optional[str] = None
     birth_year: Optional[int] = None
     gender: Optional[str] = None
+    location_object_id: Optional[UUID] = None
     alias: Optional[str] = None
     city: Optional[str] = None
     region: Optional[str] = None

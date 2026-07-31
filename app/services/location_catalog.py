@@ -8,6 +8,7 @@ from app.models.location.location_object import LocationObject
 from app.schemas.location.location import (
     LocationEntitySearchItem,
     LocationObjectCreate,
+    LocationObjectUpdate,
     LocationResolveRequest,
     LocationResolveResult,
 )
@@ -137,6 +138,47 @@ async def resolve_athlete_location_fields(
     }
 
 
+async def resolve_athlete_location_object(
+    *,
+    alias: Optional[str] = None,
+    club: Optional[str],
+    city: Optional[str],
+    region: Optional[str],
+    create_missing_alias: bool = True,
+) -> Optional[LocationObject]:
+    if not alias:
+        if not region:
+            return None
+        return await create_location_object(
+            LocationObjectCreate(
+                aliases=[club or city or region],
+                club=club,
+                city=city,
+                region=region,
+            )
+        )
+
+    resolved = await find_exact_alias(
+        alias,
+        city=city,
+        region=region,
+    )
+    if resolved is not None:
+        return resolved
+
+    if not create_missing_alias or not region:
+        return None
+
+    return await create_location_object(
+        LocationObjectCreate(
+            aliases=[alias],
+            club=club,
+            city=city,
+            region=region,
+        )
+    )
+
+
 def _canonical_identity(location: LocationObject) -> tuple[str, str, str]:
     return (
         normalize_location_text(location.club or ""),
@@ -232,6 +274,64 @@ async def add_aliases_to_location_object(
 
     location.aliases = list(dict.fromkeys([*(location.aliases or []), *new_aliases]))
     await location.save(update_fields=["aliases", "updated_at"])
+    return location
+
+
+async def update_location_object(
+    location_id: UUID,
+    payload: LocationObjectUpdate,
+) -> LocationObject:
+    location = await LocationObject.get_or_none(id=location_id)
+    if location is None:
+        raise APIError(ErrorCode.LOCATION_OBJECT_NOT_FOUND)
+
+    data = payload.model_dump(exclude_unset=True)
+    if not data:
+        return location
+
+    new_aliases = data.get("aliases", location.aliases or [])
+    new_club = data.get("club", location.club)
+    new_city = data.get("city", location.city)
+    new_region = data.get("region", location.region)
+    new_required = data.get("required", set(location.required or []))
+
+    incoming_identity = (
+        normalize_location_text(new_club or ""),
+        normalize_location_text(new_city or ""),
+        normalize_location_text(new_region),
+    )
+    incoming_aliases = {
+        normalize_location_text(alias)
+        for alias in new_aliases
+    }
+
+    for other in await LocationObject.exclude(id=location_id):
+        duplicate_aliases = incoming_aliases & {
+            normalize_location_text(alias)
+            for alias in (other.aliases or [])
+        }
+        if (
+            duplicate_aliases
+            and _canonical_identity(other) != incoming_identity
+            and not (new_required and other.required)
+        ):
+            raise APIError(ErrorCode.LOCATION_ALIAS_CONFLICT)
+
+    location.aliases = new_aliases
+    location.club = new_club
+    location.city = new_city
+    location.region = new_region
+    location.required = sorted(new_required)
+    await location.save(
+        update_fields=[
+            "aliases",
+            "club",
+            "city",
+            "region",
+            "required",
+            "updated_at",
+        ]
+    )
     return location
 
 
