@@ -1,21 +1,22 @@
-"""Import reviewed alias groups into normalized ``location_objects``."""
+"""Import reviewed alias groups into simplified ``location_objects``."""
 
 import argparse
 import asyncio
+import sys
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
-from uuid import UUID
 
 from tortoise import Tortoise
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from app.data.location_additions import locations as location_additions
 from app.data.location_aliases import locations as legacy_locations
 from app.models.location.location_object import LocationObject
-from app.services.location_catalog import (
-    deterministic_entity_id,
-    deterministic_location_object_id,
-    normalize_location_text,
-)
+from app.services.location_catalog import normalize_location_text
 
 _UNRESOLVED_REGION = "не определён"
 
@@ -27,27 +28,6 @@ class ImportSummary:
     created: int = 0
     updated: int = 0
     invalid: int = 0
-
-
-def _entity_ids(entity: str, name_key: str, id_key: str) -> dict[str, UUID]:
-    """Collect authoritative IDs from the original catalog only."""
-
-    result: dict[str, UUID] = {}
-    for value in legacy_locations.values():
-        name = value.get(name_key)
-        entity_id = value.get(id_key)
-        if not name or not entity_id:
-            continue
-        normalized = normalize_location_text(name)
-        parsed_id = UUID(str(entity_id))
-        previous = result.get(normalized)
-        if previous is not None and previous != parsed_id:
-            raise ValueError(
-                f"{entity} {name!r} связан с несколькими ID: "
-                f"{previous} и {parsed_id}"
-            )
-        result[normalized] = parsed_id
-    return result
 
 
 def _source_rows() -> list[dict[str, Any]]:
@@ -74,19 +54,21 @@ def _source_rows() -> list[dict[str, Any]]:
     return rows
 
 
-def build_location_objects(
-) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
-    known_ids = {
-        "club": _entity_ids("club", "club", "club_id"),
-        "city": _entity_ids("city", "city", "city_id"),
-        "region": _entity_ids("region", "region", "region_id"),
-    }
-    grouped: dict[UUID, dict[str, Any]] = {}
+def _identity(row: dict[str, Any]) -> tuple[str, str, str]:
+    return (
+        normalize_location_text(row.get("club") or ""),
+        normalize_location_text(row.get("city") or ""),
+        normalize_location_text(row["region"]),
+    )
+
+
+def build_location_objects() -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
+    grouped: dict[tuple[str, str, str], dict[str, Any]] = {}
     invalid: list[dict[str, str]] = []
 
-    for value in _source_rows():
-        aliases = value["aliases"]
-        region = value.get("region")
+    for row in _source_rows():
+        aliases = row["aliases"]
+        region = row.get("region")
         if not region or normalize_location_text(region) == normalize_location_text(
             _UNRESOLVED_REGION
         ):
@@ -96,71 +78,39 @@ def build_location_objects(
             )
             continue
 
-        resolved: dict[str, Any] = {
-            "club": value.get("club"),
-            "city": value.get("city"),
-            "region": region,
-        }
-        for entity in ("club", "city", "region"):
-            name = resolved.get(entity)
-            if not name:
-                resolved[f"{entity}_id"] = None
-                continue
-            normalized = normalize_location_text(name)
-            entity_id = known_ids[entity].get(normalized)
-            if entity_id is None:
-                entity_id = deterministic_entity_id(entity, name)
-                known_ids[entity][normalized] = entity_id
-            resolved[f"{entity}_id"] = entity_id
-
-        object_id = deterministic_location_object_id(
-            resolved["club_id"],
-            resolved["city_id"],
-            resolved["region_id"],
-        )
-        existing = grouped.get(object_id)
+        key = _identity(row)
+        existing = grouped.get(key)
         if existing is None:
-            grouped[object_id] = {
-                "id": object_id,
+            grouped[key] = {
                 "aliases": list(dict.fromkeys(aliases)),
-                **resolved,
-                "required": sorted(value.get("required") or []),
+                "club": row.get("club"),
+                "city": row.get("city"),
+                "region": region,
+                "required": sorted(row.get("required") or []),
             }
             continue
 
-        for field in (
-            "club",
-            "club_id",
-            "city",
-            "city_id",
-            "region",
-            "region_id",
-        ):
-            if existing[field] != resolved[field]:
-                if (
-                    field in {"club", "city", "region"}
-                    and existing[field]
-                    and resolved[field]
-                    and normalize_location_text(existing[field])
-                    == normalize_location_text(resolved[field])
-                ):
-                    continue
-                raise ValueError(
-                    f"Объект {object_id} содержит разные {field}: "
-                    f"{existing[field]!r} и {resolved[field]!r}"
-                )
         existing["aliases"] = list(
             dict.fromkeys([*existing["aliases"], *aliases])
         )
-        incoming_required = set(value.get("required") or [])
-        if incoming_required == {"region"}:
-            existing["required"] = ["region"]
-        else:
-            existing["required"] = sorted(
-                set(existing["required"]) | incoming_required
-            )
+        existing["required"] = sorted(
+            set(existing["required"]) | set(row.get("required") or [])
+        )
 
     return list(grouped.values()), invalid
+
+
+async def _find_existing(row: dict[str, Any]) -> LocationObject | None:
+    key = _identity(row)
+    for location in await LocationObject.all():
+        candidate = {
+            "club": location.club,
+            "city": location.city,
+            "region": location.region,
+        }
+        if _identity(candidate) == key:
+            return location
+    return None
 
 
 async def import_catalog(*, dry_run: bool) -> ImportSummary:
@@ -175,16 +125,21 @@ async def import_catalog(*, dry_run: bool) -> ImportSummary:
         return summary
 
     for row in objects:
-        object_id = row["id"]
-        defaults = {key: value for key, value in row.items() if key != "id"}
-        location = await LocationObject.get_or_none(id=object_id)
+        location = await _find_existing(row)
         if location is None:
             await LocationObject.create(**row)
             summary.created += 1
-        else:
-            location.update_from_dict(defaults)
-            await location.save()
-            summary.updated += 1
+            continue
+
+        location.aliases = list(dict.fromkeys([*(location.aliases or []), *row["aliases"]]))
+        location.required = sorted(set(location.required or []) | set(row["required"]))
+        location.club = row["club"]
+        location.city = row["city"]
+        location.region = row["region"]
+        await location.save(
+            update_fields=["aliases", "required", "club", "city", "region", "updated_at"]
+        )
+        summary.updated += 1
     return summary
 
 

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Query
 
 from app.schemas.location.location import LocationEntitySearchItem
 from app.services.location_catalog import search_location_entities

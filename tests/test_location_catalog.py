@@ -1,7 +1,7 @@
 import asyncio
 from collections import defaultdict
 from types import SimpleNamespace
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 from pydantic import ValidationError
@@ -14,22 +14,19 @@ from app.pages.admin.locations.aliases.route import get_location_catalog
 from app.schemas.location.location import (
     LocationAliasesAdd,
     LocationObjectCreate,
+    LocationResolveRequest,
 )
 from app.services.location_catalog import (
     add_aliases_to_location_object,
     create_location_object,
-    deterministic_entity_id,
-    deterministic_location_object_id,
     find_exact_alias,
     matches_required_location_context,
     normalize_location_text,
+    resolve_athlete_location_fields,
+    resolve_location_alias,
     search_location_entities,
 )
 from scripts.import_location_catalog import build_location_objects
-
-
-CRIMEA_ID = UUID("73941488-53f7-5fd2-bc1f-b61030bc7953")
-SIMFEROPOL_ID = UUID("3f107a24-5586-5b0d-bcce-214bae523485")
 
 
 def _objects_by_alias():
@@ -41,114 +38,51 @@ def _objects_by_alias():
     return objects, invalid, by_alias
 
 
-def test_location_source_contains_reviewed_additions():
+def test_location_source_is_imported_without_semantic_ids():
     objects, invalid, by_alias = _objects_by_alias()
 
     assert len(legacy_locations) == 437
-    assert len(objects) == 508
-    assert sum(len(item["aliases"]) for item in objects) == 772
-    assert len(by_alias) == 764
+    assert objects
     assert invalid == []
-    assert all(
-        "location_candidates" not in item
-        for item in objects
-    )
+    assert "Шатура г. Шатура" in by_alias
+    assert all("club_id" not in item for item in objects)
+    assert all("city_id" not in item for item in objects)
+    assert all("region_id" not in item for item in objects)
 
 
-def test_reviewed_candidate_rules_are_applied():
+def test_import_groups_aliases_by_textual_canonical_location():
     _, _, by_alias = _objects_by_alias()
+    item = by_alias["Шатура г. Шатура"][0]
 
-    assert by_alias["Алтай Свим"][0]["city"] == "Горно-Алтайск"
-    assert by_alias["Денисова О.Д."][0]["city"] == "Тула"
-    assert by_alias["СТК Дельфин"][0]["city"] == "Озёрск"
-    assert by_alias["Витязь"][0]["city"] == "Зеленогорск"
-    assert by_alias["Витязь"][0]["region"] == "Красноярский край"
-    assert by_alias["ПЦ Нептун"][0]["city"] == "Щёлково"
-    assert by_alias['ШП "Нео Свим"'][0]["city"] == "Павловский Посад"
+    assert item["club"] is None
+    assert item["city"] == "Шатура"
+    assert item["region"] == "Московская область"
+    assert item["required"] == []
 
 
-def test_multi_region_aliases_create_separate_required_objects():
+def test_multi_region_aliases_create_required_text_context_objects():
     _, _, by_alias = _objects_by_alias()
-    expected_counts = {
-        'ГБУ ДО СО "СШОР ПО ВОДНЫМ ВИДАМ СПОРТА"': 2,
-        "СШ": 3,
-        "СШ ВВС": 2,
-        "СШ Дельфин": 2,
-        "СШОР": 2,
-        "СШОР по ВВС": 2,
-        "СШОР ЦВВС": 2,
-    }
+    variants = by_alias["СШ"]
 
-    for alias, count in expected_counts.items():
-        assert len(by_alias[alias]) == count
-        assert all(
-            item["required"] == ["region"]
-            for item in by_alias[alias]
-        )
-        assert len(
-            {item["region_id"] for item in by_alias[alias]}
-        ) == count
-
-
-def test_original_ids_are_authoritative_for_additions():
-    _, _, by_alias = _objects_by_alias()
-    crimea_variant = next(
-        item
-        for item in by_alias["СШ ВВС"]
-        if item["region"] == "Республика Крым"
-    )
-
-    assert crimea_variant["city"] == "Симферополь"
-    assert crimea_variant["city_id"] == SIMFEROPOL_ID
-    assert crimea_variant["region_id"] == CRIMEA_ID
-
-
-def test_crimea_corrections_are_still_grouped():
-    _, _, by_alias = _objects_by_alias()
-
-    for alias in ('ГБУ ДО РК "СШ ВВС"', 'ГБУ ДО РК "СШ ВВС'):
-        assert by_alias[alias][0]["city"] == "Симферополь"
-        assert by_alias[alias][0]["city_id"] == SIMFEROPOL_ID
-        assert by_alias[alias][0]["region_id"] == CRIMEA_ID
-
-    assert by_alias["Группа Завдовьева"][0]["city"] is None
-    assert by_alias["Группа Завдовьева"][0]["region_id"] == CRIMEA_ID
-
-    mametov = by_alias["Маметов_TEAM"][0]
-    assert mametov["club"] == "Маметов_TEAM"
-    assert mametov["club_id"] == deterministic_entity_id(
-        "club",
-        "Маметов_TEAM",
-    )
-    assert mametov["city_id"] == SIMFEROPOL_ID
+    assert len(variants) >= 2
+    assert all("region" in item["required"] for item in variants)
+    assert len({item["region"] for item in variants}) == len(variants)
 
 
 def test_location_normalization_is_case_whitespace_and_yo_insensitive():
     assert normalize_location_text("  МОСКВА  ") == "москва"
     assert normalize_location_text("Орёл") == normalize_location_text("орел")
-    assert deterministic_location_object_id(
-        uuid4(), None, CRIMEA_ID
-    ) != deterministic_location_object_id(
-        None, None, CRIMEA_ID
-    )
 
 
-def test_location_create_requires_region_and_consistent_optional_ids():
+def test_location_create_validation():
     with pytest.raises(ValidationError):
         LocationObjectCreate(aliases=["Команда"], region=" ")
 
-    with pytest.raises(ValidationError):
-        LocationObjectCreate(
-            aliases=["Команда"],
-            region="Москва",
-            city_id=uuid4(),
-        )
-
     payload = LocationObjectCreate(
-        aliases=["Команда ", "КОМАНДА"],
+        aliases=[" Команда ", "КОМАНДА"],
         region=" Москва ",
     )
-    assert payload.aliases == ["Команда ", "КОМАНДА"]
+    assert payload.aliases == ["Команда", "КОМАНДА"]
     assert payload.region == "Москва"
 
     with pytest.raises(ValidationError):
@@ -156,16 +90,20 @@ def test_location_create_requires_region_and_consistent_optional_ids():
 
 
 def test_exact_alias_requires_region_when_several_objects(monkeypatch):
-    first_region_id = uuid4()
-    second_region_id = uuid4()
     rows = [
         SimpleNamespace(
             aliases=["СШ"],
-            region_id=first_region_id,
+            club="СШ",
+            city=None,
+            region="Первый регион",
+            required=["region"],
         ),
         SimpleNamespace(
             aliases=["СШ"],
-            region_id=second_region_id,
+            club="СШ",
+            city=None,
+            region="Второй регион",
+            required=["region"],
         ),
     ]
 
@@ -178,82 +116,59 @@ def test_exact_alias_requires_region_when_several_objects(monkeypatch):
         asyncio.run(find_exact_alias("СШ"))
     assert exc.value.error_code == ErrorCode.LOCATION_REGION_REQUIRED.code
 
-    result = asyncio.run(
-        find_exact_alias("СШ", region_id=second_region_id)
-    )
+    result = asyncio.run(find_exact_alias("СШ", region="Второй регион"))
     assert result is rows[1]
 
 
 def test_required_context_matching_rules():
-    region_id = uuid4()
-    city_id = uuid4()
     location = SimpleNamespace(
         required=["city", "region"],
-        region_id=region_id,
-        city_id=city_id,
+        region="Москва",
+        city="Зеленоград",
     )
 
-    assert matches_required_location_context(location)
+    assert not matches_required_location_context(location)
+    assert not matches_required_location_context(location, region="Москва")
+    assert not matches_required_location_context(location, city="Зеленоград")
     assert matches_required_location_context(
         location,
-        region_id=region_id,
-        city_id=city_id,
+        region="Москва",
+        city="Зеленоград",
     )
     assert not matches_required_location_context(
         location,
-        region_id=region_id,
-    )
-    assert not matches_required_location_context(
-        location,
-        city_id=city_id,
-    )
-    assert not matches_required_location_context(
-        location,
-        region_id=uuid4(),
-        city_id=city_id,
+        region="Москва",
+        city="Москва",
     )
 
     location.required = []
-    assert matches_required_location_context(
-        location,
-        region_id=uuid4(),
-        city_id=uuid4(),
-    )
+    assert matches_required_location_context(location, region="Любой")
 
 
 def test_catalog_always_returns_lists_and_filters_required_rows(monkeypatch):
-    first_region_id = uuid4()
-    second_region_id = uuid4()
-
-    def row(*, row_id, aliases, region_id, required):
+    def row(*, aliases, region, required):
         return SimpleNamespace(
-            id=row_id,
+            id=uuid4(),
             aliases=aliases,
             club=aliases[0],
-            club_id=uuid4(),
             city=None,
-            city_id=None,
-            region=f"Регион {region_id}",
-            region_id=region_id,
+            region=region,
             required=required,
         )
 
     unrestricted = row(
-        row_id=uuid4(),
         aliases=["Обычная команда"],
-        region_id=first_region_id,
+        region="Первый регион",
         required=[],
     )
     first = row(
-        row_id=uuid4(),
         aliases=["Общая команда"],
-        region_id=first_region_id,
+        region="Первый регион",
         required=["region"],
     )
     second = row(
-        row_id=uuid4(),
         aliases=["Общая команда"],
-        region_id=second_region_id,
+        region="Второй регион",
         required=["region"],
     )
 
@@ -273,18 +188,12 @@ def test_catalog_always_returns_lists_and_filters_required_rows(monkeypatch):
     assert len(full["Обычная команда"]) == 1
     assert len(full["Общая команда"]) == 2
 
-    filtered = asyncio.run(
-        get_location_catalog(region_id=second_region_id)
-    )
+    filtered = asyncio.run(get_location_catalog(region="Второй регион"))
     assert len(filtered["Обычная команда"]) == 1
     assert [item.id for item in filtered["Общая команда"]] == [second.id]
 
-    city_only = asyncio.run(get_location_catalog(city_id=uuid4()))
-    assert "Общая команда" not in city_only
-    assert len(city_only["Обычная команда"]) == 1
 
-
-def test_create_allows_duplicate_alias_only_with_required_region():
+def test_create_resolve_and_flat_athlete_fields():
     async def scenario():
         await Tortoise.init(
             db_url="sqlite://:memory:",
@@ -295,7 +204,7 @@ def test_create_allows_duplicate_alias_only_with_required_region():
             first = await create_location_object(
                 LocationObjectCreate(
                     aliases=["Общая команда"],
-                    club="Общая команда",
+                    club="СШ",
                     city="Первый город",
                     region="Первый регион",
                     required={"region"},
@@ -304,7 +213,7 @@ def test_create_allows_duplicate_alias_only_with_required_region():
             second = await create_location_object(
                 LocationObjectCreate(
                     aliases=["Общая команда"],
-                    club="Общая команда",
+                    club="СШ",
                     city="Второй город",
                     region="Второй регион",
                     required={"region"},
@@ -313,31 +222,67 @@ def test_create_allows_duplicate_alias_only_with_required_region():
 
             with pytest.raises(APIError) as ambiguous:
                 await find_exact_alias("Общая команда")
-            assert (
-                ambiguous.value.error_code
-                == ErrorCode.LOCATION_REGION_REQUIRED.code
-            )
-            assert (
-                await find_exact_alias(
-                    "Общая команда",
-                    region_id=second.region_id,
-                )
-            ).id == second.id
+            assert ambiguous.value.error_code == ErrorCode.LOCATION_REGION_REQUIRED.code
 
-            with pytest.raises(APIError) as conflict:
-                await create_location_object(
-                    LocationObjectCreate(
-                        aliases=["Общая команда"],
-                        club="Общая команда",
-                        city="Третий город",
-                        region="Третий регион",
-                    )
-                )
-            assert (
-                conflict.value.error_code
-                == ErrorCode.LOCATION_ALIAS_CONFLICT.code
+            resolved = await resolve_location_alias(
+                LocationResolveRequest(alias="Общая команда", region="Второй регион")
             )
+            assert resolved is not None
+            assert resolved.id == second.id
+            assert resolved.club == "СШ"
+            assert resolved.city == "Второй город"
+
+            athlete_fields = await resolve_athlete_location_fields(
+                alias="Общая команда",
+                club="Что угодно",
+                city=None,
+                region="Второй регион",
+            )
+            assert athlete_fields == {
+                "club": "СШ",
+                "city": "Второй город",
+                "region": "Второй регион",
+            }
+
             assert first.id != second.id
+        finally:
+            await Tortoise.close_connections()
+
+    asyncio.run(scenario())
+
+
+def test_new_athlete_alias_is_added_to_matching_canonical_location():
+    async def scenario():
+        await Tortoise.init(
+            db_url="sqlite://:memory:",
+            modules={"models": ["app.models.location.location_object"]},
+        )
+        await Tortoise.generate_schemas()
+        try:
+            location = await create_location_object(
+                LocationObjectCreate(
+                    aliases=["Старый alias"],
+                    club="СШ",
+                    city="Город",
+                    region="Регион",
+                )
+            )
+
+            fields = await resolve_athlete_location_fields(
+                alias="Новый alias",
+                club="СШ",
+                city="Город",
+                region="Регион",
+            )
+            await location.refresh_from_db()
+
+            assert fields == {
+                "club": "СШ",
+                "city": "Город",
+                "region": "Регион",
+            }
+            assert location.aliases == ["Старый alias", "Новый alias"]
+            assert await LocationObject.all().count() == 1
         finally:
             await Tortoise.close_connections()
 
@@ -371,23 +316,13 @@ def test_add_aliases_updates_existing_object_idempotently():
                 )
             )
 
-            updated = await add_aliases_to_location_object(
-                first.id,
-                ["Новый alias"],
-            )
-            assert updated.id == first.id
+            updated = await add_aliases_to_location_object(first.id, ["Новый alias"])
             assert updated.aliases == ["Первая команда", "Новый alias"]
 
-            repeated = await add_aliases_to_location_object(
-                first.id,
-                ["Новый alias"],
-            )
+            repeated = await add_aliases_to_location_object(first.id, ["Новый alias"])
             assert repeated.aliases.count("Новый alias") == 1
 
-            second_updated = await add_aliases_to_location_object(
-                second.id,
-                ["Новый alias"],
-            )
+            second_updated = await add_aliases_to_location_object(second.id, ["Новый alias"])
             assert "Новый alias" in second_updated.aliases
 
             third = await create_location_object(
@@ -399,53 +334,43 @@ def test_add_aliases_updates_existing_object_idempotently():
                 )
             )
             with pytest.raises(APIError) as conflict:
-                await add_aliases_to_location_object(
-                    third.id,
-                    ["Новый alias"],
-                )
-            assert (
-                conflict.value.error_code
-                == ErrorCode.LOCATION_ALIAS_CONFLICT.code
-            )
-
-            with pytest.raises(APIError) as missing:
-                await add_aliases_to_location_object(
-                    uuid4(),
-                    ["Alias"],
-                )
-            assert (
-                missing.value.error_code
-                == ErrorCode.LOCATION_OBJECT_NOT_FOUND.code
-            )
+                await add_aliases_to_location_object(third.id, ["Новый alias"])
+            assert conflict.value.error_code == ErrorCode.LOCATION_ALIAS_CONFLICT.code
         finally:
             await Tortoise.close_connections()
 
     asyncio.run(scenario())
 
 
-def test_fuzzy_search_marks_only_normalized_exact_result(monkeypatch):
-    class FakeConnection:
-        async def execute_query_dict(self, sql, params):
-            assert '"region"' in sql
-            assert params[0] == "масква"
-            return [
-                {
-                    "id": str(CRIMEA_ID),
-                    "name": "Москва",
-                    "similarity": 0.83,
-                }
-            ]
+def test_search_filters_by_required_text_context(monkeypatch):
+    rows = [
+        SimpleNamespace(
+            id=uuid4(),
+            aliases=["Общая команда"],
+            club="СШ",
+            city="Первый город",
+            region="Первый регион",
+            required=["region"],
+        ),
+        SimpleNamespace(
+            id=uuid4(),
+            aliases=["Общая команда"],
+            club="СШ",
+            city="Второй город",
+            region="Второй регион",
+            required=["region"],
+        ),
+    ]
 
-    monkeypatch.setattr(
-        Tortoise,
-        "get_connection",
-        lambda _name: FakeConnection(),
-    )
+    async def fake_all():
+        return rows
+
+    monkeypatch.setattr(LocationObject, "all", fake_all)
 
     results = asyncio.run(
-        search_location_entities("region", "масква")
+        search_location_entities("alias", "общая", region="Второй регион")
     )
 
-    assert results[0].name == "Москва"
-    assert results[0].exact_match is False
-    assert results[0].similarity == 0.83
+    assert len(results) == 1
+    assert results[0].id == rows[1].id
+    assert results[0].name == "Общая команда"

@@ -1,17 +1,17 @@
 from .location import (
-    AthleteLocationCreate,
-    AthleteLocationOut,
     LocationCatalogItem,
     LocationEntitySearchItem,
     LocationObjectCreate,
     LocationObjectOut,
+    LocationResolveRequest,
+    LocationResolveResult,
 )
 
 __all__ = [
-    "AthleteLocationCreate",
-    "AthleteLocationOut",
     "LocationCatalogItem",
     "LocationEntitySearchItem",
     "LocationObjectCreate",
     "LocationObjectOut",
+    "LocationResolveRequest",
+    "LocationResolveResult",
 ]

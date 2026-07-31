@@ -3,7 +3,6 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 from app.schemas.athlete.athlete import Athlete_Pydantic
-from app.schemas.location.location import AthleteLocationCreate
 
 
 class BulkAthleteUpdateItem(BaseModel):
@@ -12,7 +11,9 @@ class BulkAthleteUpdateItem(BaseModel):
     first_name: Optional[str] = None
     birth_year: Optional[int] = None
     gender: Optional[str] = None
+    alias: Optional[str] = None
     city: Optional[str] = None
+    region: Optional[str] = None
     club: Optional[str] = None
     license: Optional[str] = None
 
@@ -31,10 +32,11 @@ class BulkAthleteCreateItem(BaseModel):
     first_name: str
     birth_year: int
     gender: str
+    alias: Optional[str] = None
     city: Optional[str] = None
+    region: Optional[str] = None
     club: Optional[str] = None
     license: Optional[str] = None
-    location: Optional[AthleteLocationCreate] = None
 
 
 class BulkAthleteCreateRequest(BaseModel):

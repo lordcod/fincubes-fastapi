@@ -1,7 +1,6 @@
 from typing import Optional
-from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Query
 
 from app.schemas.location.location import LocationEntitySearchItem
 from app.services.location_catalog import search_location_entities
@@ -14,14 +13,14 @@ router = APIRouter()
 @require_scope("athlete:read")
 async def search_clubs(
     query: str = Query(min_length=1),
-    region_id: Optional[UUID] = None,
-    city_id: Optional[UUID] = None,
+    region: Optional[str] = None,
+    city: Optional[str] = None,
     limit: int = Query(default=10, ge=1, le=50),
 ):
     return await search_location_entities(
         "club",
         query,
         limit=limit,
-        region_id=region_id,
-        city_id=city_id,
+        region=region,
+        city=city,
     )

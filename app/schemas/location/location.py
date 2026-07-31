@@ -1,7 +1,7 @@
 from typing import Literal, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 RequiredLocationField = Literal["city", "region"]
@@ -13,42 +13,37 @@ class LocationAliasesAdd(BaseModel):
     @field_validator("aliases")
     @classmethod
     def validate_aliases(cls, values: list[str]) -> list[str]:
-        if any(not value.strip() for value in values):
-            raise ValueError("alias не может быть пустым")
-        if any(len(value) > 512 for value in values):
-            raise ValueError("alias не может быть длиннее 512 символов")
-        if len(set(values)) != len(values):
-            raise ValueError("aliases не должны повторяться")
-        return values
+        cleaned = []
+        for value in values:
+            stripped = value.strip()
+            if not stripped:
+                raise ValueError("alias cannot be empty")
+            if len(stripped) > 512:
+                raise ValueError("alias cannot be longer than 512 characters")
+            cleaned.append(stripped)
+        if len(set(cleaned)) != len(cleaned):
+            raise ValueError("aliases must be unique")
+        return cleaned
 
 
 class LocationObjectCreate(BaseModel):
     aliases: list[str] = Field(min_length=1)
     club: Optional[str] = Field(default=None, max_length=512)
-    club_id: Optional[UUID] = None
     city: Optional[str] = Field(default=None, max_length=255)
-    city_id: Optional[UUID] = None
     region: str = Field(min_length=1, max_length=255)
-    region_id: Optional[UUID] = None
     required: set[RequiredLocationField] = Field(default_factory=set)
 
     @field_validator("aliases")
     @classmethod
     def validate_aliases(cls, values: list[str]) -> list[str]:
-        if any(not value.strip() for value in values):
-            raise ValueError("alias не может быть пустым")
-        if any(len(value) > 512 for value in values):
-            raise ValueError("alias не может быть длиннее 512 символов")
-        if len(set(values)) != len(values):
-            raise ValueError("aliases не должны повторяться")
-        return values
+        return LocationAliasesAdd(aliases=values).aliases
 
     @field_validator("region")
     @classmethod
     def strip_region(cls, value: str) -> str:
         stripped = value.strip()
         if not stripped:
-            raise ValueError("значение не может быть пустым")
+            raise ValueError("region cannot be empty")
         return stripped
 
     @field_validator("club", "city")
@@ -59,14 +54,6 @@ class LocationObjectCreate(BaseModel):
         stripped = value.strip()
         return stripped or None
 
-    @model_validator(mode="after")
-    def validate_names_and_ids(self):
-        if self.club is None and self.club_id is not None:
-            raise ValueError("club_id нельзя указывать без club")
-        if self.city is None and self.city_id is not None:
-            raise ValueError("city_id нельзя указывать без city")
-        return self
-
 
 class LocationObjectOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -74,24 +61,13 @@ class LocationObjectOut(BaseModel):
     id: UUID
     aliases: list[str] = Field(default_factory=list)
     club: Optional[str] = None
-    club_id: Optional[UUID] = None
     city: Optional[str] = None
-    city_id: Optional[UUID] = None
     region: str
-    region_id: UUID
     required: list[RequiredLocationField] = Field(default_factory=list)
 
 
-class LocationCatalogItem(BaseModel):
-    id: UUID
-    aliases: list[str] = Field(default_factory=list)
-    club: Optional[str] = None
-    club_id: Optional[UUID] = None
-    city: Optional[str] = None
-    city_id: Optional[UUID] = None
-    region: str
-    region_id: UUID
-    required: list[RequiredLocationField] = Field(default_factory=list)
+class LocationCatalogItem(LocationObjectOut):
+    pass
 
 
 class LocationEntitySearchItem(BaseModel):
@@ -101,20 +77,24 @@ class LocationEntitySearchItem(BaseModel):
     similarity: float = Field(ge=0, le=1)
 
 
-class AthleteLocationCreate(BaseModel):
-    location_id: UUID
+class LocationResolveRequest(BaseModel):
     alias: str = Field(min_length=1, max_length=512)
+    city: Optional[str] = Field(default=None, max_length=255)
+    region: Optional[str] = Field(default=None, max_length=255)
 
-    @field_validator("alias")
+    @field_validator("alias", "city", "region")
     @classmethod
-    def validate_alias(cls, value: str) -> str:
-        if not value.strip():
-            raise ValueError("значение не может быть пустым")
-        return value
+    def strip_text(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        stripped = value.strip()
+        return stripped or None
 
 
-class AthleteLocationOut(BaseModel):
-    id: int
-    athlete_id: int
+class LocationResolveResult(BaseModel):
+    id: UUID
     alias: str
-    location: LocationObjectOut
+    club: Optional[str] = None
+    city: Optional[str] = None
+    region: str
+    required: list[RequiredLocationField] = Field(default_factory=list)

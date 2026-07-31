@@ -1,21 +1,16 @@
 
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from tortoise.expressions import Q
-from tortoise.transactions import in_transaction
 
 
 from app.models.athlete.athlete import Athlete
-from app.models.location.athlete_location import AthleteLocation
 from app.schemas.athlete.athlete import (
     AthleteCreateRequest,
     Athlete_Pydantic,
 )
-from app.services.location_catalog import (
-    legacy_club_value,
-    resolve_location_link,
-)
+from app.services.location_catalog import resolve_athlete_location_fields
 from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter(tags=['Admin/Athlete'])
@@ -32,6 +27,8 @@ async def get_athletes_admin(
     first_name: str = None,
     birth_year: int = None,
     club: str = None,
+    city: str = None,
+    region: str = None,
     gender: str = None,
     limit: int = None
 ):
@@ -76,6 +73,10 @@ async def get_athletes_admin(
         q_filter &= Q(birth_year=birth_year)
     if club:
         q_filter &= Q(club__icontains=club)
+    if city:
+        q_filter &= Q(city__icontains=city)
+    if region:
+        q_filter &= Q(region__icontains=region)
     if gender:
         q_filter &= Q(gender=gender)
 
@@ -92,30 +93,16 @@ async def get_athletes_admin(
 )
 @require_scope('athlete:create')
 async def create_athlete(athlete: AthleteCreateRequest):
-    location_object = (
-        await resolve_location_link(athlete.location)
-        if athlete.location is not None
-        else None
-    )
-    athlete_data = athlete.model_dump(exclude={"location"})
+    athlete_data = athlete.model_dump()
+    location_alias = athlete_data.pop("alias", None)
     athlete_data["birth_year"] = str(athlete_data["birth_year"])
-    if location_object is not None:
-        athlete_data["club"] = athlete_data["club"] or legacy_club_value(
-            athlete.location.alias,
-            location_object.club,
+    athlete_data.update(
+        await resolve_athlete_location_fields(
+            alias=location_alias,
+            club=athlete_data.get("club"),
+            city=athlete_data.get("city"),
+            region=athlete_data.get("region"),
         )
-        athlete_data["city"] = athlete_data["city"] or location_object.city
-
-    async with in_transaction() as connection:
-        db_athlete = await Athlete.create(
-            **athlete_data,
-            using_db=connection,
-        )
-        if location_object is not None:
-            await AthleteLocation.create(
-                athlete=db_athlete,
-                location_object=location_object,
-                alias=athlete.location.alias,
-                using_db=connection,
-            )
+    )
+    db_athlete = await Athlete.create(**athlete_data)
     return db_athlete
