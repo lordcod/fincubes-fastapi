@@ -2,13 +2,12 @@ from fastapi import APIRouter, Depends
 
 from app.core.errors import APIError, ErrorCode
 from app.models.athlete.athlete import Athlete
-from app.models.location.location_object import LocationObject
 from app.schemas.athlete.bulk import (
     BulkAthleteUpdateRequest,
     BulkAthleteUpdateResponse,
 )
 from app.schemas.athlete.athlete import Athlete_Pydantic
-from app.services.location_catalog import resolve_athlete_location_object
+from app.services.location_catalog import resolve_athlete_location_update
 from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter()
@@ -45,18 +44,14 @@ async def bulk_update_athletes(payload: BulkAthleteUpdateRequest):
         region = changes.pop("region", None)
         location_object_id = changes.pop("location_object_id", None)
 
-        if location_object_id is not None:
-            location_exists = await LocationObject.filter(id=location_object_id).exists()
-            if not location_exists:
-                raise APIError(ErrorCode.LOCATION_OBJECT_NOT_FOUND)
-            changes["location_object_id"] = location_object_id
-        elif any(value is not None for value in (alias, club, city, region)):
-            location = await resolve_athlete_location_object(
-                alias=alias,
-                club=club,
-                city=city,
-                region=region,
-            )
+        location = await resolve_athlete_location_update(
+            location_object_id=location_object_id,
+            alias=alias,
+            club=club,
+            city=city,
+            region=region,
+        )
+        if location is not None or location_object_id is not None:
             changes["location_object_id"] = location.id if location else None
 
         if "birth_year" in changes:

@@ -3,8 +3,8 @@ from fastapi import APIRouter
 from app.core.errors import APIError, ErrorCode
 
 from app.models.athlete.athlete import Athlete
-from app.models.location.location_object import LocationObject
 from app.schemas.athlete.athlete import Athlete_Pydantic, AthleteIn_Pydantic
+from app.services.location_catalog import resolve_athlete_location_update
 from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter()
@@ -22,12 +22,20 @@ async def update_athlete(id: int, athlete: AthleteIn_Pydantic):
 
     athlete_data = athlete.model_dump()
     location_object_id = athlete_data.pop("location_object_id", None)
-    if location_object_id is not None:
-        location_exists = await LocationObject.filter(id=location_object_id).exists()
-        if not location_exists:
-            raise APIError(ErrorCode.LOCATION_OBJECT_NOT_FOUND)
+    alias = athlete_data.pop("alias", None)
+    club = athlete_data.pop("club", None)
+    city = athlete_data.pop("city", None)
+    region = athlete_data.pop("region", None)
+    location = await resolve_athlete_location_update(
+        location_object_id=location_object_id,
+        alias=alias,
+        club=club,
+        city=city,
+        region=region,
+    )
     athlete_data["birth_year"] = str(athlete_data["birth_year"])
-    athlete_data["location_object_id"] = location_object_id
+    if location is not None or location_object_id is not None:
+        athlete_data["location_object_id"] = location.id if location else None
     db_athlete.update_from_dict(athlete_data)
     await db_athlete.save()
 

@@ -147,15 +147,10 @@ async def resolve_athlete_location_object(
     create_missing_alias: bool = True,
 ) -> Optional[LocationObject]:
     if not alias:
-        if not region:
-            return None
-        return await create_location_object(
-            LocationObjectCreate(
-                aliases=[club or city or region],
-                club=club,
-                city=city,
-                region=region,
-            )
+        return await get_or_create_location_object_by_identity(
+            club=club,
+            city=city,
+            region=region,
         )
 
     resolved = await find_exact_alias(
@@ -177,6 +172,68 @@ async def resolve_athlete_location_object(
             region=region,
         )
     )
+
+
+async def get_or_create_location_object_by_identity(
+    *,
+    club: Optional[str],
+    city: Optional[str],
+    region: Optional[str],
+) -> Optional[LocationObject]:
+    if not region:
+        return None
+
+    incoming_identity = (
+        normalize_location_text(club or ""),
+        normalize_location_text(city or ""),
+        normalize_location_text(region),
+    )
+    existing = next(
+        (
+            location
+            for location in await LocationObject.all()
+            if _canonical_identity(location) == incoming_identity
+        ),
+        None,
+    )
+    if existing is not None:
+        return existing
+
+    return await LocationObject.create(
+        aliases=[],
+        club=club,
+        city=city,
+        region=region,
+    )
+
+
+async def get_location_object_or_error(location_object_id: UUID) -> LocationObject:
+    location = await LocationObject.get_or_none(id=location_object_id)
+    if location is None:
+        raise APIError(ErrorCode.LOCATION_OBJECT_NOT_FOUND)
+    return location
+
+
+async def resolve_athlete_location_update(
+    *,
+    location_object_id: Optional[UUID] = None,
+    alias: Optional[str] = None,
+    club: Optional[str] = None,
+    city: Optional[str] = None,
+    region: Optional[str] = None,
+) -> Optional[LocationObject]:
+    if location_object_id is not None:
+        return await get_location_object_or_error(location_object_id)
+
+    if any(value is not None for value in (alias, club, city, region)):
+        return await resolve_athlete_location_object(
+            alias=alias,
+            club=club,
+            city=city,
+            region=region,
+        )
+
+    return None
 
 
 def _canonical_identity(location: LocationObject) -> tuple[str, str, str]:
