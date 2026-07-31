@@ -86,31 +86,8 @@ async def upgrade(db: BaseDBAsyncClient) -> str:
         FROM best
         WHERE athlete."id" = best."athlete_id";
 
-        DO $$
-        BEGIN
-            IF EXISTS (
-                SELECT 1
-                FROM "athletes"
-                WHERE "location_object_id" IS NULL
-                    AND (
-                        NULLIF(TRIM(COALESCE("club", '')), '') IS NOT NULL
-                        OR NULLIF(TRIM(COALESCE("city", '')), '') IS NOT NULL
-                        OR NULLIF(TRIM(COALESCE("region", '')), '') IS NOT NULL
-                    )
-            ) THEN
-                RAISE EXCEPTION 'athlete location migration stopped: some athletes still have club/city/region values without unambiguous location_object_id';
-            END IF;
-        END $$;
-
         CREATE INDEX IF NOT EXISTS "idx_athletes_location_object"
             ON "athletes" ("location_object_id");
-
-        ALTER TABLE "athletes"
-            DROP COLUMN IF EXISTS "club",
-            DROP COLUMN IF EXISTS "city",
-            DROP COLUMN IF EXISTS "region";
-
-        DROP TABLE IF EXISTS "locations";
     """
 
 
@@ -130,7 +107,4 @@ async def downgrade(db: BaseDBAsyncClient) -> str:
         WHERE athlete."location_object_id" = location_object."id";
 
         DROP INDEX IF EXISTS "idx_athletes_location_object";
-
-        ALTER TABLE "athletes"
-            DROP COLUMN IF EXISTS "location_object_id";
     """
