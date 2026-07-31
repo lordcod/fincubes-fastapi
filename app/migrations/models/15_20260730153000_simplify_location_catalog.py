@@ -3,8 +3,6 @@ from tortoise import BaseDBAsyncClient
 
 async def upgrade(db: BaseDBAsyncClient) -> str:
     return """
-        DROP TABLE IF EXISTS "locations";
-
         DROP INDEX IF EXISTS "idx_location_objects_club_id";
         DROP INDEX IF EXISTS "idx_location_objects_city_id";
         DROP INDEX IF EXISTS "idx_location_objects_region_id";
