@@ -21,12 +21,37 @@ ResultIn_Pydantic = with_nested(
     create_pydantic_model(Result, exclude_readonly=True,
                           exclude=('resolved_time', ))
 )
-Result_Pydantic = with_nested(
+_Result_Pydantic = with_nested(
     ResultDepth0_Pydantic,
     athlete=Athlete_Pydantic,
     competition=Competition_Pydantic,
     best=(Optional[FlexibleTime], None),
 )
+
+
+class Result_Pydantic(_Result_Pydantic):
+    @classmethod
+    async def from_tortoise_orm(cls, result: Result):
+        await result.fetch_related("athlete__location_object", "competition")
+        result_data = (await ResultDepth0_Pydantic.from_tortoise_orm(result)).model_dump()
+        athlete = await Athlete_Pydantic.from_tortoise_orm(result.athlete)
+        competition = await Competition_Pydantic.from_tortoise_orm(result.competition)
+        return cls.model_validate(
+            {
+                **result_data,
+                "athlete": athlete,
+                "competition": competition,
+                "best": None,
+            }
+        )
+
+    @classmethod
+    async def from_queryset(cls, queryset):
+        rows = await queryset.prefetch_related(
+            "athlete__location_object",
+            "competition",
+        )
+        return [await cls.from_tortoise_orm(row) for row in rows]
 
 
 class BulkCreateResult(BaseModel):
