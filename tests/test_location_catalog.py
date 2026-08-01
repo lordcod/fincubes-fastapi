@@ -9,6 +9,7 @@ from tortoise import Tortoise
 
 from app.core.errors import APIError, ErrorCode
 from app.data.location_aliases import locations as legacy_locations
+from app.models.location.location_alias import LocationAlias
 from app.models.location.location_object import LocationObject
 from app.pages.admin.locations.aliases.route import get_location_catalog
 from app.schemas.location.location import (
@@ -90,34 +91,43 @@ def test_location_create_validation():
 
 
 def test_exact_alias_requires_region_when_several_objects(monkeypatch):
-    rows = [
+    locations = [
         SimpleNamespace(
-            aliases=["СШ"],
+            id=uuid4(),
             club="СШ",
             city=None,
             region="Первый регион",
-            required=["region"],
         ),
         SimpleNamespace(
-            aliases=["СШ"],
+            id=uuid4(),
             club="СШ",
             city=None,
             region="Второй регион",
-            required=["region"],
         ),
     ]
+    rows = [
+        SimpleNamespace(alias="СШ", required=["region"], location_object=locations[0]),
+        SimpleNamespace(alias="СШ", required=["region"], location_object=locations[1]),
+    ]
 
-    async def fake_all():
-        return rows
+    class FakeQuerySet:
+        def prefetch_related(self, *_fields):
+            return self
 
-    monkeypatch.setattr(LocationObject, "all", fake_all)
+        def __await__(self):
+            async def resolve():
+                return rows
+
+            return resolve().__await__()
+
+    monkeypatch.setattr(LocationAlias, "filter", lambda **_kwargs: FakeQuerySet())
 
     with pytest.raises(APIError) as exc:
         asyncio.run(find_exact_alias("СШ"))
     assert exc.value.error_code == ErrorCode.LOCATION_REGION_REQUIRED.code
 
     result = asyncio.run(find_exact_alias("СШ", region="Второй регион"))
-    assert result is rows[1]
+    assert result is locations[1]
 
 
 def test_required_context_matching_rules():
@@ -127,18 +137,24 @@ def test_required_context_matching_rules():
         city="Зеленоград",
     )
 
-    assert not matches_required_location_context(location)
-    assert not matches_required_location_context(location, region="Москва")
-    assert not matches_required_location_context(location, city="Зеленоград")
+    assert not matches_required_location_context(location, required=location.required)
+    assert not matches_required_location_context(
+        location, region="Москва", required=location.required
+    )
+    assert not matches_required_location_context(
+        location, city="Зеленоград", required=location.required
+    )
     assert matches_required_location_context(
         location,
         region="Москва",
         city="Зеленоград",
+        required=location.required,
     )
     assert not matches_required_location_context(
         location,
         region="Москва",
         city="Москва",
+        required=location.required,
     )
 
     location.required = []
@@ -146,33 +162,40 @@ def test_required_context_matching_rules():
 
 
 def test_catalog_always_returns_lists_and_filters_required_rows(monkeypatch):
-    def row(*, aliases, region, required):
-        return SimpleNamespace(
+    def row(*, alias, region, required):
+        location = SimpleNamespace(
             id=uuid4(),
-            aliases=aliases,
-            club=aliases[0],
+            club=alias,
             city=None,
             region=region,
+        )
+        return SimpleNamespace(
+            id=uuid4(),
+            alias=alias,
             required=required,
+            location_object=location,
         )
 
     unrestricted = row(
-        aliases=["Обычная команда"],
+        alias="Обычная команда",
         region="Первый регион",
         required=[],
     )
     first = row(
-        aliases=["Общая команда"],
+        alias="Общая команда",
         region="Первый регион",
         required=["region"],
     )
     second = row(
-        aliases=["Общая команда"],
+        alias="Общая команда",
         region="Второй регион",
         required=["region"],
     )
 
     class FakeQuerySet:
+        def prefetch_related(self, *_fields):
+            return self
+
         def order_by(self, *_fields):
             return self
 
@@ -182,7 +205,7 @@ def test_catalog_always_returns_lists_and_filters_required_rows(monkeypatch):
 
             return resolve().__await__()
 
-    monkeypatch.setattr(LocationObject, "all", lambda: FakeQuerySet())
+    monkeypatch.setattr(LocationAlias, "all", lambda: FakeQuerySet())
 
     full = asyncio.run(get_location_catalog())
     assert len(full["Обычная команда"]) == 1
@@ -190,14 +213,14 @@ def test_catalog_always_returns_lists_and_filters_required_rows(monkeypatch):
 
     filtered = asyncio.run(get_location_catalog(region="Второй регион"))
     assert len(filtered["Обычная команда"]) == 1
-    assert [item.id for item in filtered["Общая команда"]] == [second.id]
+    assert [item.id for item in filtered["Общая команда"]] == [second.location_object.id]
 
 
 def test_create_resolve_and_flat_athlete_fields():
     async def scenario():
         await Tortoise.init(
             db_url="sqlite://:memory:",
-            modules={"models": ["app.models.location.location_object"]},
+            modules={"models": ["app.models.location"]},
         )
         await Tortoise.generate_schemas()
         try:
@@ -255,7 +278,7 @@ def test_new_athlete_alias_is_added_to_matching_canonical_location():
     async def scenario():
         await Tortoise.init(
             db_url="sqlite://:memory:",
-            modules={"models": ["app.models.location.location_object"]},
+            modules={"models": ["app.models.location"]},
         )
         await Tortoise.generate_schemas()
         try:
@@ -281,7 +304,8 @@ def test_new_athlete_alias_is_added_to_matching_canonical_location():
                 "city": "Город",
                 "region": "Регион",
             }
-            assert location.aliases == ["Старый alias", "Новый alias"]
+            aliases = await LocationAlias.filter(location_object=location).order_by("alias")
+            assert [alias.alias for alias in aliases] == ["Новый alias", "Старый alias"]
             assert await LocationObject.all().count() == 1
         finally:
             await Tortoise.close_connections()
@@ -293,7 +317,7 @@ def test_add_aliases_updates_existing_object_idempotently():
     async def scenario():
         await Tortoise.init(
             db_url="sqlite://:memory:",
-            modules={"models": ["app.models.location.location_object"]},
+            modules={"models": ["app.models.location"]},
         )
         await Tortoise.generate_schemas()
         try:
@@ -316,14 +340,20 @@ def test_add_aliases_updates_existing_object_idempotently():
                 )
             )
 
-            updated = await add_aliases_to_location_object(first.id, ["Новый alias"])
-            assert updated.aliases == ["Первая команда", "Новый alias"]
+            await add_aliases_to_location_object(first.id, ["Новый alias"], ["region"])
+            first_aliases = await LocationAlias.filter(location_object=first).order_by("alias")
+            assert [alias.alias for alias in first_aliases] == ["Новый alias", "Первая команда"]
 
-            repeated = await add_aliases_to_location_object(first.id, ["Новый alias"])
-            assert repeated.aliases.count("Новый alias") == 1
+            await add_aliases_to_location_object(first.id, ["Новый alias"], ["region"])
+            repeated_aliases = await LocationAlias.filter(
+                location_object=first,
+                alias="Новый alias",
+            )
+            assert len(repeated_aliases) == 1
 
-            second_updated = await add_aliases_to_location_object(second.id, ["Новый alias"])
-            assert "Новый alias" in second_updated.aliases
+            await add_aliases_to_location_object(second.id, ["Новый alias"], ["region"])
+            second_aliases = await LocationAlias.filter(location_object=second)
+            assert "Новый alias" in {alias.alias for alias in second_aliases}
 
             third = await create_location_object(
                 LocationObjectCreate(
@@ -343,34 +373,49 @@ def test_add_aliases_updates_existing_object_idempotently():
 
 
 def test_search_filters_by_required_text_context(monkeypatch):
+    first_location = SimpleNamespace(
+        id=uuid4(),
+        club="СШ",
+        city="Первый город",
+        region="Первый регион",
+    )
+    second_location = SimpleNamespace(
+        id=uuid4(),
+        club="СШ",
+        city="Второй город",
+        region="Второй регион",
+    )
     rows = [
         SimpleNamespace(
             id=uuid4(),
-            aliases=["Общая команда"],
-            club="СШ",
-            city="Первый город",
-            region="Первый регион",
+            alias="Общая команда",
             required=["region"],
+            location_object=first_location,
         ),
         SimpleNamespace(
             id=uuid4(),
-            aliases=["Общая команда"],
-            club="СШ",
-            city="Второй город",
-            region="Второй регион",
+            alias="Общая команда",
             required=["region"],
+            location_object=second_location,
         ),
     ]
 
-    async def fake_all():
-        return rows
+    class FakeQuerySet:
+        def prefetch_related(self, *_fields):
+            return self
 
-    monkeypatch.setattr(LocationObject, "all", fake_all)
+        def __await__(self):
+            async def resolve():
+                return rows
+
+            return resolve().__await__()
+
+    monkeypatch.setattr(LocationAlias, "all", lambda: FakeQuerySet())
 
     results = asyncio.run(
         search_location_entities("alias", "общая", region="Второй регион")
     )
 
     assert len(results) == 1
-    assert results[0].id == rows[1].id
+    assert results[0].id == second_location.id
     assert results[0].name == "Общая команда"

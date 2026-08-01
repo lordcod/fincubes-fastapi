@@ -10,6 +10,7 @@ from .competition.recent_event import RecentEvent
 from .competition.relay_leg import RelayLeg
 from .competition.relay_result import RelayResult
 from .competition.result import Result
+from .location.location_alias import LocationAlias
 from .location.location_object import LocationObject
 from .misc.region import Region
 from .misc.standard_category import StandardCategory

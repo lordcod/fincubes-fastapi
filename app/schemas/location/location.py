@@ -9,6 +9,7 @@ RequiredLocationField = Literal["city", "region"]
 
 class LocationAliasesAdd(BaseModel):
     aliases: list[str] = Field(min_length=1)
+    required: set[RequiredLocationField] = Field(default_factory=set)
 
     @field_validator("aliases")
     @classmethod
@@ -24,6 +25,30 @@ class LocationAliasesAdd(BaseModel):
         if len(set(cleaned)) != len(cleaned):
             raise ValueError("aliases must be unique")
         return cleaned
+
+
+class LocationAliasOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    location_object_id: UUID
+    alias: str
+    required: list[RequiredLocationField] = Field(default_factory=list)
+
+
+class LocationAliasUpdate(BaseModel):
+    alias: Optional[str] = Field(default=None, min_length=1, max_length=512)
+    required: Optional[set[RequiredLocationField]] = None
+
+    @field_validator("alias")
+    @classmethod
+    def strip_alias(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("alias cannot be empty")
+        return stripped
 
 
 class LocationObjectCreate(BaseModel):
@@ -56,18 +81,9 @@ class LocationObjectCreate(BaseModel):
 
 
 class LocationObjectUpdate(BaseModel):
-    aliases: Optional[list[str]] = None
     club: Optional[str] = Field(default=None, max_length=512)
     city: Optional[str] = Field(default=None, max_length=255)
     region: Optional[str] = Field(default=None, min_length=1, max_length=255)
-    required: Optional[set[RequiredLocationField]] = None
-
-    @field_validator("aliases")
-    @classmethod
-    def validate_aliases(cls, values: Optional[list[str]]) -> Optional[list[str]]:
-        if values is None:
-            return None
-        return LocationAliasesAdd(aliases=values).aliases
 
     @field_validator("region")
     @classmethod
@@ -92,15 +108,20 @@ class LocationObjectOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
-    aliases: list[str] = Field(default_factory=list)
+    club: Optional[str] = None
+    city: Optional[str] = None
+    region: str
+    aliases: list[LocationAliasOut] = Field(default_factory=list)
+
+
+class LocationCatalogItem(BaseModel):
+    id: UUID
+    alias_id: UUID
+    alias: str
     club: Optional[str] = None
     city: Optional[str] = None
     region: str
     required: list[RequiredLocationField] = Field(default_factory=list)
-
-
-class LocationCatalogItem(LocationObjectOut):
-    pass
 
 
 class LocationEntitySearchItem(BaseModel):
@@ -126,6 +147,7 @@ class LocationResolveRequest(BaseModel):
 
 class LocationResolveResult(BaseModel):
     id: UUID
+    alias_id: UUID
     alias: str
     club: Optional[str] = None
     city: Optional[str] = None

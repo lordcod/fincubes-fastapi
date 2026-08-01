@@ -16,7 +16,12 @@ if str(ROOT) not in sys.path:
 from app.data.location_additions import locations as location_additions
 from app.data.location_aliases import locations as legacy_locations
 from app.models.location.location_object import LocationObject
-from app.services.location_catalog import normalize_location_text
+from app.services.location_catalog import (
+    add_aliases_to_location_object,
+    create_location_object,
+    normalize_location_text,
+)
+from app.schemas.location.location import LocationObjectCreate
 
 _UNRESOLVED_REGION = "не определён"
 
@@ -127,17 +132,20 @@ async def import_catalog(*, dry_run: bool) -> ImportSummary:
     for row in objects:
         location = await _find_existing(row)
         if location is None:
-            await LocationObject.create(**row)
+            await create_location_object(LocationObjectCreate(**row))
             summary.created += 1
             continue
 
-        location.aliases = list(dict.fromkeys([*(location.aliases or []), *row["aliases"]]))
-        location.required = sorted(set(location.required or []) | set(row["required"]))
         location.club = row["club"]
         location.city = row["city"]
         location.region = row["region"]
         await location.save(
-            update_fields=["aliases", "required", "club", "city", "region", "updated_at"]
+            update_fields=["club", "city", "region", "updated_at"]
+        )
+        await add_aliases_to_location_object(
+            location.id,
+            row["aliases"],
+            row["required"],
         )
         summary.updated += 1
     return summary

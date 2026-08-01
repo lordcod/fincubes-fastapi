@@ -69,20 +69,13 @@ def parse_best_full_result(row: dict) -> BestFullResult:
     location_id = row.get("location_id")
     location = None
     if location_id is not None:
-        aliases = row.get("location_aliases") or []
-        required = row.get("location_required") or []
-        if isinstance(aliases, str):
-            aliases = json.loads(aliases)
-        if isinstance(required, str):
-            required = json.loads(required)
         location = LocationObjectOut.model_validate(
             {
                 "id": location_id,
-                "aliases": aliases,
                 "club": row.get("location_club"),
                 "city": row.get("location_city"),
                 "region": row.get("location_region"),
-                "required": required,
+                "aliases": [],
             }
         )
         athlete_data["location"] = location

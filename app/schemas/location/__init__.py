@@ -1,4 +1,7 @@
 from .location import (
+    LocationAliasOut,
+    LocationAliasesAdd,
+    LocationAliasUpdate,
     LocationCatalogItem,
     LocationEntitySearchItem,
     LocationObjectCreate,
@@ -8,6 +11,9 @@ from .location import (
 )
 
 __all__ = [
+    "LocationAliasOut",
+    "LocationAliasesAdd",
+    "LocationAliasUpdate",
     "LocationCatalogItem",
     "LocationEntitySearchItem",
     "LocationObjectCreate",
