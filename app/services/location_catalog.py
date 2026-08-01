@@ -110,6 +110,7 @@ async def _create_alias_rules(
     aliases: list[str],
     required: set[str] | list[str],
 ) -> None:
+    aliases = list({normalize_location_text(alias): alias for alias in aliases}.values())
     await _assert_aliases_can_be_used(
         location=location,
         aliases=aliases,
@@ -381,6 +382,9 @@ async def add_aliases_to_location_object(
         for alias in aliases
         if normalize_location_text(alias) not in existing_keys
     ]
+    new_aliases = list(
+        {normalize_location_text(alias): alias for alias in new_aliases}.values()
+    )
     if not new_aliases:
         return location
 
