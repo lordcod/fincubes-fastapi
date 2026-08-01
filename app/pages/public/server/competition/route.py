@@ -56,6 +56,12 @@ async def get_competitions(
         q_filter &= Q(end_date__lte=date_to)
 
     base_query = Competition.filter(q_filter).order_by(sort)
+    if has_results is None:
+        if offset is not None:
+            base_query = base_query.offset(offset)
+        if limit is not None:
+            base_query = base_query.limit(limit)
+
     all_competitions = await base_query
     all_competition_ids = [competition.id for competition in all_competitions]
     results_count_by_competition = dict.fromkeys(all_competition_ids, 0)
@@ -89,9 +95,10 @@ async def get_competitions(
             if competition.has_results == has_results
         ]
 
-    if offset is not None:
-        all_competitions = all_competitions[offset:]
-    if limit is not None:
-        all_competitions = all_competitions[:limit]
+    if has_results is not None:
+        if offset is not None:
+            all_competitions = all_competitions[offset:]
+        if limit is not None:
+            all_competitions = all_competitions[:limit]
 
     return all_competitions

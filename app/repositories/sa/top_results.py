@@ -11,6 +11,7 @@ from sqlalchemy import (
     or_,
     select,
     text,
+    true,
     union_all,
 )
 from sqlalchemy.sql.functions import dense_rank
@@ -30,11 +31,26 @@ from app.shared.utils.metadata import categories as CATEGORY_CONFIG
 CATEGORY_INDEX = {c["id"]: c for c in CATEGORY_CONFIG}
 
 
-def build_rankable_results():
+def build_rankable_results(
+    distance: Optional[int] = None,
+    stroke: Optional[str] = None,
+):
+    individual_filters = [results.c.resolved_time.isnot(None)]
+    relay_filters = [
+        relay_legs.c.order == 1,
+        relay_legs.c.result.isnot(None),
+    ]
+    if stroke:
+        individual_filters.append(results.c.stroke == stroke)
+        relay_filters.append(relay_results.c.stroke == stroke)
+    if distance:
+        individual_filters.append(results.c.distance == distance)
+        relay_filters.append(relay_results.c.distance == distance)
+
     individual_results = select(
         *results.c,
         literal(EventTypeEnum.INDIVIDUAL.value).label("event_type"),
-    )
+    ).where(and_(*individual_filters))
 
     relay_column_values = {
         "created_at": relay_legs.c.created_at,
@@ -69,8 +85,7 @@ def build_rankable_results():
             )
         )
         .where(
-            relay_legs.c.order == 1,
-            relay_legs.c.result.isnot(None),
+            and_(*relay_filters),
         )
     )
 
@@ -97,7 +112,10 @@ def build_top_results_query(
     courses: Optional[List[str]] = None,
     statuses: Optional[List[str]] = None,
 ):
-    rankable_results = build_rankable_results()
+    rankable_results = build_rankable_results(
+        distance=distance,
+        stroke=stroke,
+    )
     current_date = date.today()
     current_year = current_date.year
 
@@ -109,11 +127,7 @@ def build_top_results_query(
     season_start = date(season, 9, 1) if season else None
     season_end = date(season + 1, 8, 31) if season else None
 
-    base_filters = [rankable_results.c.resolved_time.isnot(None)]
-    if stroke:
-        base_filters.append(rankable_results.c.stroke == stroke)
-    if distance:
-        base_filters.append(rankable_results.c.distance == distance)
+    base_filters = []
     if gender:
         base_filters.append(athletes.c.gender == gender)
 
@@ -166,7 +180,7 @@ def build_top_results_query(
                 competitions.c.id == rankable_results.c.competition_id,
             )
         )
-        .where(and_(*best_results_filters))
+        .where(and_(*best_results_filters) if best_results_filters else true())
         .group_by(
             rankable_results.c.athlete_id,
             rankable_results.c.stroke,
@@ -215,7 +229,7 @@ def build_top_results_query(
                 == best_results_subq.c.resolved_time,
             ))
         )
-        .where(and_(*base_filters))
+        .where(and_(*base_filters) if base_filters else true())
     )
 
     # ✅ безопасная фильтрация по категориям
