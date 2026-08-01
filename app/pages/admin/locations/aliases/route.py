@@ -5,6 +5,7 @@ from fastapi import APIRouter, Query, Response, status
 
 from app.core.errors import APIError, ErrorCode
 from app.models.location.location_alias import LocationAlias
+from app.models.location.location_object import LocationObject
 from app.schemas.location.location import (
     LocationAliasOut,
     LocationAliasesAdd,
@@ -76,6 +77,31 @@ def _matches_location_catalog_query(
     )
 
 
+def _location_catalog_key(location: LocationObject) -> str:
+    return location.club or location.city or location.region
+
+
+def _matches_location_query(
+    location: LocationObject,
+    query: str,
+    kind: Optional[Literal["regions", "cities", "clubs"]],
+) -> bool:
+    query_key = normalize_location_text(query)
+    if kind == "regions":
+        values = [location.region]
+    elif kind == "cities":
+        values = [location.city]
+    elif kind == "clubs":
+        values = [location.club]
+    else:
+        values = [location.club, location.city, location.region]
+    return any(
+        query_key in normalize_location_text(value)
+        for value in values
+        if value
+    )
+
+
 def _sort_location_catalog(
     catalog: dict[str, list[LocationCatalogItem]],
     sort: str,
@@ -109,8 +135,10 @@ async def get_location_catalog(
 ):
     rows = await LocationAlias.all().prefetch_related("location_object")
     catalog: dict[str, list[LocationCatalogItem]] = {}
+    location_ids_with_aliases: set[UUID] = set()
     for row in rows:
         location = row.location_object
+        location_ids_with_aliases.add(location.id)
         if (region or city) and not matches_required_location_context(
             location,
             region=region,
@@ -132,6 +160,33 @@ async def get_location_catalog(
             required=sorted(row.required or []),
         )
         catalog.setdefault(row.alias, []).append(item)
+
+    locations_without_aliases = await LocationObject.exclude(
+        id__in=list(location_ids_with_aliases),
+    )
+    for location in locations_without_aliases:
+        if (region or city) and not matches_required_location_context(
+            location,
+            region=region,
+            city=city,
+        ):
+            continue
+        if required is not None and not _matches_required_filter([], required):
+            continue
+        if query and not _matches_location_query(location, query, kind):
+            continue
+        key = _location_catalog_key(location)
+        catalog.setdefault(key, []).append(
+            LocationCatalogItem(
+                id=location.id,
+                alias_id=None,
+                alias=None,
+                club=location.club,
+                city=location.city,
+                region=location.region,
+                required=[],
+            )
+        )
     return _sort_location_catalog(catalog, sort)
 
 

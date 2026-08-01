@@ -116,8 +116,8 @@ class LocationObjectOut(BaseModel):
 
 class LocationCatalogItem(BaseModel):
     id: UUID
-    alias_id: UUID
-    alias: str
+    alias_id: Optional[UUID] = None
+    alias: Optional[str] = None
     club: Optional[str] = None
     city: Optional[str] = None
     region: str

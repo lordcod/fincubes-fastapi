@@ -211,6 +211,15 @@ def test_catalog_always_returns_lists_and_filters_required_rows(monkeypatch):
 
     monkeypatch.setattr(LocationAlias, "all", lambda: FakeQuerySet())
 
+    class EmptyLocationQuerySet:
+        def __await__(self):
+            async def resolve():
+                return []
+
+            return resolve().__await__()
+
+    monkeypatch.setattr(LocationObject, "exclude", lambda **_kwargs: EmptyLocationQuerySet())
+
     full = asyncio.run(get_location_catalog())
     assert len(full["Обычная команда"]) == 1
     assert len(full["Общая команда"]) == 2
@@ -225,6 +234,34 @@ def test_catalog_always_returns_lists_and_filters_required_rows(monkeypatch):
 
     required_only = asyncio.run(get_location_catalog(required="region"))
     assert list(required_only) == ["Общая команда"]
+
+
+def test_catalog_returns_locations_without_aliases():
+    async def scenario():
+        await Tortoise.init(
+            db_url="sqlite://:memory:",
+            modules={"models": ["app.models.location"]},
+        )
+        await Tortoise.generate_schemas()
+        try:
+            location = await LocationObject.create(
+                club="Без alias",
+                city=None,
+                region="Регион",
+            )
+
+            catalog = await get_location_catalog()
+
+            assert list(catalog) == ["Без alias"]
+            item = catalog["Без alias"][0]
+            assert item.id == location.id
+            assert item.alias_id is None
+            assert item.alias is None
+            assert item.club == "Без alias"
+        finally:
+            await Tortoise.close_connections()
+
+    asyncio.run(scenario())
 
 
 def test_create_resolve_and_flat_athlete_fields():
