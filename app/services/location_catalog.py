@@ -480,11 +480,30 @@ async def merge_location_object(
         raise APIError(ErrorCode.LOCATION_OBJECT_NOT_FOUND)
 
     preview = await preview_location_merge(source_location_id, payload.target_location_id)
+    source_alias_count = await LocationAlias.filter(
+        location_object_id=source_location_id,
+    ).count()
+    if payload.delete_source and not payload.move_aliases and source_alias_count:
+        raise APIError(ErrorCode.LOCATION_ALIAS_CONFLICT)
 
-    async with in_transaction():
+    async with in_transaction() as connection:
         moved_athletes = await Athlete.filter(
             location_object_id=source_location_id,
-        ).update(location_object_id=payload.target_location_id)
+        ).using_db(connection).update(location_object_id=payload.target_location_id)
+
+        if getattr(connection.capabilities, "dialect", None) == "postgres":
+            await connection.execute_script(
+                f"""
+                DO $$
+                BEGIN
+                    IF to_regclass('public.locations') IS NOT NULL THEN
+                        UPDATE "locations"
+                        SET "location_object_id" = '{payload.target_location_id}'
+                        WHERE "location_object_id" = '{source_location_id}';
+                    END IF;
+                END $$;
+                """
+            )
 
         moved_aliases = 0
         duplicate_aliases: list[str] = []
@@ -493,18 +512,21 @@ async def merge_location_object(
                 alias.alias_key
                 for alias in await LocationAlias.filter(
                     location_object_id=payload.target_location_id,
-                )
+                ).using_db(connection)
             }
             source_aliases = await LocationAlias.filter(
                 location_object_id=source_location_id,
-            ).order_by("alias")
+            ).using_db(connection).order_by("alias")
             for alias in source_aliases:
                 if alias.alias_key in target_alias_keys:
                     duplicate_aliases.append(alias.alias)
-                    await alias.delete()
+                    await alias.delete(using_db=connection)
                     continue
                 alias.location_object_id = payload.target_location_id
-                await alias.save(update_fields=["location_object_id", "updated_at"])
+                await alias.save(
+                    update_fields=["location_object_id", "updated_at"],
+                    using_db=connection,
+                )
                 target_alias_keys.add(alias.alias_key)
                 moved_aliases += 1
         else:
@@ -512,7 +534,7 @@ async def merge_location_object(
 
         deleted_source_id = None
         if payload.delete_source:
-            await source.delete()
+            await source.delete(using_db=connection)
             deleted_source_id = source_location_id
 
     target = await LocationObject.get(id=payload.target_location_id)

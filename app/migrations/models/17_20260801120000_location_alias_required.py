@@ -35,7 +35,13 @@ async def upgrade(db: BaseDBAsyncClient) -> str:
             COALESCE(location_object."required", '[]'::jsonb)
         FROM "location_objects" AS location_object
         CROSS JOIN LATERAL jsonb_array_elements_text(
-            COALESCE(location_object."aliases", '[]'::jsonb)
+            CASE
+                WHEN jsonb_array_length(COALESCE(location_object."aliases", '[]'::jsonb)) > 0
+                    THEN COALESCE(location_object."aliases", '[]'::jsonb)
+                WHEN NULLIF(btrim(COALESCE(location_object."club", '')), '') IS NOT NULL
+                    THEN jsonb_build_array(location_object."club")
+                ELSE '[]'::jsonb
+            END
         ) AS alias_item(value)
         ON CONFLICT ("location_object_id", "alias_key") DO UPDATE
         SET

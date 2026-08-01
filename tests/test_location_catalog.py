@@ -496,3 +496,44 @@ def test_location_merge_moves_athletes_and_aliases():
             await Tortoise.close_connections()
 
     asyncio.run(scenario())
+
+
+def test_location_merge_does_not_delete_source_aliases_when_move_aliases_disabled():
+    async def scenario():
+        await Tortoise.init(
+            db_url="sqlite://:memory:",
+            modules={"models": ["app.models.location", "app.models.athlete.athlete"]},
+        )
+        await Tortoise.generate_schemas()
+        try:
+            source = await create_location_object(
+                LocationObjectCreate(
+                    aliases=["Источник"],
+                    club="Источник",
+                    region="Регион",
+                )
+            )
+            target = await create_location_object(
+                LocationObjectCreate(
+                    aliases=["Цель"],
+                    club="Цель",
+                    region="Регион",
+                )
+            )
+
+            with pytest.raises(APIError) as exc:
+                await merge_location_object(
+                    source.id,
+                    LocationMergeRequest(
+                        target_location_id=target.id,
+                        move_aliases=False,
+                        delete_source=True,
+                    ),
+                )
+            assert exc.value.error_code == ErrorCode.LOCATION_ALIAS_CONFLICT.code
+            assert await LocationObject.get_or_none(id=source.id) is not None
+            assert await LocationAlias.filter(location_object_id=source.id).count() == 1
+        finally:
+            await Tortoise.close_connections()
+
+    asyncio.run(scenario())
