@@ -13,6 +13,7 @@ from .competition.result import Result
 from .location.location_alias import LocationAlias
 from .location.location_object import LocationObject
 from .misc.region import Region
+from .misc.region_icon import RegionIcon
 from .misc.standard_category import StandardCategory
 from .misc.bot import Bot
 from .roles.coach import Coach

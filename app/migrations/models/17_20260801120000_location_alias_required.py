@@ -16,6 +16,36 @@ async def upgrade(db: BaseDBAsyncClient) -> str:
                 UNIQUE ("location_object_id", "alias_key")
         );
 
+        WITH legacy_alias_rows AS (
+            SELECT DISTINCT ON (
+                location_object."id",
+                lower(btrim(alias_item.value))
+            )
+                location_object."created_at",
+                location_object."updated_at",
+                uuid_in(md5(
+                    location_object."id"::text || ':' || lower(btrim(alias_item.value))
+                )::cstring) AS "id",
+                location_object."id" AS "location_object_id",
+                btrim(alias_item.value) AS "alias",
+                lower(btrim(alias_item.value)) AS "alias_key",
+                COALESCE(location_object."required", '[]'::jsonb) AS "required"
+            FROM "location_objects" AS location_object
+            CROSS JOIN LATERAL jsonb_array_elements_text(
+                CASE
+                    WHEN jsonb_array_length(COALESCE(location_object."aliases", '[]'::jsonb)) > 0
+                        THEN COALESCE(location_object."aliases", '[]'::jsonb)
+                    WHEN NULLIF(btrim(COALESCE(location_object."club", '')), '') IS NOT NULL
+                        THEN jsonb_build_array(location_object."club")
+                    ELSE '[]'::jsonb
+                END
+            ) AS alias_item(value)
+            WHERE NULLIF(btrim(alias_item.value), '') IS NOT NULL
+            ORDER BY
+                location_object."id",
+                lower(btrim(alias_item.value)),
+                btrim(alias_item.value)
+        )
         INSERT INTO "location_aliases" (
             "created_at",
             "updated_at",
@@ -26,23 +56,14 @@ async def upgrade(db: BaseDBAsyncClient) -> str:
             "required"
         )
         SELECT
-            location_object."created_at",
-            location_object."updated_at",
-            uuid_in(md5(location_object."id"::text || ':' || alias_item.value)::cstring),
-            location_object."id",
-            alias_item.value,
-            lower(btrim(alias_item.value)),
-            COALESCE(location_object."required", '[]'::jsonb)
-        FROM "location_objects" AS location_object
-        CROSS JOIN LATERAL jsonb_array_elements_text(
-            CASE
-                WHEN jsonb_array_length(COALESCE(location_object."aliases", '[]'::jsonb)) > 0
-                    THEN COALESCE(location_object."aliases", '[]'::jsonb)
-                WHEN NULLIF(btrim(COALESCE(location_object."club", '')), '') IS NOT NULL
-                    THEN jsonb_build_array(location_object."club")
-                ELSE '[]'::jsonb
-            END
-        ) AS alias_item(value)
+            "created_at",
+            "updated_at",
+            "id",
+            "location_object_id",
+            "alias",
+            "alias_key",
+            "required"
+        FROM legacy_alias_rows
         ON CONFLICT ("location_object_id", "alias_key") DO UPDATE
         SET
             "alias" = EXCLUDED."alias",
