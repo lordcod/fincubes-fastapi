@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Literal, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Query, Response, status
@@ -33,9 +33,65 @@ from app.services.location_catalog import (
     update_location_alias,
     update_location_object,
 )
+from app.shared.utils.location_text import normalize_location_text
 from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter()
+
+
+def _matches_required_filter(alias_required: list[str], value: str) -> bool:
+    normalized = normalize_location_text(value)
+    required_fields = set(alias_required or [])
+    if normalized in {"true", "1", "yes"}:
+        return bool(required_fields)
+    if normalized in {"false", "0", "no"}:
+        return not required_fields
+    requested = {
+        item.strip()
+        for item in normalized.split(",")
+        if item.strip()
+    }
+    return requested <= required_fields
+
+
+def _matches_location_catalog_query(
+    alias_rule: LocationAlias,
+    query: str,
+    kind: Optional[Literal["regions", "cities", "clubs"]],
+) -> bool:
+    query_key = normalize_location_text(query)
+    location = alias_rule.location_object
+    if kind == "regions":
+        values = [location.region]
+    elif kind == "cities":
+        values = [location.city]
+    elif kind == "clubs":
+        values = [location.club]
+    else:
+        values = [alias_rule.alias, location.club, location.city, location.region]
+    return any(
+        query_key in normalize_location_text(value)
+        for value in values
+        if value
+    )
+
+
+def _sort_location_catalog(
+    catalog: dict[str, list[LocationCatalogItem]],
+    sort: str,
+) -> dict[str, list[LocationCatalogItem]]:
+    reverse = sort.startswith("-")
+    field = sort.removeprefix("-")
+
+    def item_key(alias: str) -> str:
+        first = catalog[alias][0]
+        value = alias if field == "alias" else getattr(first, field) or ""
+        return normalize_location_text(value)
+
+    return {
+        alias: catalog[alias]
+        for alias in sorted(catalog, key=item_key, reverse=reverse)
+    }
 
 
 @router.get(
@@ -46,8 +102,12 @@ router = APIRouter()
 async def get_location_catalog(
     region: Optional[str] = None,
     city: Optional[str] = None,
+    query: Optional[str] = None,
+    kind: Optional[Literal["regions", "cities", "clubs"]] = None,
+    required: Optional[str] = None,
+    sort: Literal["alias", "-alias", "region", "-region", "city", "-city", "club", "-club"] = "alias",
 ):
-    rows = await LocationAlias.all().prefetch_related("location_object").order_by("alias")
+    rows = await LocationAlias.all().prefetch_related("location_object")
     catalog: dict[str, list[LocationCatalogItem]] = {}
     for row in rows:
         location = row.location_object
@@ -57,6 +117,10 @@ async def get_location_catalog(
             city=city,
             required=row.required,
         ):
+            continue
+        if required is not None and not _matches_required_filter(row.required or [], required):
+            continue
+        if query and not _matches_location_catalog_query(row, query, kind):
             continue
         item = LocationCatalogItem(
             id=location.id,
@@ -68,7 +132,7 @@ async def get_location_catalog(
             required=sorted(row.required or []),
         )
         catalog.setdefault(row.alias, []).append(item)
-    return dict(sorted(catalog.items()))
+    return _sort_location_catalog(catalog, sort)
 
 
 @router.get("/resolve", response_model=LocationResolveResult)

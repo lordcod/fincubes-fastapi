@@ -219,6 +219,13 @@ def test_catalog_always_returns_lists_and_filters_required_rows(monkeypatch):
     assert len(filtered["Обычная команда"]) == 1
     assert [item.id for item in filtered["Общая команда"]] == [second.location_object.id]
 
+    queried = asyncio.run(get_location_catalog(query="второй", kind="regions"))
+    assert list(queried) == ["Общая команда"]
+    assert queried["Общая команда"][0].region == "Второй регион"
+
+    required_only = asyncio.run(get_location_catalog(required="region"))
+    assert list(required_only) == ["Общая команда"]
+
 
 def test_create_resolve_and_flat_athlete_fields():
     async def scenario():
