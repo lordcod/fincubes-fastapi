@@ -9,11 +9,13 @@ from tortoise import Tortoise
 
 from app.core.errors import APIError, ErrorCode
 from app.data.location_aliases import locations as legacy_locations
+from app.models.athlete.athlete import Athlete
 from app.models.location.location_alias import LocationAlias
 from app.models.location.location_object import LocationObject
 from app.pages.admin.locations.aliases.route import get_location_catalog
 from app.schemas.location.location import (
     LocationAliasesAdd,
+    LocationMergeRequest,
     LocationObjectCreate,
     LocationResolveRequest,
 )
@@ -21,8 +23,10 @@ from app.services.location_catalog import (
     add_aliases_to_location_object,
     create_location_object,
     find_exact_alias,
+    merge_location_object,
     matches_required_location_context,
     normalize_location_text,
+    preview_location_merge,
     resolve_athlete_location_fields,
     resolve_location_alias,
     search_location_entities,
@@ -419,3 +423,69 @@ def test_search_filters_by_required_text_context(monkeypatch):
     assert len(results) == 1
     assert results[0].id == second_location.id
     assert results[0].name == "Общая команда"
+
+
+def test_location_merge_moves_athletes_and_aliases():
+    async def scenario():
+        await Tortoise.init(
+            db_url="sqlite://:memory:",
+            modules={"models": ["app.models.location", "app.models.athlete.athlete"]},
+        )
+        await Tortoise.generate_schemas()
+        try:
+            source = await create_location_object(
+                LocationObjectCreate(
+                    aliases=["Московская область", "МО"],
+                    club="Московская область",
+                    city=None,
+                    region="Московская область",
+                    required={"region"},
+                )
+            )
+            target = await create_location_object(
+                LocationObjectCreate(
+                    aliases=["Московская область"],
+                    club=None,
+                    city=None,
+                    region="Московская область",
+                    required={"region"},
+                )
+            )
+            athlete = await Athlete.create(
+                id=1001,
+                last_name="Иванов",
+                first_name="Иван",
+                birth_year="2010",
+                gender="M",
+                location_object=source,
+            )
+
+            preview = await preview_location_merge(source.id, target.id)
+            assert preview.athletes_to_move == 1
+            assert preview.aliases_to_move == ["МО"]
+            assert preview.duplicate_aliases == ["Московская область"]
+
+            result = await merge_location_object(
+                source.id,
+                LocationMergeRequest(target_location_id=target.id),
+            )
+            await athlete.refresh_from_db()
+
+            assert athlete.location_object_id == target.id
+            assert result.deleted_source_id == source.id
+            assert result.moved_athletes == 1
+            assert result.moved_aliases == 1
+            assert result.duplicate_aliases == ["Московская область"]
+            assert await LocationObject.get_or_none(id=source.id) is None
+
+            target_aliases = await LocationAlias.filter(
+                location_object_id=target.id,
+            ).order_by("alias")
+            assert [alias.alias for alias in target_aliases] == [
+                "МО",
+                "Московская область",
+            ]
+        finally:
+            await Tortoise.close_connections()
+
+    asyncio.run(scenario())

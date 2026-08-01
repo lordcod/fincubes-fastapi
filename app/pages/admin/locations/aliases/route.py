@@ -5,13 +5,15 @@ from fastapi import APIRouter, Query, Response, status
 
 from app.core.errors import APIError, ErrorCode
 from app.models.location.location_alias import LocationAlias
-from app.models.location.location_object import LocationObject
 from app.schemas.location.location import (
     LocationAliasOut,
     LocationAliasesAdd,
     LocationAliasUpdate,
     LocationCatalogItem,
     LocationEntitySearchItem,
+    LocationMergePreview,
+    LocationMergeRequest,
+    LocationMergeResult,
     LocationObjectCreate,
     LocationObjectOut,
     LocationObjectUpdate,
@@ -22,7 +24,10 @@ from app.services.location_catalog import (
     add_aliases_to_location_object,
     create_location_object,
     delete_location_alias,
+    location_object_out,
+    merge_location_object,
     matches_required_location_context,
+    preview_location_merge,
     resolve_location_alias as resolve_location_alias_service,
     search_location_entities,
     update_location_alias,
@@ -31,25 +36,6 @@ from app.services.location_catalog import (
 from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter()
-
-
-async def _location_object_out(location: LocationObject) -> LocationObjectOut:
-    aliases = await LocationAlias.filter(location_object=location).order_by("alias")
-    return LocationObjectOut(
-        id=location.id,
-        club=location.club,
-        city=location.city,
-        region=location.region,
-        aliases=[
-            LocationAliasOut(
-                id=alias.id,
-                location_object_id=location.id,
-                alias=alias.alias,
-                required=sorted(alias.required or []),
-            )
-            for alias in aliases
-        ],
-    )
 
 
 @router.get(
@@ -125,7 +111,31 @@ async def search_aliases(
 @require_scope("athlete:create")
 async def add_location_object(payload: LocationObjectCreate):
     location = await create_location_object(payload)
-    return await _location_object_out(location)
+    return await location_object_out(location)
+
+
+@router.get(
+    "/{source_location_id}/merge-preview/",
+    response_model=LocationMergePreview,
+)
+@require_scope("athlete:read")
+async def preview_location_object_merge(
+    source_location_id: UUID,
+    target_location_id: UUID,
+):
+    return await preview_location_merge(source_location_id, target_location_id)
+
+
+@router.post(
+    "/{source_location_id}/merge/",
+    response_model=LocationMergeResult,
+)
+@require_scope("athlete:write")
+async def merge_location_object_route(
+    source_location_id: UUID,
+    payload: LocationMergeRequest,
+):
+    return await merge_location_object(source_location_id, payload)
 
 
 @router.patch(
@@ -138,7 +148,7 @@ async def edit_location_object(
     payload: LocationObjectUpdate,
 ):
     location = await update_location_object(location_id, payload)
-    return await _location_object_out(location)
+    return await location_object_out(location)
 
 
 @router.post(
@@ -155,7 +165,7 @@ async def add_location_aliases(
         payload.aliases,
         payload.required,
     )
-    return await _location_object_out(location)
+    return await location_object_out(location)
 
 
 @router.patch(

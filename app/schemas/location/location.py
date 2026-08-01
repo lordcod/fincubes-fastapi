@@ -153,3 +153,25 @@ class LocationResolveResult(BaseModel):
     city: Optional[str] = None
     region: str
     required: list[RequiredLocationField] = Field(default_factory=list)
+
+
+class LocationMergeRequest(BaseModel):
+    target_location_id: UUID
+    move_aliases: bool = True
+    delete_source: bool = True
+
+
+class LocationMergePreview(BaseModel):
+    source: LocationObjectOut
+    target: LocationObjectOut
+    athletes_to_move: int
+    aliases_to_move: list[str] = Field(default_factory=list)
+    duplicate_aliases: list[str] = Field(default_factory=list)
+
+
+class LocationMergeResult(BaseModel):
+    target: LocationObjectOut
+    deleted_source_id: Optional[UUID] = None
+    moved_athletes: int
+    moved_aliases: int
+    duplicate_aliases: list[str] = Field(default_factory=list)

@@ -1,13 +1,21 @@
 from typing import Literal, Optional
 from uuid import UUID
 
+from tortoise.transactions import in_transaction
+
 from app.core.errors import APIError, ErrorCode
+from app.models.athlete.athlete import Athlete
 from app.models.location.location_alias import LocationAlias
 from app.models.location.location_object import LocationObject
 from app.schemas.location.location import (
+    LocationAliasOut,
     LocationAliasUpdate,
     LocationEntitySearchItem,
+    LocationMergePreview,
+    LocationMergeRequest,
+    LocationMergeResult,
     LocationObjectCreate,
+    LocationObjectOut,
     LocationObjectUpdate,
     LocationResolveRequest,
     LocationResolveResult,
@@ -49,6 +57,25 @@ def _canonical_identity(location: LocationObject) -> tuple[str, str, str]:
         normalize_location_text(location.club or ""),
         normalize_location_text(location.city or ""),
         normalize_location_text(location.region),
+    )
+
+
+async def location_object_out(location: LocationObject) -> LocationObjectOut:
+    aliases = await LocationAlias.filter(location_object=location).order_by("alias")
+    return LocationObjectOut(
+        id=location.id,
+        club=location.club,
+        city=location.city,
+        region=location.region,
+        aliases=[
+            LocationAliasOut(
+                id=alias.id,
+                location_object_id=location.id,
+                alias=alias.alias,
+                required=sorted(alias.required or []),
+            )
+            for alias in aliases
+        ],
     )
 
 
@@ -395,6 +422,107 @@ async def delete_location_alias(alias_id: UUID) -> None:
     deleted = await LocationAlias.filter(id=alias_id).delete()
     if not deleted:
         raise APIError(ErrorCode.LOCATION_ALIAS_NOT_FOUND)
+
+
+async def preview_location_merge(
+    source_location_id: UUID,
+    target_location_id: UUID,
+) -> LocationMergePreview:
+    if source_location_id == target_location_id:
+        raise APIError(ErrorCode.LOCATION_ALIAS_CONFLICT)
+
+    source = await LocationObject.get_or_none(id=source_location_id)
+    target = await LocationObject.get_or_none(id=target_location_id)
+    if source is None or target is None:
+        raise APIError(ErrorCode.LOCATION_OBJECT_NOT_FOUND)
+
+    athletes_to_move = await Athlete.filter(
+        location_object_id=source_location_id,
+    ).count()
+    source_aliases = await LocationAlias.filter(
+        location_object_id=source_location_id,
+    ).order_by("alias")
+    target_alias_keys = {
+        alias.alias_key
+        for alias in await LocationAlias.filter(location_object_id=target_location_id)
+    }
+
+    aliases_to_move = [
+        alias.alias
+        for alias in source_aliases
+        if alias.alias_key not in target_alias_keys
+    ]
+    duplicate_aliases = [
+        alias.alias
+        for alias in source_aliases
+        if alias.alias_key in target_alias_keys
+    ]
+
+    return LocationMergePreview(
+        source=await location_object_out(source),
+        target=await location_object_out(target),
+        athletes_to_move=athletes_to_move,
+        aliases_to_move=aliases_to_move,
+        duplicate_aliases=duplicate_aliases,
+    )
+
+
+async def merge_location_object(
+    source_location_id: UUID,
+    payload: LocationMergeRequest,
+) -> LocationMergeResult:
+    if source_location_id == payload.target_location_id:
+        raise APIError(ErrorCode.LOCATION_ALIAS_CONFLICT)
+
+    source = await LocationObject.get_or_none(id=source_location_id)
+    target = await LocationObject.get_or_none(id=payload.target_location_id)
+    if source is None or target is None:
+        raise APIError(ErrorCode.LOCATION_OBJECT_NOT_FOUND)
+
+    preview = await preview_location_merge(source_location_id, payload.target_location_id)
+
+    async with in_transaction():
+        moved_athletes = await Athlete.filter(
+            location_object_id=source_location_id,
+        ).update(location_object_id=payload.target_location_id)
+
+        moved_aliases = 0
+        duplicate_aliases: list[str] = []
+        if payload.move_aliases:
+            target_alias_keys = {
+                alias.alias_key
+                for alias in await LocationAlias.filter(
+                    location_object_id=payload.target_location_id,
+                )
+            }
+            source_aliases = await LocationAlias.filter(
+                location_object_id=source_location_id,
+            ).order_by("alias")
+            for alias in source_aliases:
+                if alias.alias_key in target_alias_keys:
+                    duplicate_aliases.append(alias.alias)
+                    await alias.delete()
+                    continue
+                alias.location_object_id = payload.target_location_id
+                await alias.save(update_fields=["location_object_id", "updated_at"])
+                target_alias_keys.add(alias.alias_key)
+                moved_aliases += 1
+        else:
+            duplicate_aliases = preview.duplicate_aliases
+
+        deleted_source_id = None
+        if payload.delete_source:
+            await source.delete()
+            deleted_source_id = source_location_id
+
+    target = await LocationObject.get(id=payload.target_location_id)
+    return LocationMergeResult(
+        target=await location_object_out(target),
+        deleted_source_id=deleted_source_id,
+        moved_athletes=moved_athletes,
+        moved_aliases=moved_aliases,
+        duplicate_aliases=duplicate_aliases,
+    )
 
 
 async def update_location_object(
