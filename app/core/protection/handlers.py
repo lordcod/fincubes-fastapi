@@ -1,4 +1,9 @@
 from app.core.errors import APIError, ErrorCode
+from app.core.deps.ratelimit import (
+    REQUEST_RATE_LIMIT_COUNT,
+    REQUEST_RATE_LIMIT_INTERVAL_SECONDS,
+    enforce_rate_limit,
+)
 from app.core.protection.utils import jwk_thumbprint, verify_dpop
 from app.shared.utils.middleware_manager import MiddlewareManager
 
@@ -7,9 +12,6 @@ from typing import Dict, Any
 from fastapi import Request
 from jwtifypy import JWTManager
 from jwt import PyJWTError
-
-
-RATE_LIMIT = 60
 
 
 async def validate_token(x_page_token: str) -> Dict[str, Any]:
@@ -44,10 +46,13 @@ async def validate_dpop(request: Request, dpop: str, payload: Dict[str, Any]):
 
 
 async def check_rate_limit(thumb: str, redis):
-    key = f"rl:req:{thumb}"
-    if await redis.incr(key) > RATE_LIMIT:
-        raise APIError(ErrorCode.RATE_LIMIT_EXCEEDED)
-    await redis.expire(key, 60)
+    await enforce_rate_limit(
+        redis,
+        name="request",
+        key=thumb,
+        interval=REQUEST_RATE_LIMIT_INTERVAL_SECONDS,
+        count=REQUEST_RATE_LIMIT_COUNT,
+    )
 
 
 manager = MiddlewareManager()

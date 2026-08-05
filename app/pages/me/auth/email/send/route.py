@@ -4,17 +4,19 @@ from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends
 
-from app.core.deps.ratelimit import create_ratelimit
+from app.core.deps.ratelimit import (
+    EMAIL_CODE_RATE_LIMIT_COUNT,
+    EMAIL_CODE_RATE_LIMIT_INTERVAL_SECONDS,
+    create_ratelimit,
+)
 from app.core.errors import APIError, ErrorCode
 from app.core.security.deps.user_auth import UserAuthSecurity
-from app.core.security.schema import TokenType
 from app.integrations.mail import send_confirm_code
 from app.models.user.user import User
 from app.models.user.user_verification import UserVerification
 from app.shared.enums.enums import VerificationTokenEnum
 
 router = APIRouter()
-MIN_TIME_BETWEEN_CODES = 10 * 60
 VERIFICATION_DELTA = timedelta(hours=1)
 
 
@@ -22,7 +24,10 @@ VERIFICATION_DELTA = timedelta(hours=1)
 async def send_verify_code(
     current_user: User = Depends(UserAuthSecurity()),
     send_limit=Depends(create_ratelimit(
-        "verify_code", MIN_TIME_BETWEEN_CODES, count=15)),
+        "verify_code",
+        EMAIL_CODE_RATE_LIMIT_INTERVAL_SECONDS,
+        count=EMAIL_CODE_RATE_LIMIT_COUNT,
+    )),
 ):
     if current_user.verified:
         raise APIError(ErrorCode.ALREADY_VERIFIED)

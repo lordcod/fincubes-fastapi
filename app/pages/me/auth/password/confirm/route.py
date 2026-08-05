@@ -5,7 +5,11 @@ from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Body, Depends
 
-from app.core.deps.ratelimit import create_ratelimit
+from app.core.deps.ratelimit import (
+    PASSWORD_RESET_RATE_LIMIT_COUNT,
+    PASSWORD_RESET_RATE_LIMIT_INTERVAL_SECONDS,
+    create_ratelimit,
+)
 from app.core.errors import APIError, ErrorCode
 from app.integrations.mail import send_reset_password
 from app.models.user.user import User
@@ -16,20 +20,22 @@ router = APIRouter()
 
 characters = string.ascii_letters + string.digits + "0123456789"
 VERIFICATION_DELTA = timedelta(hours=1)
-MIN_TIME_BETWEEN_CODES = 10 * 60
 
 
 @router.post("/", status_code=204)
 async def request_reset_password(
     email: str = Body(embed=True),
     send_limit=Depends(create_ratelimit(
-        "reset_password:request", MIN_TIME_BETWEEN_CODES)),
+        "reset_password:request",
+        PASSWORD_RESET_RATE_LIMIT_INTERVAL_SECONDS,
+        count=PASSWORD_RESET_RATE_LIMIT_COUNT,
+    )),
 ):
     user = await User.filter(email=email).first()
     if not user:
         raise APIError(ErrorCode.USER_NOT_FOUND)
 
-    # await send_limit(user.id)
+    await send_limit(user.id)
 
     await UserVerification.filter(
         user_id=user.id,

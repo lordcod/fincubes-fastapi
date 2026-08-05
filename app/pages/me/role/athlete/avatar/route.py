@@ -1,7 +1,11 @@
 import hashlib
 from fastapi import APIRouter, Depends, File, UploadFile
 
-from app.core.deps.ratelimit import create_ratelimit
+from app.core.deps.ratelimit import (
+    AVATAR_UPLOAD_RATE_LIMIT_COUNT,
+    AVATAR_UPLOAD_RATE_LIMIT_INTERVAL_SECONDS,
+    create_ratelimit,
+)
 from app.core.errors import APIError, ErrorCode
 from app.integrations.yandexcloud import delete_file, upload_file
 from app.models.athlete.athlete import Athlete
@@ -12,7 +16,6 @@ from app.shared.utils.user_role import get_role
 router = APIRouter()
 
 MAX_SIZE = 16 * 1024 * 1024
-UPLOAD_INTERVAL_SECONDS = 60 * 60
 
 
 async def get_content(file: UploadFile):
@@ -30,7 +33,10 @@ async def upload_avatar(
     file: UploadFile = File(...),
     athlete: Athlete = Depends(get_role(UserRoleEnum.ATHLETE)),
     send_limit=Depends(create_ratelimit(
-        "upload_avatar", UPLOAD_INTERVAL_SECONDS)),
+        "upload_avatar",
+        AVATAR_UPLOAD_RATE_LIMIT_INTERVAL_SECONDS,
+        count=AVATAR_UPLOAD_RATE_LIMIT_COUNT,
+    )),
 ):
     await send_limit(athlete.id)
 

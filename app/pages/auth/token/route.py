@@ -1,7 +1,11 @@
 from datetime import timedelta
 from fastapi import APIRouter, Request
+from app.core.deps.ratelimit import (
+    TOKEN_RATE_LIMIT_COUNT,
+    TOKEN_RATE_LIMIT_INTERVAL_SECONDS,
+    enforce_rate_limit,
+)
 from app.core.errors import APIError, ErrorCode
-from app.core.security.deps.user_auth import UserAuthSecurity
 from app.core.security.schema import TokenType
 from app.schemas.auth.protection import ProtectionRequest
 from app.shared.clients.redis import client
@@ -18,9 +22,13 @@ async def issue_token(
 ):
     ip = request.client.host
 
-    if await client.incr(f"rl:token:{ip}:{data.fingerprint}") > 5:
-        raise APIError(ErrorCode.RATE_LIMIT_EXCEEDED)
-    await client.expire(f"rl:token:{ip}:{data.fingerprint}", 60)
+    await enforce_rate_limit(
+        client,
+        name="token",
+        key=f"{ip}:{data.fingerprint}",
+        interval=TOKEN_RATE_LIMIT_INTERVAL_SECONDS,
+        count=TOKEN_RATE_LIMIT_COUNT,
+    )
 
     if not await client.delete(f"nonce:{data.server_nonce}"):
         raise APIError(ErrorCode.PROTECTION_NONCE_REUSED)

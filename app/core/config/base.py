@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     SENTRY_DNS: Optional[str] = None
     ALGORITHM: str = "HS256"
     POW_BITS: int = 8
+    IGNORE_RATE_LIMIT: bool = False
     ENABLE_MAINTENANCE_API: bool = False
 
     model_config = SettingsConfigDict(

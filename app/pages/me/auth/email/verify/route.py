@@ -5,14 +5,12 @@ from fastapi import APIRouter, Body, Depends
 
 from app.core.errors import APIError, ErrorCode
 from app.core.security.deps.user_auth import UserAuthSecurity
-from app.core.security.schema import TokenType
 from app.models.user.user import User
 from app.models.user.user_verification import UserVerification
 from app.shared.enums.enums import VerificationTokenEnum
 
 router = APIRouter()
 VERIFICATION_DELTA = timedelta(hours=1)
-MIN_TIME_BETWEEN_CODES = 10 * 60
 
 
 @router.post("/", status_code=204)

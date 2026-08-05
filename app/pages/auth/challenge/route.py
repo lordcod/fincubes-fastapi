@@ -1,7 +1,11 @@
 
 import uuid
 from fastapi import APIRouter, Header, Request
-from app.core.errors import APIError, ErrorCode
+from app.core.deps.ratelimit import (
+    CHALLENGE_RATE_LIMIT_COUNT,
+    CHALLENGE_RATE_LIMIT_INTERVAL_SECONDS,
+    enforce_rate_limit,
+)
 from app.shared.clients.redis import client
 from app.core.config import settings
 
@@ -15,9 +19,13 @@ async def get_challenge(
 ):
     ip = request.client.host
 
-    if await client.incr(f"rl:challenge:{ip}:{x_fp}") > 30:
-        raise APIError(ErrorCode.RATE_LIMIT_EXCEEDED)
-    await client.expire(f"rl:challenge:{ip}:{x_fp}", 60)
+    await enforce_rate_limit(
+        client,
+        name="challenge",
+        key=f"{ip}:{x_fp}",
+        interval=CHALLENGE_RATE_LIMIT_INTERVAL_SECONDS,
+        count=CHALLENGE_RATE_LIMIT_COUNT,
+    )
 
     nonce = str(uuid.uuid4())
     await client.set(f"nonce:{nonce}", x_fp, ex=300)
