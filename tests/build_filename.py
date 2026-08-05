@@ -54,7 +54,7 @@ async def generate_filename_from_db():
     filename = build_filename(comp.name, date_str, doc_type, ext)
     print("✅ Сгенерированное имя файла:", filename)
     print("✅ Ссылка:",
-          "https://cdn.fincubes.ru/docs/"+filename)
+          "https://storage.yandexcloud.net/fincubes/docs/"+filename)
 
     await Tortoise.close_connections()
 

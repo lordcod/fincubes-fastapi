@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from app.integrations.yandexcloud import make_cloud_url
 from app.models.misc.region_icon import RegionIcon
 
 
@@ -53,9 +54,6 @@ TRANSLIT = {
     "\u044f": "ya",
 }
 
-CDN_URL = "https://cdn.fincubes.ru"
-
-
 @dataclass
 class ImportSummary:
     rows: int = 0
@@ -63,7 +61,6 @@ class ImportSummary:
     created: int = 0
     updated: int = 0
     unchanged: int = 0
-    cdn_prefetch_failed: int = 0
     skipped_missing_files: int = 0
     skipped_empty_rows: int = 0
 
@@ -83,10 +80,6 @@ def object_path_for(source_path: Path) -> str:
     stem = slugify(source_path.stem)
     ext = source_path.suffix.lower()
     return f"region-coats/{stem}-{digest}{ext}"
-
-
-def make_region_icon_cdn_url(object_path: str) -> str:
-    return f"{CDN_URL}/{object_path}"
 
 
 def resolve_asset_path(csv_path: Path, asset_path: str) -> Path:
@@ -134,7 +127,6 @@ async def import_region_icons(
     *,
     apply: bool,
     upload: bool,
-    prefetch_cdn: bool,
     progress: bool,
 ) -> ImportSummary:
     summary = ImportSummary()
@@ -168,7 +160,7 @@ async def import_region_icons(
 
         file_format = detect_format(asset_path)
         object_path = object_path_for(asset_path)
-        icon_url = make_region_icon_cdn_url(object_path)
+        icon_url = make_cloud_url(object_path)
         existing = await RegionIcon.get_or_none(name=name)
 
         if (
@@ -185,14 +177,6 @@ async def import_region_icons(
                 icon_url = uploaded_urls_by_source[asset_path]
             else:
                 icon_url = await upload_with_retries(asset_path.read_bytes(), object_path)
-                if prefetch_cdn:
-                    try:
-                        from app.integrations.yandex_cdn_api import update_cdn_cache
-
-                        await update_cdn_cache(object_path, action="prefetch")
-                    except Exception as exc:
-                        summary.cdn_prefetch_failed += 1
-                        print(f"WARN cdn prefetch failed: {object_path} -> {exc}")
                 uploaded_urls_by_source[asset_path] = icon_url
                 summary.uploaded_files += 1
 
@@ -255,7 +239,6 @@ async def run(args: argparse.Namespace) -> None:
             args.csv_path.resolve(),
             apply=args.apply,
             upload=not args.no_upload,
-            prefetch_cdn=not args.no_cdn_prefetch,
             progress=args.progress,
         )
     finally:
@@ -269,7 +252,6 @@ async def run(args: argparse.Namespace) -> None:
         f"{mode}: rows={summary.rows} created={summary.created} "
         f"updated={summary.updated} unchanged={summary.unchanged} "
         f"uploaded_files={summary.uploaded_files} "
-        f"cdn_prefetch_failed={summary.cdn_prefetch_failed} "
         f"skipped_missing_files={summary.skipped_missing_files} "
         f"skipped_empty_rows={summary.skipped_empty_rows}"
     )
@@ -286,12 +268,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--no-upload",
         action="store_true",
-        help="Do not upload files, only write deterministic CDN URLs.",
-    )
-    parser.add_argument(
-        "--no-cdn-prefetch",
-        action="store_true",
-        help="Upload files and save CDN URLs without calling Yandex CDN prefetch.",
+        help="Do not upload files, only write deterministic Object Storage URLs.",
     )
     parser.add_argument("--progress", action="store_true")
     return parser.parse_args()

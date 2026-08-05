@@ -5,6 +5,7 @@ from aiosmtplib import SMTP
 
 from app.core.config import settings
 from app.core.errors import APIError, ErrorCode
+from app.integrations.yandexcloud import make_cloud_url
 from app.shared.utils.templates import get_template
 
 
@@ -69,7 +70,8 @@ async def send_warn_unverified(email: str, hours_delay: int):
     html = await get_template(
         "v2/account-deletion.html",
         hoursRemaining=hours_delay,
-        verificationLink="https://fincubes.ru/confirm"
+        verificationLink="https://fincubes.ru/confirm",
+        logoUrl=make_cloud_url("emails/logo.png"),
     )
 
     text = (

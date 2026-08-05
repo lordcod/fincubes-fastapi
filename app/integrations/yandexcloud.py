@@ -12,10 +12,7 @@ from app.shared.clients import session
 credentials = Credentials(settings.AWS_KEY_ID, settings.AWS_SECRET_KEY)
 
 CLOUD_API_URL = "https://storage.yandexcloud.net"
-CDN_URL = "https://cdn.fincubes.ru"
-
 _CLOUD_NETLOC = urlparse(CLOUD_API_URL).netloc
-_CDN_NETLOC = urlparse(CDN_URL).netloc
 
 
 class CloudError(Exception):
@@ -27,20 +24,12 @@ def make_cloud_url(object_path: str) -> str:
     return f"{CLOUD_API_URL}/{settings.BUCKET_NAME}/{object_path}"
 
 
-def make_cdn_url(object_path: str) -> str:
-    """Собрать публичный CDN-URL."""
-    return f"{CDN_URL}/{object_path}"
-
-
 def extract_object_path(url: str) -> Optional[str]:
     """
-    Получить object_path из cdn/cloud URL.
+    Получить object_path из legacy CDN/cloud URL.
     Вернёт None, если url не подходит.
     """
     parsed = urlparse(url)
-
-    if parsed.netloc == _CDN_NETLOC:
-        return parsed.path.lstrip("/")
 
     if parsed.netloc == _CLOUD_NETLOC:
         parts = parsed.path.lstrip("/").split("/", 1)
@@ -72,9 +61,9 @@ async def cloud_request(
 
 
 async def upload_file(body: bytes, object_path: str) -> str:
-    """Загрузить файл и вернуть CDN-URL."""
+    """Загрузить файл и вернуть URL объекта в Yandex Object Storage."""
     await cloud_request("PUT", object_path, data=body)
-    return make_cdn_url(object_path)
+    return make_cloud_url(object_path)
 
 
 async def delete_file(*, url: Optional[str] = None, object_path: Optional[str] = None) -> bool:
@@ -102,7 +91,7 @@ async def copy_file(
     """
     Скопировать объект внутри S3-хранилища.
     Можно передавать пути или URL.
-    Возвращает CDN-URL нового (целевого) объекта.
+    Возвращает URL нового (целевого) объекта в Object Storage.
     """
     if source_path is not None and source_url is not None:
         raise ValueError("Provide only one of source_path or source_url")
@@ -142,7 +131,7 @@ async def copy_file(
             text = await response.text()
             raise CloudError(f"Copy failed: {response.status} {text}")
 
-    return make_cdn_url(target_path)
+    return make_cloud_url(target_path)
 
 
 async def rename_file(
@@ -154,7 +143,7 @@ async def rename_file(
     """
     Переименовать объект (копирование + удаление исходного).
     Можно передавать пути или URL.
-    Возвращает CDN-URL нового объекта.
+    Возвращает URL нового объекта в Object Storage.
     """
     new_url = await copy_file(
         source_path=source_path,

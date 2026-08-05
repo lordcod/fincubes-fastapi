@@ -12,7 +12,7 @@ class UrlResponse(BaseModel):
 
 @router.post("/", response_model=UrlResponse)
 @require_scope('file:create')
-async def upload_file_cdn(
+async def upload_storage_file(
     filename: str,
     file: UploadFile = File(...)
 ):
@@ -23,5 +23,5 @@ async def upload_file_cdn(
 
 @router.delete("/", status_code=204)
 @require_scope('file:delete')
-async def delete_file_cdn(file_url: str):
+async def delete_storage_file(file_url: str):
     await delete_file(url=file_url)

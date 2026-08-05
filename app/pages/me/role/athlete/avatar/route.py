@@ -1,11 +1,9 @@
-import asyncio
 import hashlib
 from fastapi import APIRouter, Depends, File, UploadFile
 
 from app.core.deps.ratelimit import create_ratelimit
 from app.core.errors import APIError, ErrorCode
-from app.integrations.yandex_cdn_api import update_cdn_cache
-from app.integrations.yandexcloud import delete_file, extract_object_path, upload_file
+from app.integrations.yandexcloud import delete_file, upload_file
 from app.models.athlete.athlete import Athlete
 from app.schemas.athlete.athlete import Athlete_Pydantic
 from app.shared.enums.enums import UserRoleEnum
@@ -41,10 +39,7 @@ async def upload_avatar(
     hash = hashlib.sha256(content).hexdigest()
 
     filename = f"avatar/{athlete.id}_{hash[:16]}.{ext}"
-    avatar_url, _ = await asyncio.gather(
-        upload_file(content, filename),
-        update_cdn_cache(filename, action='prefetch')
-    )
+    avatar_url = await upload_file(content, filename)
     athlete.avatar_url = avatar_url
     await athlete.save()
 
