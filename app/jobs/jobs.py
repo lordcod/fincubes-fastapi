@@ -2,12 +2,14 @@ import logging
 from app.models.user.user import User
 from app.repositories.ratings import update_ratings
 from app.shared.clients.mongodb import db
+from app.services.athlete_license import sync_athlete_licenses
 
 logger = logging.getLogger(__name__)
 
 
 async def daily_task():
     await update_ratings(db['ranking'])
+    await sync_athlete_licenses()
     logger.info("Daily ratings task completed")
 
 
