@@ -1,10 +1,14 @@
 """Derive athlete sports ranks from their individual results."""
 
+import logging
 from collections import defaultdict
 from typing import Iterable
 
 from app.models.athlete.athlete import Athlete
 from app.models.competition.result import Result
+
+
+logger = logging.getLogger(__name__)
 
 
 # The order is intentionally limited to the ranks managed automatically.
@@ -84,7 +88,17 @@ async def sync_athlete_licenses() -> int:
             licenses_by_athlete.get(athlete.id, [])
         )
         if athlete.license != desired:
+            old_license = athlete.license
             athlete.license = desired
             await athlete.save(update_fields=["license"])
             changed += 1
+            logger.info(
+                "Athlete license updated: athlete_id=%s athlete=%s "
+                "old_license=%s new_license=%s",
+                athlete.id,
+                f"{athlete.last_name} {athlete.first_name}",
+                old_license,
+                desired,
+            )
+    logger.info("Athlete license synchronization completed: updated=%s", changed)
     return changed
