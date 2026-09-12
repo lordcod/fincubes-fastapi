@@ -19,4 +19,6 @@ async def get_athletes(
     query: str,
     limit: int = 15,
 ):
+    if len(query.strip()) < 3:
+        return []
     return await search_athletes(query, limit)
