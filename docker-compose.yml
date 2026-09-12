@@ -23,7 +23,6 @@ services:
       MONGO_DB_NAME: ${MONGO_DB_NAME:-fincubes_db}
     volumes:
       - ./logs:/app/logs
-    command: poetry run start
     labels:
       - traefik.enable=true
       - traefik.http.routers.fincubes-api.rule=Host(`api.fincubes.ru`)
