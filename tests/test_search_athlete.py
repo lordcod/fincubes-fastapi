@@ -13,16 +13,16 @@ def test_search_supports_partial_two_word_names():
     assert "ILIKE" in sql
     assert "%аникин%" in params
     assert "%да%" in params
-    assert "similarity" in sql
+    assert "similarity" not in sql
 
 
 def test_search_supports_more_than_two_tokens():
     sql, params = _compile("аникин данил сергеевич")
 
-    assert sql.count("similarity") >= 3
-    assert "аникин" in params
-    assert "данил" in params
-    assert "сергеевич" in params
+    assert sql.count("ILIKE") >= 3
+    assert "%аникин%" in params
+    assert "%данил%" in params
+    assert "%сергеевич%" in params
 
 
 def test_short_search_is_always_empty():

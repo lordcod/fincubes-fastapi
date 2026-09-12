@@ -1,5 +1,5 @@
 from typing import Optional
-from sqlalchemy import case, select, func, or_, and_, String
+from sqlalchemy import select, func, or_, and_, String
 from app.repositories.sa.models import athletes
 
 
@@ -19,12 +19,10 @@ def build_athlete_search_query(user_input: str, limit: Optional[int], similarity
 
     def matches(col, word):
         value = func.cast(col, String)
-        return or_(
-            # Covers normal typing and partial first/last names. ILIKE is
-            # case-insensitive for Cyrillic in PostgreSQL.
-            value.ilike(f"%{word}%"),
-            func.similarity(value, word) > similarity_threshold,
-        )
+        # Covers normal typing and partial first/last names. ILIKE is
+        # case-insensitive for Cyrillic in PostgreSQL and does not depend on
+        # the optional pg_trgm extension.
+        return value.ilike(f"%{word}%")
 
     if len(words) == 1:
         where_expr = or_(*(matches(column, words[0]) for column in name_columns))
@@ -47,25 +45,10 @@ def build_athlete_search_query(user_input: str, limit: Optional[int], similarity
             for word in words
         ])
 
-    def relevance(column, word):
-        value = func.cast(column, String)
-        return case(
-            (value.ilike(word), 4),
-            (value.ilike(f"{word}%"), 3),
-            (value.ilike(f"%{word}%"), 2),
-            (func.similarity(value, word) > similarity_threshold, 1),
-            else_=0,
-        )
-
-    relevance_score = sum(
-        func.greatest(*(relevance(column, word) for column in name_columns))
-        for word in words
-    ).label("relevance_score")
-
     stmt = (
         select(athletes)
         .where(where_expr)
-        .order_by(relevance_score.desc())
+        .order_by(athletes.c.last_name.asc(), athletes.c.first_name.asc())
     )
 
     if limit is not None:
