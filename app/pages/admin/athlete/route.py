@@ -81,9 +81,9 @@ async def get_athletes_admin(
         q_filter &= Q(gender=gender)
 
     if limit is None:
-        athletes = await Athlete.filter(q_filter)
+        athletes = Athlete.filter(q_filter)
     else:
-        athletes = await Athlete.filter(q_filter).limit(limit)
+        athletes = Athlete.filter(q_filter).limit(limit)
     return await Athlete_Pydantic.from_queryset(athletes)
 
 
