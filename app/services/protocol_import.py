@@ -1,4 +1,5 @@
 from difflib import SequenceMatcher
+import re
 
 from tortoise.transactions import in_transaction
 
@@ -26,6 +27,47 @@ def normalized(value):
 def location_data(location):
     return {"location_id": str(location.id), "club": location.club,
             "city": location.city, "region": location.region}
+
+
+def location_text(value):
+    value = normalized(value)
+    value = re.sub(r"^(?:г\.|город|г\s)\s*", "", value)
+    return re.sub(r"[\W_]+", "", value)
+
+
+def compare_locations(left, right):
+    """Compare affiliations, not IDs; missing detail is not a contradiction."""
+    if left is None or right is None:
+        return False, "no_location_context"
+    if left.id == right.id:
+        return True, "same_id"
+    shared = False
+    for field in ("city", "region"):
+        a, b = location_text(getattr(left, field)), location_text(getattr(right, field))
+        if a and b:
+            if a != b:
+                return False, f"different_{field}"
+            shared = True
+    a, b = location_text(left.club), location_text(right.club)
+    # A city/region stored as a club label carries no separate club identity.
+    geography = {location_text(getattr(loc, field))
+                 for loc in (left, right) for field in ("city", "region")}
+    if a in geography:
+        a = ""
+    if b in geography:
+        b = ""
+    if a and b:
+        if a == b:
+            return True, "same_club"
+        # School numbers carry identity even when the surrounding text is similar.
+        if re.findall(r"\d+", a) != re.findall(r"\d+", b):
+            return False, "different_club_numbers"
+        if SequenceMatcher(None, a, b).ratio() >= 0.82:
+            return True, "similar_club"
+        return False, "different_club"
+    if shared:
+        return True, "compatible_geography"
+    return False, "no_common_location_context"
 
 
 async def prepare_locations(payload):
@@ -67,6 +109,7 @@ async def prepare_locations(payload):
 
 
 async def prepare_athletes(payload, location_ids):
+    locations = {str(loc.id): loc for loc in await LocationObject.filter(id__in=list(location_ids.values()))}
     # One bounded database fetch for the birth years present in this protocol.
     candidates = await Athlete.filter(birth_year__in=[str(a.birth_year) for a in payload.athletes]).prefetch_related("location_object")
     by_year = {}
@@ -85,16 +128,21 @@ async def prepare_athletes(payload, location_ids):
             if not same_name and similarity < 0.65:
                 continue
             same_location = str(candidate.location_object_id) == location_ids[source.team_key]
+            compatible_location, location_reason = compare_locations(
+                candidate.location_object if candidate.location_object_id else None,
+                locations.get(location_ids[source.team_key]),
+            )
             license_conflict = bool(source.license and candidate.license and source.license != candidate.license)
-            if same_name and same_location and not license_conflict:
+            if same_name and compatible_location and not license_conflict:
                 exact.append(candidate.id)
             rows.append({"athlete_id": candidate.id, "last_name": candidate.last_name,
                          "first_name": candidate.first_name, "birth_year": candidate.birth_year,
                          "gender": candidate.gender, "license": candidate.license,
                          "location": location_data(candidate.location_object) if candidate.location_object_id else None,
                          "same_name": same_name, "same_location": same_location,
+                         "compatible_location": compatible_location, "location_reason": location_reason,
                          "license_conflict": license_conflict, "similarity": round(similarity, 3)})
-        rows.sort(key=lambda row: (not row["same_name"], not row["same_location"], -row["similarity"], row["athlete_id"]))
+        rows.sort(key=lambda row: (not row["same_name"], not row["compatible_location"], -row["similarity"], row["athlete_id"]))
         if len(exact) == 1:
             matched[source.key] = exact[0]
         else:
@@ -170,6 +218,12 @@ async def process_protocol_import(request):
             await Competition.filter(id=draft.competition_id).using_db(connection).select_for_update().first()
             athlete_ids = dict(draft.state["athlete_response"]["matched"])
             check_decisions(request.decisions, {a.key for a in payload.athletes}, athlete_ids)
+            # Recompute uniqueness as well as compatibility before creating anything:
+            # profiles or additional namesakes may have appeared since locations.
+            current = await prepare_athletes(payload, draft.state["locations"])
+            for key, athlete_id in athlete_ids.items():
+                if key not in request.decisions and current["matched"].get(key) != athlete_id:
+                    raise APIError(ErrorCode.PROTOCOL_IMPORT_CONFLICT)
             created = []
             for source in payload.athletes:
                 decision = request.decisions.get(source.key)
@@ -186,19 +240,6 @@ async def process_protocol_import(request):
             existing = await Athlete.filter(id__in=list(athlete_ids.values())).using_db(connection).select_for_update()
             if {a.id for a in existing} != set(athlete_ids.values()):
                 raise APIError(ErrorCode.ATHLETE_NOT_FOUND)
-            # Revalidate automatically selected identities if profiles changed between calls.
-            by_id = {a.id: a for a in existing}
-            for source in payload.athletes:
-                if source.key in request.decisions:
-                    continue
-                athlete = by_id[athlete_ids[source.key]]
-                if (normalized(athlete.last_name) != normalized(source.last_name)
-                        or normalized(athlete.first_name) != normalized(source.first_name)
-                        or str(athlete.birth_year) != str(source.birth_year)
-                        or athlete.gender.upper() != source.gender
-                        or str(athlete.location_object_id) != draft.state["locations"][source.team_key]
-                        or (source.license and athlete.license and source.license != athlete.license)):
-                    raise APIError(ErrorCode.PROTOCOL_IMPORT_CONFLICT)
             results = []
             for source in payload.athletes:
                 for item in source.results:
