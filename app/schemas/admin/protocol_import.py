@@ -19,7 +19,7 @@ class ProtocolTeam(ImportModel):
 
 
 class ProtocolResult(ImportModel):
-    stroke: str = Field(min_length=1, max_length=50)
+    stroke: Literal["APNEA", "BIFINS", "IMMERSION", "SURFACE"]
     distance: int = Field(gt=0)
     result: str | None = None
     final: str | None = None
