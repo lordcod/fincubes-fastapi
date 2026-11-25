@@ -8,6 +8,7 @@ from enum import StrEnum
 
 
 class Status(StrEnum):
+    DNS = "DNS"
     EXH = "EXH"
     DSQ = "DSQ"
     DSQ_FINAL = "DSQ_FINAL"

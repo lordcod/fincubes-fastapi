@@ -153,6 +153,9 @@ class ErrorCode(Enum):
     RELAY_COUNT_INVALID = ErrorInfo(
         3029, "Для результата эстафеты relay_count должен быть больше 1", 422
     )
+    PROTOCOL_IMPORT_NOT_FOUND = ErrorInfo(3030, "Импорт протокола не найден", 404)
+    PROTOCOL_IMPORT_CONFLICT = ErrorInfo(3031, "Этап или содержимое импорта не соответствует запросу", 409)
+    PROTOCOL_IMPORT_DECISIONS_REQUIRED = ErrorInfo(3032, "Для каждой несопоставленной записи нужен ID или создание новой записи", 422)
     SEND_EMAIL_EXCEPTION = ErrorInfo(
         4001, "Не удалось отправить электронное письмо", 500
     )
