@@ -4,7 +4,7 @@ from app.core.errors import APIError, ErrorCode
 
 from app.models.athlete.athlete import Athlete
 from app.schemas.athlete.athlete import Athlete_Pydantic, AthleteIn_Pydantic
-from app.services.location_catalog import resolve_athlete_location_update
+from app.services.athlete_affiliation import athlete_text_fields
 from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter()
@@ -20,22 +20,9 @@ async def update_athlete(id: int, athlete: AthleteIn_Pydantic):
     if not db_athlete:
         raise APIError(ErrorCode.ATHLETE_NOT_FOUND)
 
-    athlete_data = athlete.model_dump()
-    location_object_id = athlete_data.pop("location_object_id", None)
-    alias = athlete_data.pop("alias", None)
-    club = athlete_data.pop("club", None)
-    city = athlete_data.pop("city", None)
-    region = athlete_data.pop("region", None)
-    location = await resolve_athlete_location_update(
-        location_object_id=location_object_id,
-        alias=alias,
-        club=club,
-        city=city,
-        region=region,
-    )
-    athlete_data["birth_year"] = str(athlete_data["birth_year"])
-    if location is not None or location_object_id is not None:
-        athlete_data["location_object_id"] = location.id if location else None
+    athlete_data = await athlete_text_fields(athlete.model_dump(exclude_unset=True))
+    if "birth_year" in athlete_data:
+        athlete_data["birth_year"] = str(athlete_data["birth_year"])
     db_athlete.update_from_dict(athlete_data)
     await db_athlete.save()
 

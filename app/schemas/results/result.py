@@ -32,7 +32,7 @@ _Result_Pydantic = with_nested(
 class Result_Pydantic(_Result_Pydantic):
     @classmethod
     async def from_tortoise_orm(cls, result: Result):
-        await result.fetch_related("athlete__location_object", "competition")
+        await result.fetch_related("athlete", "competition")
         result_data = (await ResultDepth0_Pydantic.from_tortoise_orm(result)).model_dump()
         athlete = await Athlete_Pydantic.from_tortoise_orm(result.athlete)
         competition = await Competition_Pydantic.from_tortoise_orm(result.competition)
@@ -48,7 +48,7 @@ class Result_Pydantic(_Result_Pydantic):
     @classmethod
     async def from_queryset(cls, queryset):
         rows = await queryset.prefetch_related(
-            "athlete__location_object",
+            "athlete",
             "competition",
         )
         return [await cls.from_tortoise_orm(row) for row in rows]

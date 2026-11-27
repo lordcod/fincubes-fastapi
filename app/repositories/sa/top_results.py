@@ -19,7 +19,6 @@ from sqlalchemy.sql.functions import dense_rank
 from app.repositories.sa.models import (
     athletes,
     competitions,
-    location_objects,
     relay_legs,
     relay_results,
     results,
@@ -193,7 +192,6 @@ def build_top_results_query(
         select(
             *label_columns(rankable_results, "result"),
             *label_columns(athletes, "athlete"),
-            *label_columns(location_objects, "location"),
             *label_columns(competitions, "competition"),
             dense_rank().over(
                 partition_by=[
@@ -213,10 +211,6 @@ def build_top_results_query(
             .join(
                 competitions,
                 competitions.c.id == rankable_results.c.competition_id,
-            )
-            .outerjoin(
-                location_objects,
-                location_objects.c.id == athletes.c.location_object_id,
             )
             .join(best_results_subq, and_(
                 rankable_results.c.athlete_id

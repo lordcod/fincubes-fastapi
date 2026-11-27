@@ -7,7 +7,7 @@ from app.schemas.athlete.bulk import (
     BulkAthleteUpdateResponse,
 )
 from app.schemas.athlete.athlete import Athlete_Pydantic
-from app.services.location_catalog import resolve_athlete_location_update
+from app.services.athlete_affiliation import athlete_text_fields
 from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter()
@@ -37,23 +37,12 @@ async def bulk_update_athletes(payload: BulkAthleteUpdateRequest):
         if athlete is None:
             raise APIError(ErrorCode.ATHLETE_NOT_FOUND)
 
-        changes = item.model_dump(exclude={"id"}, exclude_none=True)
-        alias = changes.pop("alias", None)
-        club = changes.pop("club", None)
-        city = changes.pop("city", None)
-        region = changes.pop("region", None)
-        location_object_id = changes.pop("location_object_id", None)
-
-        location = await resolve_athlete_location_update(
-            location_object_id=location_object_id,
-            alias=alias,
-            club=club,
-            city=city,
-            region=region,
-        )
-        if location is not None or location_object_id is not None:
-            changes["location_object_id"] = location.id if location else None
-
+        changes = await athlete_text_fields(item.model_dump(exclude={"id"}, exclude_unset=True))
+        # Nullable affiliation/license fields may be explicitly cleared.
+        # Preserve the historical no-op behavior for null required identity fields.
+        for field in ("last_name", "first_name", "birth_year", "gender"):
+            if field in changes and changes[field] is None:
+                changes.pop(field)
         if "birth_year" in changes:
             changes["birth_year"] = str(changes["birth_year"])
         if "gender" in changes:

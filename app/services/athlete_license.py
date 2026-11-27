@@ -33,6 +33,11 @@ def normalize_license(value: str | None) -> str | None:
     compact = value.replace(" ", "")
     aliases = {
         "1": "I",
+        "1ЮН": "IЮН",
+        "2ЮН": "IIЮН",
+        "3ЮН": "IIIЮН",
+        "К.М.С.": "КМС",
+        "ЗМС": "ЗМС",
         "2": "II",
         "3": "III",
         "I ЮН": "IЮН",
@@ -85,9 +90,9 @@ async def sync_athlete_licenses() -> int:
             continue
 
         desired = highest_automatic_license(
-            licenses_by_athlete.get(athlete.id, [])
+            [current, *licenses_by_athlete.get(athlete.id, [])]
         )
-        if athlete.license != desired:
+        if desired is not None and athlete.license != desired:
             old_license = athlete.license
             athlete.license = desired
             await athlete.save(update_fields=["license"])

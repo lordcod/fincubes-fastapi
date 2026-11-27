@@ -14,7 +14,7 @@ class AthleteIn_Pydantic(BaseModel):
     birth_year: int | str
     location_object_id: Optional[UUID] = None
     alias: Optional[str] = Field(default=None, max_length=512)
-    club: Optional[str] = Field(default=None, max_length=255)
+    club: Optional[str] = Field(default=None, max_length=512)
     city: Optional[str] = Field(default=None, max_length=255)
     region: Optional[str] = Field(default=None, max_length=255)
     license: Optional[str] = Field(default=None, max_length=50)
@@ -57,7 +57,7 @@ class Athlete_Pydantic(BaseModel):
 
     @classmethod
     async def from_tortoise_orm(cls, athlete: Athlete):
-        location = await _get_athlete_location(athlete)
+        location = None
         return cls.model_validate(
             {
                 "id": athlete.id,
@@ -66,11 +66,11 @@ class Athlete_Pydantic(BaseModel):
                 "last_name": athlete.last_name,
                 "first_name": athlete.first_name,
                 "birth_year": athlete.birth_year,
-                "location_object_id": athlete.location_object_id,
+                "location_object_id": None,
                 "location": location,
-                "club": location.club if location else None,
-                "city": location.city if location else None,
-                "region": location.region if location else None,
+                "club": athlete.club,
+                "city": athlete.city,
+                "region": athlete.region,
                 "license": athlete.license,
                 "gender": athlete.gender,
                 "avatar_url": athlete.avatar_url,
@@ -80,21 +80,12 @@ class Athlete_Pydantic(BaseModel):
 
     @classmethod
     async def from_queryset(cls, queryset):
-        rows = await queryset.prefetch_related("location_object")
+        rows = await queryset
         return [await cls.from_tortoise_orm(row) for row in rows]
 
 
-async def _get_athlete_location(athlete: Athlete):
-    if athlete.location_object_id is None:
-        return None
-    location = getattr(athlete, "_location_object", None)
-    if location is None:
-        location = await athlete.location_object
-    return LocationObjectOut.model_validate(location)
-
-
 class AthleteCreateRequest(BaseModel):
-    """Backward-compatible athlete payload with an optional normalized location."""
+    """Athlete with independent affiliation text fields."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -103,7 +94,7 @@ class AthleteCreateRequest(BaseModel):
     birth_year: int = Field(ge=1000, le=9999)
     gender: str = Field(min_length=1, max_length=1)
     alias: Optional[str] = Field(default=None, max_length=512)
-    club: Optional[str] = Field(default=None, max_length=255)
+    club: Optional[str] = Field(default=None, max_length=512)
     city: Optional[str] = Field(default=None, max_length=255)
     region: Optional[str] = Field(default=None, max_length=255)
     license: Optional[str] = Field(default=None, max_length=50)

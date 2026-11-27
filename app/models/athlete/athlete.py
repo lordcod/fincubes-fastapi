@@ -1,5 +1,4 @@
 from tortoise import fields
-from tortoise.queryset import QuerySet
 
 from app.models.base import TimestampedModel
 
@@ -9,6 +8,10 @@ class Athlete(TimestampedModel):
     last_name = fields.CharField(max_length=100)
     first_name = fields.CharField(max_length=100)
     birth_year = fields.CharField(max_length=4)
+    club = fields.CharField(max_length=512, null=True)
+    city = fields.CharField(max_length=255, null=True)
+    region = fields.CharField(max_length=255, null=True)
+    # Deprecated compatibility column; new writes store affiliation as text.
     location_object = fields.ForeignKeyField(
         "models.LocationObject",
         related_name="athletes",
@@ -20,27 +23,6 @@ class Athlete(TimestampedModel):
 
     avatar_url = fields.CharField(max_length=250, null=True)
     is_top = fields.BooleanField(default=False)
-
-    @property
-    def club(self):
-        location = getattr(self, "location_object", None)
-        if location is None or isinstance(location, QuerySet):
-            return None
-        return location.club if location else None
-
-    @property
-    def city(self):
-        location = getattr(self, "location_object", None)
-        if location is None or isinstance(location, QuerySet):
-            return None
-        return location.city if location else None
-
-    @property
-    def region(self):
-        location = getattr(self, "location_object", None)
-        if location is None or isinstance(location, QuerySet):
-            return None
-        return location.region if location else None
 
     class Meta:
         table = "athletes"

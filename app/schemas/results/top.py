@@ -7,7 +7,6 @@ from app.models.competition.competition import Competition
 from app.repositories.sa.utils import prepare_columns
 from app.schemas.athlete.athlete import Athlete_Pydantic
 from app.schemas.competition.competition import Competition_Pydantic
-from app.schemas.location.location import LocationObjectOut
 from app.schemas.results.result import ResultDepth0_Pydantic
 from app.shared.enums.enums import EventTypeEnum, GenderEnum
 
@@ -66,22 +65,8 @@ def parse_best_full_result(row: dict) -> BestFullResult:
         and (field_name := name.removeprefix("athlete_")) in athlete_fields
     }
 
-    location_id = row.get("location_id")
-    location = None
-    if location_id is not None:
-        location = LocationObjectOut.model_validate(
-            {
-                "id": location_id,
-                "club": row.get("location_club"),
-                "city": row.get("location_city"),
-                "region": row.get("location_region"),
-                "aliases": [],
-            }
-        )
-        athlete_data["location"] = location
-        athlete_data["club"] = location.club
-        athlete_data["city"] = location.city
-        athlete_data["region"] = location.region
+    athlete_data["location_object_id"] = None
+    athlete_data["location"] = None
 
     return BestFullResult(
         result=ResultDepth0_Pydantic.model_validate(result_data),

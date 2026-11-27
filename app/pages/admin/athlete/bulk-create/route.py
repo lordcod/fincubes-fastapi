@@ -8,7 +8,7 @@ from app.schemas.athlete.bulk import (
     BulkAthleteCreateResultItem,
 )
 from app.schemas.athlete.athlete import Athlete_Pydantic
-from app.services.location_catalog import resolve_athlete_location_object
+from app.services.athlete_affiliation import athlete_text_fields
 from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter()
@@ -24,21 +24,10 @@ async def bulk_create_athletes(payload: BulkAthleteCreateRequest):
 
     async with in_transaction() as connection:
         for item in payload.items:
-            location = await resolve_athlete_location_object(
-                alias=item.alias,
-                club=item.club,
-                city=item.city,
-                region=item.region,
-            )
-            athlete = await Athlete.create(
-                last_name=item.last_name,
-                first_name=item.first_name,
-                birth_year=str(item.birth_year),
-                gender=item.gender.upper(),
-                location_object=location,
-                license=item.license,
-                using_db=connection,
-            )
+            data = await athlete_text_fields(item.model_dump(exclude={"external_id"}))
+            data["birth_year"] = str(data["birth_year"])
+            data["gender"] = data["gender"].upper()
+            athlete = await Athlete.create(**data, using_db=connection)
             created_models.append(athlete)
 
     response_items = [

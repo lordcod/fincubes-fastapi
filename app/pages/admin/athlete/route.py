@@ -10,7 +10,7 @@ from app.schemas.athlete.athlete import (
     AthleteCreateRequest,
     Athlete_Pydantic,
 )
-from app.services.location_catalog import resolve_athlete_location_object
+from app.services.athlete_affiliation import athlete_text_fields
 from app.shared.utils.scopes.request import require_scope
 
 router = APIRouter(tags=['Admin/Athlete'])
@@ -72,11 +72,11 @@ async def get_athletes_admin(
     if birth_year:
         q_filter &= Q(birth_year=birth_year)
     if club:
-        q_filter &= Q(location_object__club__icontains=club)
+        q_filter &= Q(club__icontains=club)
     if city:
-        q_filter &= Q(location_object__city__icontains=city)
+        q_filter &= Q(city__icontains=city)
     if region:
-        q_filter &= Q(location_object__region__icontains=region)
+        q_filter &= Q(region__icontains=region)
     if gender:
         q_filter &= Q(gender=gender)
 
@@ -93,20 +93,7 @@ async def get_athletes_admin(
 )
 @require_scope('athlete:create')
 async def create_athlete(athlete: AthleteCreateRequest):
-    athlete_data = athlete.model_dump()
-    location_alias = athlete_data.pop("alias", None)
-    club = athlete_data.pop("club", None)
-    city = athlete_data.pop("city", None)
-    region = athlete_data.pop("region", None)
+    athlete_data = await athlete_text_fields(athlete.model_dump())
     athlete_data["birth_year"] = str(athlete_data["birth_year"])
-    location = await resolve_athlete_location_object(
-        alias=location_alias,
-        club=club,
-        city=city,
-        region=region,
-    )
-    db_athlete = await Athlete.create(
-        **athlete_data,
-        location_object=location,
-    )
+    db_athlete = await Athlete.create(**athlete_data)
     return await Athlete_Pydantic.from_tortoise_orm(db_athlete)
