@@ -1,5 +1,7 @@
 # Protocol Import v2
 
+Готовая инструкция для ChatGPT: [промпт импорта](protocol-import-prompt.md).
+
 `POST /admin/protocol-import/`, право `protocol:import`.
 Обычный сценарий состоит из двух запросов: `prepare` → `finish`.
 Между ними можно сделать паузу: черновик хранится в PostgreSQL.
